@@ -410,7 +410,7 @@ export default function OutletDetails() {
 
             if (!isLoading && !countData.total && !countData.active && !countData.inactive) return null;
 
-            return (
+  return (
               <div key={key} className="bg-white p-4 rounded-lg border border-gray-200 transition-all hover:shadow-md flex flex-col">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center">
@@ -420,30 +420,30 @@ export default function OutletDetails() {
                   <div className="bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center">
                     <span className="text-sm font-semibold text-gray-800">{isLoading ? "0" : (countData.total || 0)}</span>
                   </div>
-                </div>
+        </div>
                 
                 <div className="mt-auto pt-3 border-t border-gray-100">
                   {(!isLoading && !countData.active && !countData.inactive) ? (
                     <div className="text-center text-xs text-gray-500">No details available</div>
-                  ) : (
+      ) : (
                     <div className="space-y-1.5">
                       {(isLoading || countData.active > 0) && (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></div>
-                            <span className="text-xs text-gray-500">Active</span>
+                          <span className="text-xs text-gray-500">Active</span>
                           </div>
                           <span className="text-sm font-medium text-green-600">{isLoading ? "0" : countData.active}</span>
-                        </div>
+                    </div>
                       )}
                       {(isLoading || countData.inactive > 0) && (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5"></div>
-                            <span className="text-xs text-gray-500">Inactive</span>
+                          <span className="text-xs text-gray-500">Inactive</span>
                           </div>
                           <span className="text-sm font-medium text-red-500">{isLoading ? "0" : countData.inactive}</span>
-                        </div>
+                  </div>
                       )}
                     </div>
                   )}
@@ -514,7 +514,7 @@ export default function OutletDetails() {
                 <span className="text-sm text-green-700 mb-1 font-medium">Total Orders</span>
                 <span className="text-2xl font-semibold text-green-900">
                   {isLoading ? "0" : parseInt(data?.total_orders_since_menumitra_was_installed || 0).toLocaleString()}
-                </span>
+                      </span>
               </div>
             </div>
           )}
@@ -552,8 +552,8 @@ export default function OutletDetails() {
               </div>
             </div>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
     );
   };
 
@@ -576,7 +576,7 @@ export default function OutletDetails() {
           </span>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
             <div className="bg-gray-50 p-4 rounded-md border border-gray-100 flex items-center">
               <div className="animate-pulse flex space-x-4 w-full">
@@ -606,18 +606,18 @@ export default function OutletDetails() {
                       </span>
                     )}
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${owner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {owner.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                  {owner.is_active ? 'Active' : 'Inactive'}
+                </span>
                   </div>
                 </div>
               </div>
             </div>
           ))}
-        </div>
-      </div>
+            </div>
+          </div>
     );
   };
-
+  
   // Breadcrumb items
   const breadcrumbItems = [
     { text: 'Dashboard', url: '/' },
@@ -695,7 +695,7 @@ export default function OutletDetails() {
                   </svg>
                 </div>
                 <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Type</div>
-              </div>
+                    </div>
               
               {/* Food Type */}
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
@@ -723,16 +723,16 @@ export default function OutletDetails() {
                 </div>
                 <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Code</div>
               </div>
-            </div>
-            
+                  </div>
+
             {/* Contact and Timing Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {/* Contact Detail */}
               {(isLoading || !isEmpty(outletData.mobile)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                    <div className="text-base font-medium">
-                      {isLoading ? "N/A" : outletData.mobile}
+                  <div className="text-base font-medium">
+                    {isLoading ? "N/A" : outletData.mobile}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -746,8 +746,8 @@ export default function OutletDetails() {
               {(isLoading || !isEmpty(outletData.created_on)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                    <div className="text-base font-medium">
-                      {isLoading ? "N/A" : outletData.created_on}
+                  <div className="text-base font-medium">
+                    {isLoading ? "N/A" : outletData.created_on}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -762,7 +762,7 @@ export default function OutletDetails() {
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-base font-medium flex-1">
-                      {isLoading ? "N/A - N/A" : (
+                    {isLoading ? "N/A - N/A" : (
                         <>
                           <div className="flex items-center justify-between text-sm">
                             <span>Opening:</span>
@@ -789,7 +789,7 @@ export default function OutletDetails() {
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-start justify-between mb-1">
                   <div className="text-base font-medium pr-2">
-                    {isLoading ? "N/A" : toTitleCase(outletData.address)}
+                  {isLoading ? "N/A" : toTitleCase(outletData.address)}
                   </div>
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

@@ -65,55 +65,55 @@ export default function Layout({ children }) {
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>Testing Environment - Not For Production Use</span>
+        <span>Testing Environment</span>
       </div>
       
       {/* Main content wrapper - takes remaining height */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Mobile Sidebar Backdrop */}
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 z-20 bg-black bg-opacity-50 transition-opacity lg:hidden"
-            onClick={toggleSidebar}
-          ></div>
-        )}
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 transition-opacity lg:hidden"
+          onClick={toggleSidebar}
+        ></div>
+      )}
 
-        {/* Sidebar */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0 ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="flex h-full flex-col">
-            {/* Sidebar Header/Logo */}
-            <div className="flex h-16 items-center justify-between px-4 border-b">
-              <div className="flex items-center">
-                <img
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          {/* Sidebar Header/Logo */}
+          <div className="flex h-16 items-center justify-between px-4 border-b">
+            <div className="flex items-center">
+              <img
                   src="/assets/MenuMitra_logo.png"
-                  alt="MenuMitra Logo"
-                  className="h-8 w-auto"
-                />
-                <span className="ml-2 text-xl font-semibold text-gray-800">MenuMitra</span>
-              </div>
-              <button
-                onClick={toggleSidebar}
-                className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                alt="MenuMitra Logo"
+                className="h-8 w-auto"
+              />
+              <span className="ml-2 text-xl font-semibold text-gray-800">MenuMitra</span>
             </div>
+            <button
+              onClick={toggleSidebar}
+              className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
 
             {/* User Profile Section - Only visible on mobile */}
             <div className="border-b border-gray-200 px-4 py-3 md:hidden">
@@ -139,81 +139,81 @@ export default function Layout({ children }) {
               </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto p-4">
-              <ul className="space-y-1">
-                {navigationItems.map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                        location.pathname === item.path
-                          ? 'bg-primary-50 text-primary-600'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                      onClick={() => setIsSidebarOpen(false)}
-                    >
-                      <SidebarIcon name={item.icon} />
-                      <span className="ml-3">{item.name}</span>
-                    </Link>
-                  </li>
-                ))}
-                
-                {/* Reports Menu with Dropdown */}
-                <li>
-                  <button
-                    onClick={toggleReportsMenu}
-                    className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-md transition-colors ${
-                      location.pathname.startsWith('/reports')
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto p-4">
+            <ul className="space-y-1">
+              {navigationItems.map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                      location.pathname === item.path
                         ? 'bg-primary-50 text-primary-600'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
+                      onClick={() => setIsSidebarOpen(false)}
                   >
-                    <div className="flex items-center">
-                      <SidebarIcon name="reports" />
-                      <span className="ml-3">Reports</span>
-                    </div>
-                    <svg
-                      className={`h-4 w-4 transition-transform ${
-                        reportsOpen ? 'transform rotate-180' : ''
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-                  
-                  {/* Reports Submenu */}
-                  {reportsOpen && (
-                    <ul className="mt-1 pl-6 space-y-1">
-                      {reportItems.map((item) => (
-                        <li key={item.path}>
-                          <Link
-                            to={item.path}
-                            className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                              location.pathname === item.path
-                                ? 'bg-primary-50 text-primary-600'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                            onClick={() => setIsSidebarOpen(false)}
-                          >
-                            <SidebarIcon name={item.icon} />
-                            <span className="ml-3">{item.name}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    <SidebarIcon name={item.icon} />
+                    <span className="ml-3">{item.name}</span>
+                  </Link>
                 </li>
-              </ul>
-            </nav>
+              ))}
+              
+              {/* Reports Menu with Dropdown */}
+              <li>
+                <button
+                  onClick={toggleReportsMenu}
+                  className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                    location.pathname.startsWith('/reports')
+                      ? 'bg-primary-50 text-primary-600'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <SidebarIcon name="reports" />
+                    <span className="ml-3">Reports</span>
+                  </div>
+                  <svg
+                    className={`h-4 w-4 transition-transform ${
+                      reportsOpen ? 'transform rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                
+                {/* Reports Submenu */}
+                {reportsOpen && (
+                  <ul className="mt-1 pl-6 space-y-1">
+                    {reportItems.map((item) => (
+                      <li key={item.path}>
+                        <Link
+                          to={item.path}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            location.pathname === item.path
+                              ? 'bg-primary-50 text-primary-600'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                            onClick={() => setIsSidebarOpen(false)}
+                        >
+                          <SidebarIcon name={item.icon} />
+                          <span className="ml-3">{item.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            </ul>
+          </nav>
             
             {/* Logout Button at bottom of sidebar - only visible on mobile */}
             <div className="border-t border-gray-200 p-4 md:hidden mt-auto">
@@ -227,50 +227,50 @@ export default function Layout({ children }) {
                 Logout
               </button>
             </div>
-          </div>
-        </aside>
+        </div>
+      </aside>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header with Outlet Selector */}
-          <header className="bg-white z-10 shadow-sm">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header with Outlet Selector */}
+        <header className="bg-white z-10 shadow-sm">
             <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-md text-gray-500 lg:hidden"
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-md text-gray-500 lg:hidden"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-              
-              <div className="flex-1">
-                <OutletHeader />
-              </div>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
             
-            {/* Outlet Status Bar - shows on all pages */}
-            <OutletStatusBar />
-          </header>
-
-          {/* Page Content */}
-          <main className="flex-1 overflow-auto bg-gray-50">
-            <div className="py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {children}
-              </div>
+            <div className="flex-1">
+              <OutletHeader />
             </div>
-          </main>
+          </div>
+          
+          {/* Outlet Status Bar - shows on all pages */}
+          <OutletStatusBar />
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 overflow-auto bg-gray-50">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </div>
+        </main>
         </div>
       </div>
     </div>

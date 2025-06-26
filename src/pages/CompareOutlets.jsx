@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, API_PATHS } from '../api/index';
 import { useOutlet } from '../context/OutletContext';
@@ -12,7 +12,13 @@ export default function CompareOutlets() {
   const navigate = useNavigate();
   const { currentOutlet } = useOutlet();
   const { hasOutlet, warningElement } = useOutletWarning();
-
+  
+  // Cache-related refs and variables
+  const CACHE_EXPIRATION = 30 * 60 * 1000; // 30 minutes cache expiration
+  const outletDetailsCache = useRef(new Map());
+  const outletDetailsFetchTimestamp = useRef(new Map());
+  const pendingRequestsRef = useRef(new Map());
+  
   const MAX_COMPARE_OUTLETS = 3; // Maximum outlets to compare
 
   // Currently selected outlets for comparison (object format with full data)
@@ -68,6 +74,26 @@ export default function CompareOutlets() {
     return formatter.format(num);
   };
 
+  // Helper function to generate a content hash based on data structure
+  const generateDataHash = useCallback((data) => {
+    if (!data) return '';
+    // Get a subset of important fields to determine if data has changed
+    const keyFields = [
+      data.installation_statistics?.total_orders,
+      data.revenue_statistics?.total_revenue,
+      data.order_status_statistics?.success,
+      data.order_status_statistics?.cancelled,
+    ];
+    return keyFields.join('|');
+  }, []);
+
+  // Modified function to check if data has actually changed
+  const isDataChanged = useCallback((oldData, newData) => {
+    const oldHash = generateDataHash(oldData);
+    const newHash = generateDataHash(newData);
+    return oldHash !== newHash;
+  }, [generateDataHash]);
+
   // Fetch current outlet details for comparison
   const fetchCurrentOutletDetails = useCallback(async () => {
     try {
@@ -83,20 +109,71 @@ export default function CompareOutlets() {
         return;
       }
       
-      // Get comparison details
-      const compareResponse = await api.post(API_PATHS.outletCompareDetails, {
-        user_id: parseInt(userId),
-        outlet_id: parseInt(outletId)
-      });
+      // Check if we have cached data for this outlet
+      const cacheKey = outletId.toString();
+      const cachedData = outletDetailsCache.current.get(cacheKey);
+      const fetchTime = outletDetailsFetchTimestamp.current.get(cacheKey);
+      const now = Date.now();
       
-      if (compareResponse.status === 200 && compareResponse.data.detail) {
+      // Use cached data if available and not expired
+      if (cachedData && fetchTime && (now - fetchTime < CACHE_EXPIRATION)) {
+        console.log(`[CompareOutlets] Using cached data for outlet ${outletId}`);
         setCurrentOutletDetails({
           id: outletId,
           outlet_id: outletId,
           name: currentOutlet.name || "Current Outlet",
           address: currentOutlet.address || "",
-          ...compareResponse.data.detail
+          ...cachedData
         });
+        return;
+      }
+      
+      // Check if there's already a pending request for this outlet
+      if (pendingRequestsRef.current.has(cacheKey)) {
+        console.log(`[CompareOutlets] Request already pending for outlet ${outletId}`);
+        const result = await pendingRequestsRef.current.get(cacheKey);
+        return result;
+      }
+      
+      console.log(`[CompareOutlets] Fetching data for outlet ${outletId}`);
+      
+      // Create promise for the API call
+      const requestPromise = api.post(API_PATHS.outletCompareDetails, {
+        user_id: parseInt(userId),
+        outlet_id: parseInt(outletId)
+      });
+      
+      // Store the promise in pendingRequests
+      pendingRequestsRef.current.set(cacheKey, requestPromise);
+      
+      // Get comparison details
+      const compareResponse = await requestPromise;
+      
+      // Remove from pending requests
+      pendingRequestsRef.current.delete(cacheKey);
+      
+      if (compareResponse.status === 200 && compareResponse.data.detail) {
+        // Check if data has actually changed before updating state
+        const cachedData = outletDetailsCache.current.get(cacheKey);
+        const newData = compareResponse.data.detail;
+        const dataChanged = !cachedData || isDataChanged(cachedData, newData);
+        
+        // Cache the data
+        outletDetailsCache.current.set(cacheKey, newData);
+        outletDetailsFetchTimestamp.current.set(cacheKey, Date.now());
+        
+        if (dataChanged) {
+          console.log(`[CompareOutlets] Data changed for outlet ${outletId}, updating state`);
+          setCurrentOutletDetails({
+            id: outletId,
+            outlet_id: outletId,
+            name: currentOutlet.name || "Current Outlet",
+            address: currentOutlet.address || "",
+            ...compareResponse.data.detail
+          });
+        } else {
+          console.log(`[CompareOutlets] No change in data for outlet ${outletId}`);
+        }
       } else {
         throw new Error(`Failed to fetch comparison data for current outlet`);
       }
@@ -117,12 +194,57 @@ export default function CompareOutlets() {
         return null;
       }
       
-      const response = await api.post(API_PATHS.outletCompareDetails, {
+      // Check if we have cached data for this outlet
+      const cacheKey = outletId.toString();
+      const cachedData = outletDetailsCache.current.get(cacheKey);
+      const fetchTime = outletDetailsFetchTimestamp.current.get(cacheKey);
+      const now = Date.now();
+      
+      // Use cached data if available and not expired
+      if (cachedData && fetchTime && (now - fetchTime < CACHE_EXPIRATION)) {
+        console.log(`[CompareOutlets] Using cached data for outlet ${outletId}`);
+        return cachedData;
+      }
+      
+      // Check if there's already a pending request for this outlet
+      if (pendingRequestsRef.current.has(cacheKey)) {
+        console.log(`[CompareOutlets] Request already pending for outlet ${outletId}`);
+        const response = await pendingRequestsRef.current.get(cacheKey);
+        return response.data?.detail || null;
+      }
+      
+      console.log(`[CompareOutlets] Fetching comparison data for outlet ${outletId}`);
+      
+      // Create promise for the API call
+      const requestPromise = api.post(API_PATHS.outletCompareDetails, {
         user_id: parseInt(userId),
         outlet_id: parseInt(outletId)
       });
       
+      // Store the promise in pendingRequests
+      pendingRequestsRef.current.set(cacheKey, requestPromise);
+      
+      const response = await requestPromise;
+      
+      // Remove from pending requests
+      pendingRequestsRef.current.delete(cacheKey);
+      
       if (response.status === 200 && response.data.detail) {
+        // Check if data has actually changed
+        const cachedData = outletDetailsCache.current.get(cacheKey);
+        const newData = response.data.detail;
+        const dataChanged = !cachedData || isDataChanged(cachedData, newData);
+        
+        // Cache the data
+        outletDetailsCache.current.set(cacheKey, newData);
+        outletDetailsFetchTimestamp.current.set(cacheKey, Date.now());
+        
+        if (dataChanged) {
+          console.log(`[CompareOutlets] Data changed for outlet ${outletId}`);
+        } else {
+          console.log(`[CompareOutlets] No change in data for outlet ${outletId}`);
+        }
+        
         return response.data.detail;
       } else {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -199,6 +321,11 @@ export default function CompareOutlets() {
   };
 
   const handleRefreshOutlet = (index) => {
+    const outletToRefresh = selectedOutlets[index];
+    if (outletToRefresh) {
+      // Invalidate the cache for this outlet
+      invalidateOutletCache(outletToRefresh.outlet_id);
+    }
     setRefreshOutletIndex(index);
     setIsOutletSelectorOpen(true);
   };
@@ -235,9 +362,32 @@ export default function CompareOutlets() {
   // Initialize component - fetch current outlet details when mounted
   useEffect(() => {
     if (currentOutlet?.outlet_id) {
-      fetchCurrentOutletDetails();
+      // Check if we have this outlet ID cached already
+      const cacheKey = currentOutlet.outlet_id.toString();
+      const isCached = outletDetailsCache.current.has(cacheKey);
+      const fetchTime = outletDetailsFetchTimestamp.current.get(cacheKey);
+      const now = Date.now();
+      
+      // Only fetch if:
+      // 1. The data is not cached yet, OR
+      // 2. The cache has expired
+      if (!isCached || (fetchTime && now - fetchTime >= CACHE_EXPIRATION)) {
+        console.log(`[CompareOutlets] First mount or cache expired, fetching outlet ${currentOutlet.outlet_id}`);
+        fetchCurrentOutletDetails();
+      } else {
+        console.log(`[CompareOutlets] Component remounted, using cached data for outlet ${currentOutlet.outlet_id}`);
+        // Use the cached data without making an API call
+        const cachedData = outletDetailsCache.current.get(cacheKey);
+        setCurrentOutletDetails({
+          id: currentOutlet.outlet_id,
+          outlet_id: currentOutlet.outlet_id,
+          name: currentOutlet.name || "Current Outlet",
+          address: currentOutlet.address || "",
+          ...cachedData
+        });
+      }
     }
-  }, [currentOutlet, fetchCurrentOutletDetails]);
+  }, [currentOutlet, fetchCurrentOutletDetails, CACHE_EXPIRATION]);
 
   // Get already selected outlet IDs for the selector
   const getAlreadySelectedOutletIds = useCallback(() => {
@@ -263,6 +413,87 @@ export default function CompareOutlets() {
     );
   }
 
+  // Function to clear specific items from cache or force refresh them
+  const invalidateOutletCache = useCallback((outletId = null, forceRefresh = false) => {
+    // If outlet ID is provided, clear just that one
+    if (outletId) {
+      const cacheKey = outletId.toString();
+      console.log(`[CompareOutlets] Invalidating cache for outlet ${outletId}`);
+      outletDetailsCache.current.delete(cacheKey);
+      outletDetailsFetchTimestamp.current.delete(cacheKey);
+      
+      // If forceRefresh is true and this is the current outlet, re-fetch data
+      if (forceRefresh && currentOutlet?.outlet_id === outletId) {
+        fetchCurrentOutletDetails();
+      }
+      return;
+    }
+    
+    // If no outlet ID provided, clear entire cache
+    console.log('[CompareOutlets] Invalidating entire outlet cache');
+    outletDetailsCache.current.clear();
+    outletDetailsFetchTimestamp.current.clear();
+    
+    // If forceRefresh is true, re-fetch current outlet data
+    if (forceRefresh && currentOutlet?.outlet_id) {
+      fetchCurrentOutletDetails();
+    }
+  }, [currentOutlet, fetchCurrentOutletDetails]);
+
+  // Add a component to handle manual refresh of data
+  const RefreshButton = () => (
+    <button 
+      onClick={() => {
+        // Force refresh current outlet data
+        invalidateOutletCache(currentOutlet?.outlet_id, true);
+        
+        // Refresh all the selected outlets data
+        selectedOutlets.forEach(outlet => {
+          invalidateOutletCache(outlet.outlet_id);
+        });
+        
+        // Re-fetch data for all selected outlets
+        const refreshOutlets = async () => {
+          setIsLoading(true);
+          const refreshedOutlets = [];
+          
+          for (const outlet of selectedOutlets) {
+            const data = await fetchOutletCompareDetails(outlet.outlet_id);
+            if (data) {
+              refreshedOutlets.push({
+                ...outlet,
+                ...data
+              });
+            } else {
+              refreshedOutlets.push(outlet);
+            }
+          }
+          
+          setSelectedOutlets(refreshedOutlets);
+          setIsLoading(false);
+        };
+        
+        refreshOutlets();
+      }}
+      className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors ml-2"
+      disabled={isLoading}
+    >
+      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Refresh All
+    </button>
+  );
+
+  // Debug component lifecycle
+  useEffect(() => {
+    console.log('[CompareOutlets] Component mounted');
+    
+    return () => {
+      console.log('[CompareOutlets] Component unmounted');
+    };
+  }, []);
+
   return (
     <div className="bg-gray-50 min-h-screen pb-8">
       <div className="space-y-4 p-2 sm:p-3">
@@ -285,9 +516,14 @@ export default function CompareOutlets() {
               <h1 className="text-xl font-bold text-gray-800">Compare Outlets</h1>
             </div>
             
-            <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-              {selectedOutlets.length} of {MAX_COMPARE_OUTLETS} outlets selected
-            </span>
+            <div className="flex items-center">
+              {/* Only show refresh button if we have outlets to refresh */}
+              {(selectedOutlets.length > 0 || currentOutlet) && <RefreshButton />}
+              
+              <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full ml-2">
+                {selectedOutlets.length} of {MAX_COMPARE_OUTLETS} outlets selected
+              </span>
+            </div>
           </div>
         </div>
 

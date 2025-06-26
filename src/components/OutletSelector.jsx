@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import { COMMON_PREFIX } from '../api/axios';
+import { useCacheData } from '../context/CacheDataContext';
 
 /**
  * OutletSelector component for outlet dashboard
@@ -14,10 +15,16 @@ import { COMMON_PREFIX } from '../api/axios';
 const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = true, excludedOutletIds = [] }) => {
   const modalRef = useRef(null);
   const [outlets, setOutlets] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredOutlets, setFilteredOutlets] = useState([]);
+  const { fetchData, getCachedData, generateCacheKey } = useCacheData();
+  
+  // Add lastFetchTimestamp ref to track when data was last fetched
+  const lastFetchTimestampRef = useRef(null);
+  
+  // Define cache duration (15 minutes in milliseconds)
+  const CACHE_DURATION = 15 * 60 * 1000;
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
@@ -123,39 +130,65 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
     });
   };
 
-  // Fetch outlets from API
+  // Fetch outlets from API with caching
   const fetchOutlets = async () => {
     try {
-      setIsLoading(true);
       setError(null);
       
       const userId = localStorage.getItem('user_id');
       if (!userId) {
         setError('User not authenticated');
-        setIsLoading(false);
         return;
       }
 
-      const response = await axios.post(`${COMMON_PREFIX}/get_outlet_list`, {
+      const requestBody = {
         owner_id: Number(userId),
         app_source: 'admin'
-      });
-
-      if (response.data && response.data.outlets) {
-        // Process outlet data to handle duplicates with unique keys
-        const processedOutlets = processOutletData(response.data.outlets);
-        
+      };
+      
+      // Generate cache key
+      const cacheKey = generateCacheKey(`${COMMON_PREFIX}/get_outlet_list`, requestBody);
+      
+      // Check for cached data first and display it immediately if available
+      const cachedData = getCachedData(cacheKey);
+      let shouldFetchFreshData = true;
+      
+      if (cachedData && cachedData.outlets) {
+        const processedOutlets = processOutletData(cachedData.outlets);
         setOutlets(processedOutlets);
         setFilteredOutlets(processedOutlets);
-        console.log('Fetched and processed outlets:', processedOutlets);
+        
+        // Determine if we need to fetch fresh data based on last fetch time
+        const now = Date.now();
+        if (lastFetchTimestampRef.current && (now - lastFetchTimestampRef.current < CACHE_DURATION)) {
+          shouldFetchFreshData = false;
+          console.log('Using cached outlet data, last fetched:', new Date(lastFetchTimestampRef.current).toLocaleTimeString());
+        }
+      }
+      
+      // Fetch fresh data only if needed
+      if (shouldFetchFreshData) {
+        console.log('Fetching fresh outlet data');
+        
+        const freshData = await fetchData(`${COMMON_PREFIX}/get_outlet_list`, requestBody, {
+          forceRefresh: true,
+          transformResponse: (data) => data
+        });
+        
+        if (freshData && freshData.outlets) {
+          const processedOutlets = processOutletData(freshData.outlets);
+          setOutlets(processedOutlets);
+          setFilteredOutlets(processedOutlets);
+          
+          // Update the last fetch timestamp
+          lastFetchTimestampRef.current = Date.now();
       } else {
         setError('No outlets found');
+        }
       }
     } catch (err) {
       console.error('Error fetching outlets:', err);
       setError(err.response?.data?.detail || 'Failed to fetch outlets');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -354,37 +387,35 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
           {/* Reset Filters Button - Only shown if any filter is active */}
           {isAnyFilterActive && (
             <div className="flex justify-end mt-2 sm:mt-3">
-              <button
-                onClick={resetFilters}
-                className="text-xs text-primary-600 hover:text-primary-800 font-medium focus:outline-none"
-              >
-                Reset Filters
-              </button>
-            </div>
+            <button
+              onClick={resetFilters}
+              className="text-xs text-primary-600 hover:text-primary-800 font-medium focus:outline-none"
+            >
+              Reset Filters
+            </button>
+          </div>
           )}
         </div>
         
         {/* Outlet List */}
         <div className="overflow-y-auto flex-grow" style={{ maxHeight: 'calc(90vh - 240px)' }}>
-          {isLoading ? (
-            <div className="px-4 sm:px-6 py-4 text-center text-gray-500">
-              <svg className="animate-spin mx-auto h-8 w-8 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <p className="mt-2">Loading outlets...</p>
-            </div>
-          ) : error ? (
+          {error ? (
             <div className="px-4 sm:px-6 py-4 text-center text-red-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="mt-2">{error}</p>
+              <button
+                onClick={fetchOutlets}
+                className="mt-2 text-primary-600 hover:text-primary-800 font-medium"
+              >
+                Try Again
+              </button>
             </div>
           ) : filteredOutlets.length === 0 ? (
             <div className="px-4 sm:px-6 py-4 text-center text-gray-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="mt-2">No outlets found</p>
               {isAnyFilterActive && (
@@ -420,45 +451,45 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
                   >
                     <div className="flex flex-col">
                       <div className="flex flex-wrap justify-between gap-2">
-                        <div>
+                      <div>
                           <div className="flex items-center flex-wrap gap-2">
                             <h4 className="font-medium text-gray-900 uppercase">{outlet.name}</h4>
-                            {isCurrentOutlet && (
+                          {isCurrentOutlet && (
                               <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
-                                Current
-                              </span>
-                            )}
-                            {isExcluded && !isCurrentOutlet && (
+                              Current
+                            </span>
+                          )}
+                          {isExcluded && !isCurrentOutlet && (
                               <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-600">
-                                Selected
-                              </span>
-                            )}
-                          </div>
+                              Selected
+                            </span>
+                          )}
                         </div>
+                      </div>
                         <div className="flex-shrink-0">
                           <div className="flex flex-wrap gap-2">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              outlet.is_open 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {outlet.is_open ? 'Open' : 'Closed'}
-                            </span>
+                            outlet.is_open 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {outlet.is_open ? 'Open' : 'Closed'}
+                          </span>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              outlet.outlet_status 
-                                ? 'bg-blue-100 text-blue-800' 
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {outlet.outlet_status ? 'Active' : 'Inactive'}
-                            </span>
+                            outlet.outlet_status 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {outlet.outlet_status ? 'Active' : 'Inactive'}
+                          </span>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              outlet.account_type === 'live'
-                                ? 'bg-indigo-100 text-indigo-800'
-                                : 'bg-purple-100 text-purple-800'
-                            }`}>
-                              {outlet.account_type === 'live' ? 'Live' : 'Test'}
-                            </span>
-                          </div>
+                            outlet.account_type === 'live'
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {outlet.account_type === 'live' ? 'Live' : 'Test'}
+                          </span>
+                        </div>
                         </div>
                       </div>
                       

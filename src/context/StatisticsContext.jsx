@@ -7,6 +7,19 @@ const StatisticsContext = createContext();
 // Cache expiration time (in milliseconds)
 const CACHE_EXPIRATION = 30 * 60 * 1000; // 30 minutes
 
+// Helper function to generate a content hash based on data structure
+const generateDataHash = (data) => {
+  if (!data) return '';
+  // Get a subset of important fields to determine if data has changed
+  const keyFields = [
+    data.analytic_reports?.total_orders,
+    data.analytic_reports?.total_revenue,
+    data.order_statistics?.success_orders,
+    data.order_statistics?.cancelled_orders,
+  ];
+  return keyFields.join('|');
+};
+
 // Provider component
 export const StatisticsProvider = ({ children }) => {
   // State for statistics data
@@ -18,9 +31,68 @@ export const StatisticsProvider = ({ children }) => {
     startDate: null,
     endDate: null
   });
-  // Track ongoing requests
+  
+  // Track ongoing requests and data hash
   const pendingRequestRef = useRef(null);
   const currentOutletIdRef = useRef(null);
+  const dataHashRef = useRef(null);
+  const periodicCheckerRef = useRef(null);
+  const forcedRefreshTimeRef = useRef(null);
+
+  // Function to check if the data has changed
+  const checkForDataChanges = useCallback(async (outletId) => {
+    try {
+      if (!outletId) return;
+      
+      console.log('Running background data freshness check');
+      const numericOutletId = parseInt(outletId, 10);
+      
+      // Quick check API call - use a special endpoint or parameter if available
+      // For now we'll use the same API but we could optimize this
+      const apiParams = { outlet_id: numericOutletId, checkOnly: true };
+      
+      const data = await getAllStats(apiParams);
+      if (!data) return;
+      
+      // Generate a hash of the new data
+      const newHash = generateDataHash(data);
+      const oldHash = dataHashRef.current;
+      
+      // If the hash is different, the data has changed
+      if (newHash !== oldHash) {
+        console.log('Data has changed, triggering refresh');
+        // Update the hash and fetch the full data
+        dataHashRef.current = newHash;
+        // Set force refresh timestamp to avoid immediate re-fetch
+        forcedRefreshTimeRef.current = Date.now();
+        fetchStatistics({ outlet_id: numericOutletId }, true);
+      }
+    } catch (err) {
+      console.error('Error checking for data changes:', err);
+      // Don't set any errors in the UI for background checks
+    }
+  }, []);
+
+  // Set up periodic background data freshness checks
+  useEffect(() => {
+    // Clear any existing checker
+    if (periodicCheckerRef.current) {
+      clearInterval(periodicCheckerRef.current);
+    }
+    
+    if (currentOutletIdRef.current) {
+      // Check for data changes every 5 minutes
+      periodicCheckerRef.current = setInterval(() => {
+        checkForDataChanges(currentOutletIdRef.current);
+      }, 5 * 60 * 1000); // 5 minutes
+    }
+    
+    return () => {
+      if (periodicCheckerRef.current) {
+        clearInterval(periodicCheckerRef.current);
+      }
+    };
+  }, [currentOutletIdRef.current, checkForDataChanges]);
 
   // Function to fetch statistics data
   const fetchStatistics = useCallback(async (params = {}, forceRefresh = false) => {
@@ -32,8 +104,24 @@ export const StatisticsProvider = ({ children }) => {
 
     // Convert to number for consistent comparison
     const numericOutletId = parseInt(outlet_id, 10);
+    
+    // Debug logging to track API call source
+    const stack = new Error().stack;
+    const caller = stack.split('\n')[2]?.trim() || 'unknown';
+    console.log(`[StatisticsContext] fetchStatistics called from: ${caller}`);
+    console.log(`[StatisticsContext] params:`, params, `forceRefresh:`, forceRefresh);
 
-    // Check if we already have data for this outlet
+    // Check for recent forced refresh to avoid rapid successive refreshes
+    if (
+      !forceRefresh && 
+      forcedRefreshTimeRef.current && 
+      Date.now() - forcedRefreshTimeRef.current < 10000 // 10 seconds
+    ) {
+      console.log('[StatisticsContext] Skipping fetch - recent forced refresh');
+      return statistics;
+    }
+
+    // Check if we already have data for this outlet and it's not expired
     if (
       !forceRefresh &&
       statistics && 
@@ -41,15 +129,18 @@ export const StatisticsProvider = ({ children }) => {
       lastFetched &&
       Date.now() - lastFetched < CACHE_EXPIRATION
     ) {
+      console.log('[StatisticsContext] Using cached data - not expired yet');
       return statistics;
     }
 
     // If there's already a request in progress for this outlet, return that promise
     if (pendingRequestRef.current && currentOutletIdRef.current === numericOutletId && !forceRefresh) {
+      console.log('[StatisticsContext] Request already in progress, reusing promise');
       return pendingRequestRef.current;
     }
 
     try {
+      console.log('[StatisticsContext] Initiating API call for outlet ID:', numericOutletId);
       // Set loading in the background, but don't expose it to the UI
       setLoading(true);
       setError(null);
@@ -79,14 +170,25 @@ export const StatisticsProvider = ({ children }) => {
           ...data,
           outlet_id: numericOutletId
         };
+        
+        // Update our data hash for change detection
+        dataHashRef.current = generateDataHash(dataWithOutlet);
+        
         setStatistics(dataWithOutlet);
         setLastFetched(Date.now());
+        
+        // If this was a forced refresh, update the timestamp
+        if (forceRefresh) {
+          forcedRefreshTimeRef.current = Date.now();
+        }
+        
+        console.log('[StatisticsContext] Successfully updated statistics data');
         return dataWithOutlet;
       }
       
       return statistics; // Return existing data if new data is null
     } catch (err) {
-      console.error('Error fetching statistics:', err);
+      console.error('[StatisticsContext] Error fetching statistics:', err);
       setError(err.message || 'Failed to fetch statistics');
       pendingRequestRef.current = null;
       return statistics; // Return existing data on error
@@ -113,6 +215,15 @@ export const StatisticsProvider = ({ children }) => {
       fetchStatistics({ outlet_id: parseInt(outlet_id, 10) });
     }
   }, [fetchStatistics, statistics]);
+
+  // Run a data freshness check when the component mounts
+  useEffect(() => {
+    const outlet_id = localStorage.getItem('outlet_id');
+    if (outlet_id && currentOutletIdRef.current !== parseInt(outlet_id, 10)) {
+      currentOutletIdRef.current = parseInt(outlet_id, 10);
+      checkForDataChanges(outlet_id);
+    }
+  }, [checkForDataChanges]);
 
   // Context value - we don't expose loading state to prevent UI flashing
   const value = {

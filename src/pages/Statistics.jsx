@@ -14,12 +14,13 @@ const FoodTypeChart = ({ foodTypeData }) => {
   const days = Object.keys(foodTypeData);
   const foodTypes = ['veg', 'nonveg', 'vegan', 'egg'];
   
-  // Check if there's any data
-  const hasData = days.some(day => {
-    return foodTypes.some(type => foodTypeData[day][type] > 0);
+  // Filter out days that have no data (all zeros)
+  const filteredDays = days.filter(day => {
+    return foodTypes.some(type => (foodTypeData[day][type] || 0) > 0);
   });
   
-  if (!hasData) return null;
+  // Check if there's any data
+  if (filteredDays.length === 0) return null;
 
   // Food type badge definitions with colors and labels
   const foodTypeBadges = {
@@ -29,15 +30,17 @@ const FoodTypeChart = ({ foodTypeData }) => {
     egg: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '🟡', label: 'Egg' }
   };
 
-  // Prepare series data
-  const series = foodTypes.map(type => {
+  // Prepare series data - only include food types with non-zero values
+  const series = foodTypes
+    .map(type => {
     return {
       name: type === 'veg' ? 'Vegetarian' : 
             type === 'nonveg' ? 'Non-Vegetarian' : 
             type === 'vegan' ? 'Vegan' : 'Egg',
-      data: days.map(day => foodTypeData[day][type] || 0)
+        data: filteredDays.map(day => foodTypeData[day][type] || 0)
     };
-  }).filter(series => series.data.some(value => value > 0)); // Filter out series with all zeros
+    })
+    .filter(series => series.data.some(value => value > 0)); // Filter out series with all zeros
 
   const options = {
     chart: {
@@ -51,9 +54,10 @@ const FoodTypeChart = ({ foodTypeData }) => {
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: '55%',
-        endingShape: 'rounded'
-      },
+        columnWidth: '30%', // Fixed column width regardless of data points
+        endingShape: 'rounded',
+        distributed: false
+      }
     },
     dataLabels: {
       enabled: false
@@ -64,12 +68,13 @@ const FoodTypeChart = ({ foodTypeData }) => {
       colors: ['transparent']
     },
     xaxis: {
-      categories: days.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
+      categories: filteredDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
       labels: {
         style: {
           fontSize: '12px'
-        }
       }
+      },
+      tickPlacement: 'on'
     },
     yaxis: {
       title: {
@@ -89,12 +94,18 @@ const FoodTypeChart = ({ foodTypeData }) => {
     colors: ['#10B981', '#EF4444', '#8B5CF6', '#F59E0B'],
     legend: {
       show: false
+    },
+    grid: {
+      padding: {
+        left: 20,
+        right: 20
+      }
     }
   };
 
   // Get active food types that have data
   const activeFoodTypes = foodTypes.filter(type => 
-    days.some(day => foodTypeData[day][type] > 0)
+    filteredDays.some(day => (foodTypeData[day][type] || 0) > 0)
   );
 
   return (
@@ -607,18 +618,20 @@ const CollectionSourcesCard = ({ collectionData }) => {
   return (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="p-5 border-b border-gray-200">
+              <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
               <p className="text-sm text-gray-500">
-          Total: {formatCurrency(totalAmount)}
+                  <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
               </p>
+              </div>  
             </div>
       <div className="p-5 space-y-4">
         {paymentMethods.map((method, index) => (
           <div key={index} className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-700">{method.name}</span>
-              <span className="text-sm text-gray-500">
-                {formatCurrency(method.amount)} ({method.orders} orders)
+              <span className="text-sm">
+                <span className="font-medium text-gray-900">{formatCurrency(method.amount)}</span> <span className="text-gray-500">({method.orders} orders)</span>
               </span>
               </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -695,10 +708,10 @@ const OrderStatisticsCard = ({ orderStats }) => {
   if (orderTypes.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
-      </div>
+            </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {orderTypes.map((type, index) => (
           <div 
@@ -707,14 +720,14 @@ const OrderStatisticsCard = ({ orderStats }) => {
           >
             <div className="flex-shrink-0 mr-3 flex items-center self-center">
               {type.icon}
-            </div>
+              </div>
             <div>
               <span className="text-2xl font-bold block">{type.count}</span>
               <span className="text-sm">{type.name}</span>
             </div>
           </div>
         ))}
-      </div>
+        </div>
     </div>
   );
 };
@@ -777,10 +790,10 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
   ].filter(type => type.count > 0);
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Order Type Statistics</h3>
-      </div>
+            </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
         {orderTypes.map((type, index) => (
           <div 
@@ -789,15 +802,15 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
           >
             <div className="flex-shrink-0 mr-3 flex items-center self-center">
               {type.icon}
-            </div>
+                  </div>
             <div>
               <span className="text-2xl font-bold block">{type.count}</span>
-              <span className="text-sm">{type.name}</span>
+            <span className="text-sm">{type.name}</span>
+            </div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
-    </div>
   );
 };
 
@@ -805,12 +818,15 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
 const WeeklyOrderStatsChart = ({ weeklyData }) => {
   if (!weeklyData || !weeklyData.data) return null;
 
-  const days = weeklyData.data.map(day => day[0]);
-  const counts = weeklyData.data.map(day => parseInt(day[1]));
+  // Filter out days with zero orders
+  const filteredData = weeklyData.data.filter(day => parseInt(day[1]) > 0);
+  
+  // Extract days and counts from filtered data
+  const days = filteredData.map(day => day[0]);
+  const counts = filteredData.map(day => parseInt(day[1]));
   
   // Check if we have any non-zero data
-  const hasNonZeroData = counts.some(count => count > 0);
-  if (!hasNonZeroData) return null;
+  if (filteredData.length === 0) return null;
   
   const options = {
     chart: {
@@ -824,7 +840,7 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: '55%',
+        columnWidth: '30%', // Fixed column width for consistency
         endingShape: 'rounded',
         distributed: true
       },
@@ -843,8 +859,9 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
         style: {
           fontSize: '12px',
           fontFamily: 'Inter, sans-serif'
-        }
       }
+      },
+      tickPlacement: 'on'
     },
     yaxis: {
       title: {
@@ -867,11 +884,17 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
     },
     annotations: {
       points: []
+    },
+    grid: {
+      padding: {
+        left: 20,
+        right: 20
+      }
     }
   };
 
   // Add peak day annotation if it's a valid day (not "None")
-  if (weeklyData.peak_day && weeklyData.peak_day[0] && weeklyData.peak_day[0] !== "None") {
+  if (weeklyData.peak_day && weeklyData.peak_day[0] && weeklyData.peak_day[0] !== "None" && days.includes(weeklyData.peak_day[0])) {
     options.annotations.points.push({
       x: weeklyData.peak_day[0],
       y: parseInt(weeklyData.peak_day[1]),
@@ -955,34 +978,34 @@ const ProductsAnalysisCard = ({ categoryData }) => {
   if (topSellingItems.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
         <div className="mt-4 flex justify-center">
           <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-            <button 
-              onClick={() => setActiveTab('top')}
+          <button 
+            onClick={() => setActiveTab('top')}
               className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Top Selling
-            </button>
-            <button 
-              onClick={() => setActiveTab('low')}
+              activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Top Selling
+          </button>
+          <button 
+            onClick={() => setActiveTab('low')}
               className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Low Selling
-            </button>
+              activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Low Selling
+          </button>
           </div>
         </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 #
               </th>
@@ -992,9 +1015,9 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Sales Count
               </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
             {(activeTab === 'top' ? topSellingItems : lowSellingItems).map((item, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -1006,12 +1029,12 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                   {item.sales_count}
                 </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
   );
 };
 
@@ -1019,6 +1042,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
 const AppUsageStatsChart = ({ appUsageData }) => {
   if (!appUsageData) return null;
 
+  // Create data array with app usage values
   const data = [
     { name: 'Owner App', value: Math.max(0, appUsageData.owner_app || 0) },
     { name: 'POS App', value: Math.max(0, appUsageData.pos_app || 0) },
@@ -1029,16 +1053,19 @@ const AppUsageStatsChart = ({ appUsageData }) => {
     { name: 'CDS App', value: Math.max(0, appUsageData.cds_app || 0) }
   ];
 
-  // Check if any app has usage data
-  const hasData = data.some(item => item.value > 0);
+  // Filter out apps with zero usage
+  const filteredData = data.filter(item => item.value > 0);
   
   // If no data with non-zero values, don't render the card
-  if (!hasData) return null;
+  if (filteredData.length === 0) return null;
+
+  // Sort data by usage count (descending)
+  filteredData.sort((a, b) => b.value - a.value);
 
   const options = {
     chart: {
       type: 'bar',
-      height: 400,
+      height: Math.max(250, filteredData.length * 50), // Dynamic height based on number of items
       fontFamily: 'Inter, sans-serif',
       toolbar: {
         show: false
@@ -1046,56 +1073,44 @@ const AppUsageStatsChart = ({ appUsageData }) => {
     },
     plotOptions: {
       bar: {
-        horizontal: false,
-        columnWidth: '35%',
+        horizontal: true,
+        barHeight: '70%',
         distributed: true,
-        borderRadius: 4
+        dataLabels: {
+          position: 'front'
+        },
+        borderRadius: 2
       }
     },
     dataLabels: {
       enabled: true,
       formatter: function (val) {
-        return val > 0 ? val : '';
+        return val;
       },
+      textAnchor: 'start',
+      offsetX: 5,
       style: {
         fontSize: '12px',
-        colors: ['#333'],
+        colors: ['#fff'],
         fontWeight: 500
       },
-      offsetY: -20
+      background: {
+        enabled: false
+      }
     },
-    colors: ['#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6'],
+    colors: ['#8B5CF6', '#7C3AED', '#9333EA', '#A855F7', '#C084FC', '#D8B4FE', '#E9D5FF'],
     xaxis: {
-      categories: data.map(d => d.name),
+      categories: filteredData.map(d => d.name),
       labels: {
         style: {
           fontSize: '12px',
           fontFamily: 'Inter, sans-serif'
         }
-      },
-      axisBorder: {
-        show: false
-      },
-      axisTicks: {
-        show: false
       }
     },
     yaxis: {
-      title: {
-        text: 'Usage Count',
-        style: {
-          fontSize: '14px'
-        }
-      },
       labels: {
-        formatter: function (val) {
-          return Math.max(0, val).toFixed(0);
-        }
-      },
-      min: 0,
-      max: function(max) {
-        // Ensure the max is at least 150 to match the image or 20% higher than the largest value
-        return Math.max(150, max * 1.2);
+        show: true
       }
     },
     grid: {
@@ -1103,25 +1118,19 @@ const AppUsageStatsChart = ({ appUsageData }) => {
       strokeDashArray: 5,
       xaxis: {
         lines: {
-          show: false
+          show: true
         }
       },
       yaxis: {
         lines: {
-          show: true
+          show: false
         }
-      },
-      padding: {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0
       }
     },
     tooltip: {
       y: {
         formatter: function (val) {
-          return Math.max(0, val) + " usages";
+          return val + " usages";
         }
       }
     },
@@ -1132,7 +1141,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
 
   const series = [{
     name: 'Usage',
-    data: data.map(d => Math.max(0, d.value))
+    data: filteredData.map(d => d.value)
   }];
 
   return (
@@ -1145,7 +1154,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
           options={options} 
           series={series} 
           type="bar" 
-          height={400} 
+          height={options.chart.height} 
         />
       </div>
     </div>
@@ -1352,6 +1361,25 @@ export default function Statistics() {
   const navigate = useNavigate();
   const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
 
+  // Add debugging logs for component lifecycle and render
+  useEffect(() => {
+    console.log('[Statistics] Component mounted');
+    
+    return () => {
+      console.log('[Statistics] Component unmounted');
+    };
+  }, []);
+
+  // Debug current data state
+  useEffect(() => {
+    console.log('[Statistics] Data state update:', {
+      hasData: !!statistics,
+      outletId: statistics?.outlet_id,
+      currentContextOutletId: outletId,
+      fetchedForOutlet: fetchedForOutletRef.current
+    });
+  }, [statistics, outletId]);
+
   // Breadcrumb items
   const breadcrumbItems = [
     { text: 'Dashboard', url: '/' },
@@ -1437,10 +1465,16 @@ export default function Statistics() {
     // Only fetch if outlet ID exists and is different from the last one we fetched for
     if (outletId && fetchedForOutletRef.current !== outletId) {
       console.log('Fetching statistics for outlet:', outletId);
-      fetchStatistics({ outlet_id: outletId }, true); // Force refresh when outlet changes
+      
+      // Check if we already have statistics data for this outlet in context
+      if (!statistics || statistics.outlet_id !== parseInt(outletId, 10)) {
+        // Only force refresh when the outlet has changed or data doesn't exist
+        fetchStatistics({ outlet_id: outletId }, false); // Use context caching - don't force refresh
+      }
+      
       fetchedForOutletRef.current = outletId; // Remember which outlet we fetched for
     }
-  }, [outletId, fetchStatistics]);
+  }, [outletId, fetchStatistics, statistics]);
 
   // Format currency in Indian format
   const formatCurrency = (amount) => {
@@ -1576,7 +1610,7 @@ export default function Statistics() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Statistics Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Statistics Dashboard</h1>
         </div>
         
         {activeDateRangeText && (
@@ -1640,23 +1674,23 @@ export default function Statistics() {
           {hasAnalytics && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <SummaryCard
-                title="Total Orders"
                 value={statistics.analytic_reports.total_orders || 0}
+                title="Total Orders"
                 icon="orders"
               />
               <SummaryCard
-                title="Total Revenue"
                 value={formatCurrency(statistics.analytic_reports.total_revenue || 0)}
+                title="Total Revenue"
                 icon="revenue"
               />
               <SummaryCard
-                title="Avg. Order Value"
                 value={formatCurrency(statistics.analytic_reports.avg_order_value || 0)}
+                title="Avg. Order Value"
                 icon="average"
               />
               <SummaryCard
-                title="Avg. Turnover Time"
                 value={formatTurnoverTime(statistics.analytic_reports.average_turnover_time || '0 min')}
+                title="Avg. Turnover Time"
                 icon="time"
               />
             </div>
@@ -1757,10 +1791,10 @@ const SummaryCard = ({ title, value, icon }) => {
           </div>
           <div className="ml-5 w-0 flex-1">
             <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
               <dd>
                 <div className="text-lg font-medium text-gray-900">{value}</div>
               </dd>
+              <dt className="text-sm font-medium text-gray-500 truncate mt-1">{title}</dt>
             </dl>
           </div>
         </div>

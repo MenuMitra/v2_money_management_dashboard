@@ -402,7 +402,7 @@ const ReportTable = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Custom filters - full width on mobile */}
             <div className="w-full sm:w-auto relative z-1">
-              {filterComponent}
+            {filterComponent}
             </div>
             
             {/* Generate Button - full width on mobile */}
@@ -481,50 +481,50 @@ const ReportTable = ({
                 
                 {/* Hidden on mobile, visible on desktop */}
                 <div className="hidden sm:flex items-center space-x-2">
-                  {/* Export Buttons */}
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={exportToExcel}
-                      className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                      </svg>
-                      Excel
-                    </button>
-                    
-                    <CSVLink
-                      data={getExportData()}
-                      filename={`${title || 'report'}.csv`}
-                      className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                      </svg>
-                      CSV
-                    </CSVLink>
-                    
-                    <button
-                      onClick={exportToPDF}
-                      className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                      </svg>
-                      PDF
-                    </button>
-                  </div>
-                  
-                  {/* Refresh Button */}
+                {/* Export Buttons */}
+                <div className="flex space-x-2">
                   <button
-                    onClick={handleGenerateReport}
-                    className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
-                    title="Refresh Report"
+                    onClick={exportToExcel}
+                    className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
                     </svg>
+                    Excel
                   </button>
+                  
+                  <CSVLink
+                    data={getExportData()}
+                    filename={`${title || 'report'}.csv`}
+                    className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                    </svg>
+                    CSV
+                  </CSVLink>
+                  
+                  <button
+                    onClick={exportToPDF}
+                    className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                    </svg>
+                    PDF
+                  </button>
+                </div>
+                
+                {/* Refresh Button */}
+                <button
+                  onClick={handleGenerateReport}
+                  className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
+                  title="Refresh Report"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
                 </div>
                 
                 {/* Mobile export menu button */}
@@ -557,7 +557,7 @@ const ReportTable = ({
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                      </svg>
+                  </svg>
                       PDF
                     </button>
                   </div>
