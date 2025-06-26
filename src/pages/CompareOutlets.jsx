@@ -1,0 +1,473 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api, API_PATHS } from '../api/index';
+import { useOutlet } from '../context/OutletContext';
+import { useOutletWarning } from '../hooks/useOutletId.jsx';
+import OutletSelector from '../components/OutletSelector';
+
+export default function CompareOutlets() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { currentOutlet } = useOutlet();
+  const { hasOutlet, warningElement } = useOutletWarning();
+
+  const MAX_COMPARE_OUTLETS = 3; // Maximum outlets to compare
+
+  // Currently selected outlets for comparison (object format with full data)
+  const [selectedOutlets, setSelectedOutlets] = useState([]);
+  
+  // Outlet selector modal state
+  const [isOutletSelectorOpen, setIsOutletSelectorOpen] = useState(false);
+  const [refreshOutletIndex, setRefreshOutletIndex] = useState(null);
+
+  // Current outlet details for comparison
+  const [currentOutletDetails, setCurrentOutletDetails] = useState({});
+
+  // All metrics to display in specific order
+  const [metrics] = useState([
+    { id: 'installation_statistics.total_orders', name: 'Total Orders', type: 'number' },
+    { id: 'installation_statistics.days_since_installation', name: 'Days Since Installation', type: 'number' },
+    { id: 'installation_statistics.first_order_date', name: 'First Order Date', type: 'date' },
+    { id: 'revenue_statistics.total_revenue', name: 'Total Revenue', type: 'currency' },
+    { id: 'payment_statistics.upi', name: 'UPI Payments', type: 'currency' },
+    { id: 'payment_statistics.card', name: 'Card Payments', type: 'currency' },
+    { id: 'payment_statistics.cash', name: 'Cash Payments', type: 'currency' },
+    { id: 'payment_statistics.complementary', name: 'Complementary', type: 'currency' },
+    { id: 'payment_statistics.udhari', name: 'Udhari', type: 'currency' },
+    { id: 'order_status_statistics.success', name: 'Successful Orders', type: 'number' },
+    { id: 'order_status_statistics.cancelled', name: 'Cancelled Orders', type: 'number' },
+    { id: 'order_status_statistics.kot_orders', name: 'KOT Orders', type: 'number' },
+    { id: 'order_status_statistics.complementary_orders', name: 'Complementary Orders', type: 'number' },
+    { id: 'order_status_statistics.udhari_orders', name: 'Udhari Orders', type: 'number' },
+    { id: 'order_type_statistics.dine_in', name: 'Dine In Orders', type: 'number' },
+    { id: 'order_type_statistics.parcel', name: 'Parcel Orders', type: 'number' },
+    { id: 'order_type_statistics.drive_through', name: 'Drive Through Orders', type: 'number' },
+    { id: 'order_type_statistics.counter', name: 'Counter Orders', type: 'number' },
+    { id: 'udhari_statistics.udhari_pending', name: 'Udhari Pending', type: 'currency' },
+    { id: 'udhari_statistics.udhari_settled', name: 'Udhari Settled', type: 'currency' },
+    { id: 'advance_payment_statistics.booking_settled', name: 'Booking Settled', type: 'currency' },
+    { id: 'advance_payment_statistics.partial_payment', name: 'Partial Payment', type: 'currency' }
+  ]);
+
+  // Format currency in Indian format
+  const formatIndianCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '₹0';
+    
+    const num = parseFloat(amount);
+    if (isNaN(num)) return '₹0';
+    
+    const formatter = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+    
+    return formatter.format(num);
+  };
+
+  // Fetch current outlet details for comparison
+  const fetchCurrentOutletDetails = useCallback(async () => {
+    try {
+      if (!currentOutlet?.outlet_id) {
+        return;
+      }
+      
+      const userId = localStorage.getItem('user_id');
+      const outletId = currentOutlet.outlet_id;
+      
+      if (!userId || !outletId) {
+        setError('User ID or outlet ID not found');
+        return;
+      }
+      
+      // Get comparison details
+      const compareResponse = await api.post(API_PATHS.outletCompareDetails, {
+        user_id: parseInt(userId),
+        outlet_id: parseInt(outletId)
+      });
+      
+      if (compareResponse.status === 200 && compareResponse.data.detail) {
+        setCurrentOutletDetails({
+          id: outletId,
+          outlet_id: outletId,
+          name: currentOutlet.name || "Current Outlet",
+          address: currentOutlet.address || "",
+          ...compareResponse.data.detail
+        });
+      } else {
+        throw new Error(`Failed to fetch comparison data for current outlet`);
+      }
+    } catch (err) {
+      console.error('Error fetching current outlet details:', err);
+      setError('Failed to fetch current outlet details');
+    }
+  }, [currentOutlet]);
+
+  // Fetch outlet comparison details for a specific outlet
+  const fetchOutletCompareDetails = async (outletId) => {
+    try {
+      setIsLoading(true);
+      const userId = localStorage.getItem('user_id');
+      
+      if (!userId || !outletId) {
+        console.error('Missing user ID or outlet ID');
+        return null;
+      }
+      
+      const response = await api.post(API_PATHS.outletCompareDetails, {
+        user_id: parseInt(userId),
+        outlet_id: parseInt(outletId)
+      });
+      
+      if (response.status === 200 && response.data.detail) {
+        return response.data.detail;
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (err) {
+      console.error(`Error fetching comparison details for outlet ${outletId}:`, err);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenOutletSelector = () => {
+    // Open the outlet selector
+    setIsOutletSelectorOpen(true);
+    setRefreshOutletIndex(null);
+  };
+
+  const handleOutletSelect = async (outlet) => {
+    try {
+      if (selectedOutlets.length >= MAX_COMPARE_OUTLETS && refreshOutletIndex === null) {
+        setError(`You can only compare up to ${MAX_COMPARE_OUTLETS} outlets`);
+        return;
+      }
+      
+      // Check if outlet is the current outlet or already selected
+      if (outlet.outlet_id.toString() === currentOutlet?.outlet_id?.toString()) {
+        setError('You cannot select the current outlet for comparison');
+        return;
+      }
+      
+      if (selectedOutlets.some(o => o.outlet_id.toString() === outlet.outlet_id.toString())) {
+        setError('This outlet is already selected for comparison');
+        return;
+      }
+      
+    setIsLoading(true);
+      
+      // Fetch comparison data for this outlet
+      const outletId = outlet.outlet_id;
+      const comparisonData = await fetchOutletCompareDetails(outletId);
+      
+      if (comparisonData) {
+        // Prepare the outlet object with all data
+        const outletWithData = {
+          id: outletId,
+          outlet_id: outletId,
+          name: outlet.name,
+          address: outlet.address || '',
+          ...comparisonData
+        };
+        
+        // If we're refreshing an existing outlet
+        if (refreshOutletIndex !== null) {
+          const updatedOutlets = [...selectedOutlets];
+          updatedOutlets[refreshOutletIndex] = outletWithData;
+          setSelectedOutlets(updatedOutlets);
+        } else {
+          // Add to selected outlets with comparison data
+          setSelectedOutlets(prev => [...prev, outletWithData]);
+        }
+        
+        setIsOutletSelectorOpen(false);
+        setRefreshOutletIndex(null);
+      } else {
+        throw new Error(`Could not fetch comparison data for outlet ${outletId}`);
+      }
+    } catch (err) {
+      console.error('Error adding outlet:', err);
+      setError(`Failed to add outlet for comparison: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefreshOutlet = (index) => {
+    setRefreshOutletIndex(index);
+    setIsOutletSelectorOpen(true);
+  };
+
+  const handleRemoveOutlet = (index) => {
+    setSelectedOutlets(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Extract a nested value from an object using a path string (e.g., "revenue_statistics.total_revenue")
+  const getNestedValue = (obj, path) => {
+    if (!obj) return null;
+    return path.split('.').reduce((o, key) => (o && o[key] !== undefined) ? o[key] : null, obj);
+  };
+
+  // Format value based on its type
+  const formatValue = (value, type) => {
+    if (value === null || value === undefined) return '₹0';
+    
+    if (type === 'currency') {
+      return formatIndianCurrency(value);
+    }
+    
+    if (type === 'date') {
+      return value || 'N/A'; // Return date as is or N/A if empty
+    }
+    
+    if (type === 'number') {
+      return value.toLocaleString();
+    }
+    
+    return value;
+  };
+
+  // Initialize component - fetch current outlet details when mounted
+  useEffect(() => {
+    if (currentOutlet?.outlet_id) {
+      fetchCurrentOutletDetails();
+    }
+  }, [currentOutlet, fetchCurrentOutletDetails]);
+
+  // Get already selected outlet IDs for the selector
+  const getAlreadySelectedOutletIds = useCallback(() => {
+    const currentId = currentOutlet?.outlet_id?.toString();
+    const selectedIds = selectedOutlets.map(o => o.outlet_id.toString());
+    return [currentId, ...selectedIds].filter(Boolean);
+  }, [currentOutlet, selectedOutlets]);
+
+  // Breadcrumb component
+  const Breadcrumb = () => {
+    return (
+      <nav className="flex mb-5" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600"
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd"></path>
+              </svg>
+              Back
+            </button>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+              </svg>
+              <Link to="/" className="ml-1 text-sm font-medium text-gray-600 hover:text-blue-600 md:ml-2">Home</Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+              </svg>
+              <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Compare Outlets</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+    );
+  };
+
+  // If no outlet is selected, show warning
+  if (!hasOutlet) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Compare Outlets</h1>
+        {warningElement}
+        <p className="text-gray-600 mt-4">Please select an outlet to start comparison.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen pb-8">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Breadcrumb */}
+        <Breadcrumb />
+        
+        {/* Page Header */}
+        <div className="bg-white p-3 rounded-lg shadow-sm mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-800">Compare Outlets</h1>
+            
+            <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+              {selectedOutlets.length} of {MAX_COMPARE_OUTLETS} outlets selected
+            </span>
+          </div>
+        </div>
+
+        {/* Error state */}
+        {error && (
+          <div className="mb-6 p-3 bg-white border border-red-200 rounded-lg bg-red-50">
+            <p className="text-red-700">{error}</p>
+      </div>
+        )}
+
+        {/* Comparison Results Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-auto border-collapse border-gray-200">
+              <thead>
+                <tr className="bg-gray-50 divide-x divide-gray-200">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-64 border-b border-gray-200">
+                    METRICS
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    CURRENT OUTLET
+                  </th>
+                  
+                  {/* Headers for selected outlets */}
+                  {selectedOutlets.map((outlet, idx) => (
+                    <th key={idx} className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span>{outlet.name}</span>
+                        <div className="flex space-x-1">
+                          <button 
+                            onClick={() => handleRefreshOutlet(idx)}
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                            title="Change outlet"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                          <button 
+                            onClick={() => handleRemoveOutlet(idx)}
+                            className="text-red-600 hover:text-red-800 p-1 rounded"
+                            title="Remove outlet"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </th>
+                  ))}
+                  
+                  {/* Add outlet column if not at maximum */}
+                  {selectedOutlets.length < MAX_COMPARE_OUTLETS && (
+                    <th className="px-4 py-3 text-center border-b border-gray-200">
+                      <button 
+                        onClick={handleOpenOutletSelector}
+                        className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
+                        disabled={isLoading}
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Select Outlet
+                      </button>
+                    </th>
+                  )}
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-200">
+                {/* Outlet Details Row */}
+                <tr className="divide-x divide-gray-200">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50">
+                    OUTLET DETAILS
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center text-blue-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">{currentOutletDetails.name || currentOutlet?.name || "Current Outlet"}</p>
+                        <p className="text-xs text-gray-500">{currentOutletDetails.address || currentOutlet?.address || "Address not available"}</p>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  {/* Outlet details for selected outlets */}
+                  {selectedOutlets.map((outlet, idx) => (
+                    <td key={idx} className="px-4 py-3">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 bg-green-100 w-8 h-8 rounded-full flex items-center justify-center text-green-600">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                  </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-gray-900">{outlet.name}</p>
+                          <p className="text-xs text-gray-500">{outlet.address || outlet.location || "Address not available"}</p>
+                </div>
+              </div>
+                    </td>
+                  ))}
+                  
+                  {/* Empty cell if not at maximum */}
+                  {selectedOutlets.length < MAX_COMPARE_OUTLETS && (
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-gray-400 text-xs italic">Select an outlet to compare</span>
+                    </td>
+                  )}
+                          </tr>
+
+                {/* Generate rows for each metric */}
+                {metrics.map((metric) => {
+                  const currentValue = getNestedValue(currentOutletDetails, metric.id);
+                  return (
+                    <tr key={metric.id} className="divide-x divide-gray-200 bg-white">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
+                        {metric.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        {formatValue(currentValue, metric.type)}
+                      </td>
+                      
+                      {/* Values for selected outlets */}
+                      {selectedOutlets.map((outlet, idx) => {
+                        const outletValue = getNestedValue(outlet, metric.id);
+                        return (
+                          <td key={idx} className="px-4 py-3 text-sm font-medium text-gray-900">
+                            {formatValue(outletValue, metric.type)}
+                          </td>
+                        );
+                      })}
+                      
+                      {/* Empty cell if not at maximum */}
+                      {selectedOutlets.length < MAX_COMPARE_OUTLETS && (
+                        <td className="px-4 py-3"></td>
+                      )}
+                            </tr>
+                  );
+                })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+              </div>
+      
+      {/* Outlet Selector Modal */}
+      <OutletSelector
+        isOpen={isOutletSelectorOpen}
+        onClose={() => {
+          setIsOutletSelectorOpen(false);
+          setRefreshOutletIndex(null);
+        }}
+        onSelect={handleOutletSelect}
+        excludedOutletIds={getAlreadySelectedOutletIds()}
+        updateContextOnSelect={false}
+      />
+    </div>
+  );
+} 

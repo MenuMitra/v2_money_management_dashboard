@@ -1,0 +1,40 @@
+{
+  "name": "outlet-dashboard",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "A responsive and optimized dashboard for outlet management",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "apexcharts": "^4.7.0",
+    "autoprefixer": "^10.4.19",
+    "axios": "^1.6.8",
+    "date-fns": "^4.1.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
+    "postcss": "^8.4.38",
+    "postcss-nesting": "^13.0.2",
+    "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-apexcharts": "^1.7.0",
+    "react-csv": "^2.2.2",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.58.1",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^6.22.3",
+    "tailwindcss": "^3.4.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.2.0"
+  }
+}
