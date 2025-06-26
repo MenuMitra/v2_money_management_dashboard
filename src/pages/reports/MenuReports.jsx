@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getMenuReport } from '../../api/reports';
 import { api, API_PATHS } from '../../api';
@@ -186,13 +187,17 @@ export default function MenuReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Menu Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Menu Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze menu performance data across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       {error && (

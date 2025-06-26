@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getCouponReport } from '../../api/reports';
 
@@ -67,21 +68,21 @@ export default function CouponReports() {
         const status = row.order_status?.toLowerCase();
         if (status === 'completed') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-              Completed
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else if (status === 'cancelled') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-              Cancelled
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+            <div className="text-sm capitalize text-gray-700">
               {row.order_status || 'Unknown'}
-            </span>
+            </div>
           );
         }
       }
@@ -147,13 +148,17 @@ export default function CouponReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Coupon Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Coupon Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Track coupon usage, redemptions, and revenue impact
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getOrderReport } from '../../api/reports';
 
@@ -53,23 +54,11 @@ export default function OrderReports() {
     {
       Header: 'Order Status',
       accessor: 'order_status',
-      Cell: (row) => {
-        const statusColors = {
-          paid: 'bg-green-100 text-green-800',
-          cancelled: 'bg-red-100 text-red-800',
-          pending: 'bg-yellow-100 text-yellow-800',
-          default: 'bg-gray-100 text-gray-800'
-        };
-        
-        const status = row.order_status?.toLowerCase() || 'default';
-        const colorClass = statusColors[status] || statusColors.default;
-        
-        return (
-          <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
-            {row.order_status}
-          </span>
-        );
-      }
+      Cell: (row) => (
+        <div className="text-sm capitalize text-gray-700">
+          {row.order_status}
+        </div>
+      )
     },
     {
       Header: 'Payment',
@@ -183,13 +172,17 @@ export default function OrderReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Order Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Order Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze order data across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable

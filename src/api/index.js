@@ -116,7 +116,6 @@ const API_PATHS = {
   
   // Statistics API endpoints
   outletStatistics: STATISTICS_PREFIX,
-  getOutletStats: `${STATISTICS_PREFIX}/get_outlet_stats`,
   getAllStatsWithoutFilter: `${STATISTICS_PREFIX}/get_all_stats`,
   outletDetails: `${STATISTICS_PREFIX}/outlet_details`,
   outletCompareDetails: `${STATISTICS_PREFIX}/outlet_compare_details`,

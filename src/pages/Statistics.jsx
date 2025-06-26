@@ -3,6 +3,8 @@ import { FaDownload } from 'react-icons/fa';
 import { useStatistics } from '../context/StatisticsContext';
 import ReactApexChart from 'react-apexcharts';
 import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
+import { Breadcrumb } from '../components';
+import { useNavigate } from 'react-router-dom';
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
@@ -18,6 +20,14 @@ const FoodTypeChart = ({ foodTypeData }) => {
   });
   
   if (!hasData) return null;
+
+  // Food type badge definitions with colors and labels
+  const foodTypeBadges = {
+    veg: { color: 'bg-green-100 text-green-800 border-green-200', icon: '🟢', label: 'Vegetarian' },
+    nonveg: { color: 'bg-red-100 text-red-800 border-red-200', icon: '🔴', label: 'Non-Vegetarian' },
+    vegan: { color: 'bg-purple-100 text-purple-800 border-purple-200', icon: '🟣', label: 'Vegan' },
+    egg: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '🟡', label: 'Egg' }
+  };
 
   // Prepare series data
   const series = foodTypes.map(type => {
@@ -78,17 +88,30 @@ const FoodTypeChart = ({ foodTypeData }) => {
     },
     colors: ['#10B981', '#EF4444', '#8B5CF6', '#F59E0B'],
     legend: {
-      position: 'bottom',
-      horizontalAlign: 'center',
-      fontSize: '14px'
+      show: false
     }
   };
+
+  // Get active food types that have data
+  const activeFoodTypes = foodTypes.filter(type => 
+    days.some(day => foodTypeData[day][type] > 0)
+  );
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
-        <p className="text-sm text-gray-500">Distribution of food types across days of the week</p>
+        <p className="text-sm text-gray-500 mb-3">Distribution of food types across days of the week</p>
+        
+        {/* Food Type Badges */}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {activeFoodTypes.map(type => (
+            <div key={type} className={`inline-flex items-center px-3 py-1 rounded-full text-sm border ${foodTypeBadges[type].color}`}>
+              <span className="mr-1">{foodTypeBadges[type].icon}</span>
+              {foodTypeBadges[type].label}
+            </div>
+          ))}
+        </div>
       </div>
       <div className="p-5">
         <ReactApexChart 
@@ -621,7 +644,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: orderStats.success_orders || 0,
       color: 'bg-green-100 text-green-800',
       icon: (
-        <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-green-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       )
@@ -631,7 +654,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: orderStats.cancelled_orders || 0,
       color: 'bg-red-100 text-red-800',
       icon: (
-        <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-red-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       )
@@ -641,7 +664,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: orderStats.complementary_orders || 0,
       color: 'bg-purple-100 text-purple-800',
       icon: (
-        <svg className="h-5 w-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-purple-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
         </svg>
       )
@@ -651,7 +674,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: orderStats.KOT_orders || 0,
       color: 'bg-yellow-100 text-yellow-800',
       icon: (
-        <svg className="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-yellow-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       )
@@ -661,7 +684,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: orderStats.udhari_orders || 0,
       color: 'bg-blue-100 text-blue-800',
       icon: (
-        <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-blue-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       )
@@ -672,26 +695,26 @@ const OrderStatisticsCard = ({ orderStats }) => {
   if (orderTypes.length === 0) return null;
 
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
-            </div>
+      </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {orderTypes.map((type, index) => (
           <div 
             key={index} 
             className={`${type.color} rounded-lg p-4 flex items-center`}
           >
-            <div className="flex-shrink-0 mr-3">
+            <div className="flex-shrink-0 mr-3 flex items-center self-center">
               {type.icon}
-              </div>
+            </div>
             <div>
               <span className="text-2xl font-bold block">{type.count}</span>
               <span className="text-sm">{type.name}</span>
             </div>
           </div>
         ))}
-        </div>
+      </div>
     </div>
   );
 };
@@ -706,7 +729,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: orderTypeData['dine-in'] || 0,
       color: 'bg-purple-100 text-purple-800',
       icon: (
-        <svg className="h-5 w-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-purple-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       )
@@ -716,7 +739,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: orderTypeData['parcel'] || 0,
       color: 'bg-green-100 text-green-800',
       icon: (
-        <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-green-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
         </svg>
       )
@@ -726,7 +749,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: orderTypeData['delivery'] || 0,
       color: 'bg-blue-100 text-blue-800',
       icon: (
-        <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-blue-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       )
@@ -736,7 +759,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: orderTypeData['counter'] || 0,
       color: 'bg-red-100 text-red-800',
       icon: (
-        <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-red-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
         </svg>
       )
@@ -746,7 +769,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: orderTypeData['drive-through'] || 0,
       color: 'bg-yellow-100 text-yellow-800',
       icon: (
-        <svg className="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-yellow-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
         </svg>
       )
@@ -754,25 +777,27 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
   ].filter(type => type.count > 0);
 
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Order Type Statistics</h3>
-            </div>
+      </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
         {orderTypes.map((type, index) => (
           <div 
             key={index} 
-            className={`${type.color} rounded-lg p-4 flex flex-col items-center justify-center text-center`}
+            className={`${type.color} rounded-lg p-4 flex items-center`}
           >
-            <div className="rounded-full p-2 mb-2">
+            <div className="flex-shrink-0 mr-3 flex items-center self-center">
               {type.icon}
-                  </div>
-            <span className="text-2xl font-bold">{type.count}</span>
-            <span className="text-sm">{type.name}</span>
-                </div>
-              ))}
+            </div>
+            <div>
+              <span className="text-2xl font-bold block">{type.count}</span>
+              <span className="text-sm">{type.name}</span>
             </div>
           </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -881,8 +906,8 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   const lowDay = weeklyData.low_day || ["None", "0"];
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Weekly Order Statistics</h3>
         <div className="mt-2 flex flex-wrap gap-3">
           {peakDay[0] !== "None" && (
@@ -893,10 +918,10 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
           {lowDay[0] !== "None" && (
             <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               Low: {lowDay[0]} - {lowDay[1]} orders
-            </div>
+              </div>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
       <div className="p-5">
         <ReactApexChart 
           options={options} 
@@ -904,7 +929,7 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
           type="bar" 
           height={350} 
         />
-      </div>
+        </div>
     </div>
   );
 };
@@ -930,32 +955,34 @@ const ProductsAnalysisCard = ({ categoryData }) => {
   if (topSellingItems.length === 0) return null;
 
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
-        <div className="mt-2 flex space-x-2">
-          <button 
-            onClick={() => setActiveTab('top')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Top Selling
-          </button>
-          <button 
-            onClick={() => setActiveTab('low')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Low Selling
-          </button>
+        <div className="mt-4 flex justify-center">
+          <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+            <button 
+              onClick={() => setActiveTab('top')}
+              className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Top Selling
+            </button>
+            <button 
+              onClick={() => setActiveTab('low')}
+              className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Low Selling
+            </button>
+          </div>
         </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 #
               </th>
@@ -965,9 +992,9 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Sales Count
               </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
             {(activeTab === 'top' ? topSellingItems : lowSellingItems).map((item, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -979,12 +1006,12 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                   {item.sales_count}
                 </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
@@ -1108,8 +1135,8 @@ const AppUsageStatsChart = ({ appUsageData }) => {
   }];
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">App Usage Statistics</h3>
       </div>
       <div className="p-5">
@@ -1317,10 +1344,92 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
 };
 
 export default function Statistics() {
-  const { statistics, fetchStatistics, error } = useStatistics();
+  const { statistics, fetchStatistics, error, updateDateRange } = useStatistics();
   const outletId = useOutletId();
   const { warningElement } = useOutletWarning();
   const fetchedForOutletRef = useRef(null);
+  const navigate = useNavigate();
+  const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Statistics' }
+  ];
+
+  // Listen for date range changes from the header component
+  useEffect(() => {
+    const handleDateRangeChange = (event) => {
+      const range = event.detail;
+      setCurrentDateRange(range);
+      
+      // Prepare the API parameters based on the range type
+      const params = { outlet_id: outletId };
+      
+      if (range.type === 'custom' && range.startDate && range.endDate) {
+        // For custom range, convert from YYYY-MM-DD to DD MMM YYYY format
+        params.start_date = formatDateForApi(new Date(range.startDate));
+        params.end_date = formatDateForApi(new Date(range.endDate));
+      } else if (range.type !== 'all') {
+        // For predefined ranges, calculate the dates
+        const today = new Date();
+        let startDate = new Date();
+        let endDate = new Date();
+        
+        switch (range.type) {
+          case 'today':
+            // Just use today for both
+            break;
+          case 'yesterday':
+            startDate.setDate(today.getDate() - 1);
+            endDate.setDate(today.getDate() - 1);
+            break;
+          case 'last7days':
+            startDate.setDate(today.getDate() - 6);
+            break;
+          case 'last30days':
+            startDate.setDate(today.getDate() - 29);
+            break;
+          case 'thisMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+          case 'lastMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+          default:
+            // Default case, don't set date parameters
+            break;
+        }
+        
+        if (range.type !== 'all') {
+          params.start_date = formatDateForApi(startDate);
+          params.end_date = formatDateForApi(endDate);
+        }
+      }
+      
+      console.log('Fetching statistics with params:', params);
+      
+      // Fetch statistics with the date range
+      fetchStatistics(params, true);
+    };
+
+    // Format date as "DD MMM YYYY" (e.g. "17 Jun 2025")
+    const formatDateForApi = (date) => {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = date.getDate();
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day} ${month} ${year}`;
+    };
+
+    // Listen for date range change events
+    window.addEventListener('daterange:changed', handleDateRangeChange);
+    
+    return () => {
+      window.removeEventListener('daterange:changed', handleDateRangeChange);
+    };
+  }, [outletId, fetchStatistics]);
 
   // Fetch statistics data only when component mounts or outlet changes
   useEffect(() => {
@@ -1408,7 +1517,7 @@ export default function Statistics() {
   // If no outlet is selected, show warning
   if (!outletId) {
     return (
-      <div className="p-4 sm:p-6 md:p-8 space-y-6">
+      <div className="space-y-4 p-2 sm:p-3">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Statistics Dashboard</h1>
         </div>
@@ -1417,10 +1526,68 @@ export default function Statistics() {
     );
   }
 
+  // Get formatted date range for display
+  const getActiveDateRangeText = () => {
+    if (!currentDateRange || currentDateRange.type === 'all') return null;
+    
+    switch (currentDateRange.type) {
+      case 'custom':
+        if (currentDateRange.startDate && currentDateRange.endDate) {
+          const formatDate = (dateStr) => {
+            const date = new Date(dateStr);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+          };
+          return `${formatDate(currentDateRange.startDate)} to ${formatDate(currentDateRange.endDate)}`;
+        }
+        return null;
+      case 'today':
+        return 'Today';
+      case 'yesterday':
+        return 'Yesterday';
+      case 'last7days':
+        return 'Last 7 Days';
+      case 'last30days':
+        return 'Last 30 Days';
+      case 'thisMonth':
+        return 'This Month';
+      case 'lastMonth':
+        return 'Last Month';
+      default:
+        return null;
+    }
+  };
+
+  const activeDateRangeText = getActiveDateRangeText();
+
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6">
+    <div className="space-y-4 p-2 sm:p-3">
+      <Breadcrumb items={breadcrumbItems} />
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Statistics Dashboard</h1>
+        <div className="flex items-center">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="mr-3 p-1 rounded-full hover:bg-gray-100"
+            aria-label="Go back"
+          >
+            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Statistics Dashboard</h1>
+        </div>
+        
+        {activeDateRangeText && (
+          <div className="mt-2 sm:mt-0 flex items-center">
+            <span className="inline-flex items-center px-4 py-2 rounded-md bg-primary-50 text-primary-800 border border-primary-200 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="font-medium">Filtered by: {activeDateRangeText}</span>
+            </span>
+          </div>
+        )}
       </div>
       
       {/* Show error message if there was an error */}

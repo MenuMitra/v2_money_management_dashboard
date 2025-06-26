@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getTableReport } from '../../api/reports';
 import { api, API_PATHS } from '../../api';
@@ -66,21 +67,15 @@ export default function TableReports() {
       Cell: (row) => {
         if (row.is_reserved) {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-              Reserved
-            </span>
+            <div className="text-sm capitalize text-gray-700">Reserved</div>
           );
         } else if (row.is_joined && row.current_order) {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-              Occupied
-            </span>
+            <div className="text-sm capitalize text-gray-700">Occupied</div>
           );
         } else {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-              Available
-            </span>
+            <div className="text-sm capitalize text-gray-700">Available</div>
           );
         }
       }
@@ -181,13 +176,17 @@ export default function TableReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Table Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Table Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze table data across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable

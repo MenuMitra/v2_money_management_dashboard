@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getOrderStatusReport } from '../../api/reports';
 
@@ -47,39 +48,39 @@ export default function OrderStatusReports() {
         const status = row.order_status?.toLowerCase();
         if (status === 'completed') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-              Completed
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else if (status === 'preparing') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-              Preparing
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else if (status === 'delivering') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-              Delivering
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else if (status === 'received') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-              Received
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else if (status === 'cancelled') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-              Cancelled
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.order_status}
+            </div>
           );
         } else {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+            <div className="text-sm capitalize text-gray-700">
               {row.order_status || 'Unknown'}
-            </span>
+            </div>
           );
         }
       }
@@ -116,13 +117,17 @@ export default function OrderStatusReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Order Status Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Order Status Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Track order status changes across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable

@@ -24,6 +24,13 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
   const [accountFilter, setAccountFilter] = useState('all'); // 'all', 'live', 'test'
   const [openFilter, setOpenFilter] = useState('all'); // 'all', 'open', 'closed'
   const [sortOrder, setSortOrder] = useState('default'); // 'default', 'asc', 'desc'
+  
+  // Check if any filter is active
+  const isAnyFilterActive = statusFilter !== 'all' || 
+                            accountFilter !== 'all' || 
+                            openFilter !== 'all' || 
+                            sortOrder !== 'default' ||
+                            searchTerm.trim() !== '';
 
   // Fetch outlets when component mounts or modal opens
   useEffect(() => {
@@ -34,6 +41,8 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
 
   // Apply filters and search when any filtering condition changes
   useEffect(() => {
+    if (!outlets || outlets.length === 0) return;
+    
     let filtered = [...outlets];
     
     // Apply search filter
@@ -41,9 +50,10 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       const searchTermLower = searchTerm.toLowerCase();
       filtered = filtered.filter(outlet => {
         return (
-          outlet.name.toLowerCase().includes(searchTermLower) ||
+          (outlet.name && outlet.name.toLowerCase().includes(searchTermLower)) ||
           (outlet.outlet_code && outlet.outlet_code.toLowerCase().includes(searchTermLower)) ||
-          (outlet.address && outlet.address.toLowerCase().includes(searchTermLower))
+          (outlet.address && outlet.address.toLowerCase().includes(searchTermLower)) ||
+          (outlet.owner_name && outlet.owner_name.toLowerCase().includes(searchTermLower))
         );
       });
     }
@@ -51,7 +61,7 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(outlet => {
-        return statusFilter === 'active' ? outlet.outlet_status : !outlet.outlet_status;
+        return statusFilter === 'active' ? Boolean(outlet.outlet_status) : !Boolean(outlet.outlet_status);
       });
     }
     
@@ -65,19 +75,53 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
     // Apply open filter
     if (openFilter !== 'all') {
       filtered = filtered.filter(outlet => {
-        return openFilter === 'open' ? outlet.is_open : !outlet.is_open;
+        return openFilter === 'open' ? Boolean(outlet.is_open) : !Boolean(outlet.is_open);
       });
     }
     
     // Apply sorting
     if (sortOrder === 'asc') {
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
+      filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else if (sortOrder === 'desc') {
-      filtered.sort((a, b) => b.name.localeCompare(a.name));
+      filtered.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
     }
     
     setFilteredOutlets(filtered);
   }, [searchTerm, outlets, statusFilter, accountFilter, openFilter, sortOrder]);
+
+  // Helper function to title case text
+  const toTitleCase = (str) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Process outlet data to create a unique key for each outlet
+  const processOutletData = (outlets) => {
+    // Create a counter for duplicate outlet IDs
+    const idCounts = {};
+    
+    // Create unique outlets with compound keys
+    return outlets.map(outlet => {
+      const outletId = outlet.outlet_id;
+      
+      // Count occurrences of this outlet ID
+      idCounts[outletId] = (idCounts[outletId] || 0) + 1;
+      
+      // Create a unique compound key based on outlet_id and owner_name
+      const uniqueKey = `${outletId}_${outlet.owner_name || 'unknown'}_${idCounts[outletId]}`;
+      
+      return {
+        ...outlet,
+        uniqueKey: uniqueKey,
+        is_open: Boolean(outlet.is_open),
+        outlet_status: Boolean(outlet.outlet_status)
+      };
+    });
+  };
 
   // Fetch outlets from API
   const fetchOutlets = async () => {
@@ -98,18 +142,12 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       });
 
       if (response.data && response.data.outlets) {
-        const transformedOutlets = response.data.outlets.map(outlet => ({
-          outlet_id: outlet.outlet_id,
-          name: outlet.name || 'Unnamed Outlet',
-          outlet_code: outlet.outlet_code || '',
-          address: outlet.address || '',
-          is_open: outlet.is_open || false,
-          outlet_status: outlet.outlet_status || false,
-          account_type: outlet.account_type || 'live'
-        }));
+        // Process outlet data to handle duplicates with unique keys
+        const processedOutlets = processOutletData(response.data.outlets);
         
-        setOutlets(transformedOutlets);
-        setFilteredOutlets(transformedOutlets);
+        setOutlets(processedOutlets);
+        setFilteredOutlets(processedOutlets);
+        console.log('Fetched and processed outlets:', processedOutlets);
       } else {
         setError('No outlets found');
       }
@@ -128,10 +166,13 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       // Store selected outlet details in localStorage
       localStorage.setItem('outlet_id', outlet.outlet_id);
       localStorage.setItem('outlet_name', outlet.name);
-      localStorage.setItem('outlet_code', outlet.outlet_code);
-      localStorage.setItem('outlet_address', outlet.address);
+      localStorage.setItem('outlet_code', outlet.outlet_code || '');
+      localStorage.setItem('outlet_address', outlet.address || '');
       localStorage.setItem('outlet_status', outlet.outlet_status ? 'active' : 'inactive');
       localStorage.setItem('outlet_is_open', outlet.is_open ? 'open' : 'closed');
+      if (outlet.owner_name) {
+        localStorage.setItem('owner_name', outlet.owner_name);
+      }
     }
     
     // Call onSelect callback
@@ -148,6 +189,19 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
     setAccountFilter('all');
     setOpenFilter('all');
     setSortOrder('default');
+  };
+
+  // Toggle sort order (default -> asc -> desc -> default)
+  const toggleSortOrder = () => {
+    if (sortOrder === 'default') {
+      setSortOrder('asc');
+    }
+    else if (sortOrder === 'asc') {
+      setSortOrder('desc');
+    }
+    else {
+      setSortOrder('default');
+    }
   };
 
   // Handle click outside to close modal
@@ -171,14 +225,14 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div 
         ref={modalRef} 
-        className="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden"
+        className="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-primary-50 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-900">Select Outlet</h3>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-primary-50 border-b flex justify-between items-center">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Select Outlet</h3>
           <button 
             type="button" 
             onClick={onClose} 
@@ -191,15 +245,15 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
         </div>
         
         {/* Search and Filters */}
-        <div className="px-6 py-4 border-b">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b">
           {/* Search Bar */}
-          <div className="relative mb-4">
+          <div className="relative mb-3 sm:mb-4">
             <input
               type="text"
-              placeholder="Search outlets by name, code or location..."
+              placeholder="Search by name, code, location or owner..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-2 pl-10 pr-8 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 text-sm"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,7 +274,7 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
           </div>
           
           {/* Filter and Sort Options */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
             {/* Status Filter */}
             <div>
               <label htmlFor="status-filter" className="block text-xs font-medium text-gray-700 mb-1">Status</label>
@@ -266,37 +320,54 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
               </select>
             </div>
             
-            {/* Sort Order */}
+            {/* Sort Button Instead of Dropdown */}
             <div>
-              <label htmlFor="sort-order" className="block text-xs font-medium text-gray-700 mb-1">Sort By</label>
-              <select
-                id="sort-order"
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full rounded-md border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
+              <label className="block text-xs font-medium text-gray-700 mb-1">Sort</label>
+              <button
+                onClick={toggleSortOrder}
+                className="flex items-center justify-between w-full rounded-md border border-gray-300 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 bg-white hover:bg-gray-50"
               >
-                <option value="default">Default</option>
-                <option value="asc">Name (A-Z)</option>
-                <option value="desc">Name (Z-A)</option>
-              </select>
+                <span className="text-gray-700">
+                  {sortOrder === 'default' ? 'Default' : sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+                </span>
+                <span>
+                  {sortOrder === 'default' && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />
+                    </svg>
+                  )}
+                  {sortOrder === 'asc' && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                    </svg>
+                  )}
+                  {sortOrder === 'desc' && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                    </svg>
+                  )}
+                </span>
+              </button>
             </div>
           </div>
           
-          {/* Reset Filters Button */}
-          <div className="flex justify-end mt-3">
-            <button
-              onClick={resetFilters}
-              className="text-xs text-primary-600 hover:text-primary-800 font-medium focus:outline-none"
-            >
-              Reset Filters
-            </button>
-          </div>
+          {/* Reset Filters Button - Only shown if any filter is active */}
+          {isAnyFilterActive && (
+            <div className="flex justify-end mt-2 sm:mt-3">
+              <button
+                onClick={resetFilters}
+                className="text-xs text-primary-600 hover:text-primary-800 font-medium focus:outline-none"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
         </div>
         
         {/* Outlet List */}
-        <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
+        <div className="overflow-y-auto flex-grow" style={{ maxHeight: 'calc(90vh - 240px)' }}>
           {isLoading ? (
-            <div className="px-6 py-4 text-center text-gray-500">
+            <div className="px-4 sm:px-6 py-4 text-center text-gray-500">
               <svg className="animate-spin mx-auto h-8 w-8 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -304,19 +375,19 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
               <p className="mt-2">Loading outlets...</p>
             </div>
           ) : error ? (
-            <div className="px-6 py-4 text-center text-red-500">
+            <div className="px-4 sm:px-6 py-4 text-center text-red-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="mt-2">{error}</p>
             </div>
           ) : filteredOutlets.length === 0 ? (
-            <div className="px-6 py-4 text-center text-gray-500">
+            <div className="px-4 sm:px-6 py-4 text-center text-gray-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="mt-2">No outlets found</p>
-              {(statusFilter !== 'all' || accountFilter !== 'all' || openFilter !== 'all' || sortOrder !== 'default' || searchTerm) && (
+              {isAnyFilterActive && (
                 <p className="mt-1 text-sm">
                   <button
                     onClick={resetFilters}
@@ -339,68 +410,89 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
                 
                 return (
                   <li 
-                    key={outlet.outlet_id}
+                    key={outlet.uniqueKey}
                     onClick={() => !isCurrentOutlet && !isExcluded && handleOutletSelect(outlet)}
-                    className={`px-6 py-4 transition-colors ${
+                    className={`px-4 sm:px-6 py-3 sm:py-4 transition-colors ${
                       isCurrentOutlet ? 'bg-primary-50' : 
                       isExcluded ? 'bg-gray-100 opacity-60 cursor-not-allowed' : 
                       'cursor-pointer hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex justify-between">
-                      <div>
-                        <div className="flex items-center">
-                          <h4 className="font-medium text-gray-900">{outlet.name}</h4>
-                          {isCurrentOutlet && (
-                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
-                              Current
-                            </span>
-                          )}
-                          {isExcluded && !isCurrentOutlet && (
-                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-600">
-                              Selected
-                            </span>
-                          )}
+                    <div className="flex flex-col">
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <div>
+                          <div className="flex items-center flex-wrap gap-2">
+                            <h4 className="font-medium text-gray-900 uppercase">{outlet.name}</h4>
+                            {isCurrentOutlet && (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
+                                Current
+                              </span>
+                            )}
+                            {isExcluded && !isCurrentOutlet && (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-600">
+                                Selected
+                              </span>
+                            )}
+                          </div>
                         </div>
+                        <div className="flex-shrink-0">
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              outlet.is_open 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {outlet.is_open ? 'Open' : 'Closed'}
+                            </span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              outlet.outlet_status 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {outlet.outlet_status ? 'Active' : 'Inactive'}
+                            </span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              outlet.account_type === 'live'
+                                ? 'bg-indigo-100 text-indigo-800'
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {outlet.account_type === 'live' ? 'Live' : 'Test'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        {/* Owner name */}
+                        {outlet.owner_name && (
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <svg className="flex-shrink-0 h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>{outlet.owner_name}</span>
+                          </div>
+                        )}
+
+                        {/* Address */}
                         {outlet.address && (
-                          <p className="mt-1 text-sm text-gray-500">
-                            <svg className="inline-block h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <svg className="flex-shrink-0 h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            {outlet.address}
-                          </p>
+                            <span className="break-words">{toTitleCase(outlet.address)}</span>
+                          </div>
                         )}
-                      </div>
-                      <div className="ml-2">
+                        
+                        {/* Outlet code */}
                         {outlet.outlet_code && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {outlet.outlet_code}
-                          </span>
+                          <div className="text-sm text-gray-500 flex items-center sm:ml-auto">
+                            <svg className="flex-shrink-0 h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            <span>{outlet.outlet_code}</span>
+                          </div>
                         )}
-                        <div className="mt-1 flex space-x-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            outlet.is_open 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {outlet.is_open ? 'Open' : 'Closed'}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            outlet.outlet_status 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {outlet.outlet_status ? 'Active' : 'Inactive'}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            outlet.account_type === 'live'
-                              ? 'bg-indigo-100 text-indigo-800'
-                              : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {outlet.account_type === 'live' ? 'Live' : 'Test'}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   </li>

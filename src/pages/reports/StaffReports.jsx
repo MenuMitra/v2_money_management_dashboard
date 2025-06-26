@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getStaffReport } from '../../api/reports';
 
@@ -50,15 +51,11 @@ export default function StaffReports() {
         
         if (isActive === true) {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-              Active
-            </span>
+            <div className="text-sm capitalize text-gray-700">Active</div>
           );
         } else if (isActive === false) {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-              Inactive
-            </span>
+            <div className="text-sm capitalize text-gray-700">Inactive</div>
           );
         }
         
@@ -78,15 +75,11 @@ export default function StaffReports() {
         
         if (type === 'operational') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-              Operational
-            </span>
+            <div className="text-sm capitalize text-gray-700">Operational</div>
           );
         } else if (type === 'non-operational') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-              Non-Operational
-            </span>
+            <div className="text-sm capitalize text-gray-700">Non-Operational</div>
           );
         }
         
@@ -141,13 +134,17 @@ export default function StaffReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Staff Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Staff Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze staff data across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable

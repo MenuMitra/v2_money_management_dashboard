@@ -4,6 +4,7 @@ import { useCacheData } from '../context/CacheDataContext';
 import { API_PATHS } from '../api/index';
 import { useOutletWarning } from '../hooks/useOutletId.jsx';
 import { Link, useNavigate } from 'react-router-dom';
+import { Breadcrumb } from '../components';
 
 export default function OutletDetails() {
   const [outletData, setOutletData] = useState({
@@ -137,7 +138,7 @@ export default function OutletDetails() {
     }
     
     try {
-      setIsLoading(true);
+    setIsLoading(true);
       console.log(`Fetching outlet details for outlet ID: ${outletId}${options.isInitialLoad ? ' (initial load)' : ''}`);
       
       // Remember this outlet ID to prevent duplicate fetches (store as number for consistent comparison)
@@ -290,9 +291,115 @@ export default function OutletDetails() {
     
     if (sections.length === 0) return null;
     
+    // Map section keys to icons
+    const sectionIcons = {
+      menu: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      ),
+      menu_category: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      ),
+      section: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+      table: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      ),
+      waiter: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+      captain: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+      manager: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ),
+      chef: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" />
+        </svg>
+      ),
+      Inventory_Items: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      ),
+      Inventory_Category: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+      Inventory_Sub_Category: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      ),
+      supplier: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-lime-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+        </svg>
+      ),
+    };
+    
+    // Get section icon or default
+    const getSectionIcon = (key) => {
+      return sectionIcons[key] || (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      );
+    };
+    
+    // Get icon for the section title
+    const getTitleIcon = () => {
+      if (title.includes('Menu')) {
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        );
+      } else if (title.includes('Staff')) {
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        );
+      } else if (title.includes('Inventory')) {
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        );
+      }
+      return null;
+    };
+    
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-        <h2 className="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100">{title}</h2>
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
+          <h2 className="text-lg font-medium text-gray-800 flex items-center">
+            {getTitleIcon()}
+            {title}
+          </h2>
+          <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            {sections.length} {sections.length === 1 ? "Item" : "Items"}
+          </span>
+        </div>
+        
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {sections.map(([key, countData]) => {
             const displayKey = key
@@ -303,32 +410,42 @@ export default function OutletDetails() {
 
             if (!isLoading && !countData.total && !countData.active && !countData.inactive) return null;
 
-  return (
-              <div key={key} className="bg-gray-50 p-4 rounded-md border border-gray-100 transition-all hover:shadow-md">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-gray-600 capitalize">{displayKey}</p>
-                  <span className="text-xl font-semibold text-gray-800">{isLoading ? "0" : (countData.total || 0)}</span>
-        </div>
+            return (
+              <div key={key} className="bg-white p-4 rounded-lg border border-gray-200 transition-all hover:shadow-md flex flex-col">
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center">
+                    {getSectionIcon(key)}
+                    <p className="text-sm font-medium text-gray-700 capitalize ml-2">{displayKey}</p>
+                  </div>
+                  <div className="bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center">
+                    <span className="text-sm font-semibold text-gray-800">{isLoading ? "0" : (countData.total || 0)}</span>
+                  </div>
+                </div>
                 
-                {/* Only show active count if it exists and is not zero */}
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="mt-auto pt-3 border-t border-gray-100">
                   {(!isLoading && !countData.active && !countData.inactive) ? (
                     <div className="text-center text-xs text-gray-500">No details available</div>
-      ) : (
-        <>
+                  ) : (
+                    <div className="space-y-1.5">
                       {(isLoading || countData.active > 0) && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-500">Active</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></div>
+                            <span className="text-xs text-gray-500">Active</span>
+                          </div>
                           <span className="text-sm font-medium text-green-600">{isLoading ? "0" : countData.active}</span>
-                    </div>
+                        </div>
                       )}
                       {(isLoading || countData.inactive > 0) && (
-                        <div className="flex justify-between items-center mt-1">
-                          <span className="text-xs text-gray-500">Inactive</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5"></div>
+                            <span className="text-xs text-gray-500">Inactive</span>
+                          </div>
                           <span className="text-sm font-medium text-red-500">{isLoading ? "0" : countData.inactive}</span>
-                  </div>
+                        </div>
                       )}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
@@ -355,13 +472,29 @@ export default function OutletDetails() {
     
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-        <h2 className="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100">MenuMitra Usage</h2>
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
+          <h2 className="text-lg font-medium text-gray-800 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            MenuMitra Usage
+          </h2>
+          <span className="bg-green-50 text-green-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            Statistics
+          </span>
+        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {/* Days Since Installation - only show if value > 0 */}
           {(isLoading || (data?.total_days_since_menumitra_was_installed > 0)) && (
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <div className="flex flex-col">
-                <span className="text-sm text-blue-700 mb-1">Days Since Installation</span>
+            <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="flex flex-col relative">
+                <span className="text-sm text-blue-700 mb-1 font-medium">Days Since Installation</span>
                 <span className="text-2xl font-semibold text-blue-900">
                   {isLoading ? "0" : (data?.total_days_since_menumitra_was_installed || 0)}
                 </span>
@@ -371,21 +504,31 @@ export default function OutletDetails() {
           
           {/* Total Orders - only show if value > 0 */}
           {(isLoading || (data?.total_orders_since_menumitra_was_installed > 0)) && (
-            <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-              <div className="flex flex-col">
-                <span className="text-sm text-green-700 mb-1">Total Orders</span>
+            <div className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200 overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <div className="flex flex-col relative">
+                <span className="text-sm text-green-700 mb-1 font-medium">Total Orders</span>
                 <span className="text-2xl font-semibold text-green-900">
                   {isLoading ? "0" : parseInt(data?.total_orders_since_menumitra_was_installed || 0).toLocaleString()}
-                      </span>
+                </span>
               </div>
             </div>
           )}
           
           {/* Total Revenue - only show if value > 0 */}
           {(isLoading || (data?.total_revenue > 0)) && (
-            <div className="bg-purple-50 rounded-lg p-4 border border-purple-100">
-              <div className="flex flex-col">
-                <span className="text-sm text-purple-700 mb-1">Total Revenue</span>
+            <div className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200 overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-purple-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col relative">
+                <span className="text-sm text-purple-700 mb-1 font-medium">Total Revenue</span>
                 <span className="text-2xl font-semibold text-purple-900">
                   {isLoading ? "₹0" : formatIndianCurrency(data?.total_revenue || 0)}
                 </span>
@@ -395,17 +538,22 @@ export default function OutletDetails() {
           
           {/* First Order Date - only show if exists and not N/A */}
           {(isLoading || (data?.first_order_date && data?.first_order_date !== 'N/A')) && (
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-100">
-              <div className="flex flex-col">
-                <span className="text-sm text-amber-700 mb-1">First Order Date</span>
+            <div className="relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200 overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-20">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col relative">
+                <span className="text-sm text-amber-700 mb-1 font-medium">First Order Date</span>
                 <span className="text-2xl font-semibold text-amber-900">
                   {isLoading ? "N/A" : (data?.first_order_date || 'N/A')}
                 </span>
               </div>
             </div>
           )}
-            </div>
-          </div>
+        </div>
+      </div>
     );
   };
 
@@ -416,68 +564,65 @@ export default function OutletDetails() {
     
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-        <h2 className="text-lg font-medium text-gray-800 mb-4 pb-2 border-b border-gray-100">Outlet Owners</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
+          <h2 className="text-lg font-medium text-gray-800 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            Outlet Owners
+          </h2>
+          <span className="bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            {isLoading ? "0" : owners.length} {owners.length === 1 ? "Owner" : "Owners"}
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
-              <p className="text-gray-500">Loading owner information...</p>
+            <div className="bg-gray-50 p-4 rounded-md border border-gray-100 flex items-center">
+              <div className="animate-pulse flex space-x-4 w-full">
+                <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+                <div className="flex-1 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
             </div>
           ) : owners.map((owner) => (
-            <div key={owner.owner_id} className="bg-gray-50 p-4 rounded-md border border-gray-100 hover:shadow-sm transition-all">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium text-gray-900">{owner.owner_name}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {owner.is_primary ? 'Primary Owner' : 'Owner'}
-                  </p>
+            <div key={owner.owner_id} className="bg-white border border-gray-200 p-4 rounded-lg hover:shadow-md transition-all">
+              <div className="flex items-center space-x-3">
+                {/* Owner avatar/icon */}
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-semibold">
+                  {owner.owner_name.charAt(0).toUpperCase()}
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${owner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {owner.is_active ? 'Active' : 'Inactive'}
-                </span>
+                
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">
+                    {owner.owner_name}
+                  </p>
+                  <div className="flex items-center mt-1">
+                    {owner.is_primary && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 mr-1">
+                        Primary
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${owner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {owner.is_active ? 'Active' : 'Inactive'}
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
     );
   };
-  
-  // Breadcrumb component
-  const Breadcrumb = () => {
-    return (
-      <nav className="flex mb-5" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <button 
-              onClick={() => navigate(-1)} 
-              className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600"
-            >
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd"></path>
-              </svg>
-              Back
-            </button>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
-              </svg>
-              <Link to="/" className="ml-1 text-sm font-medium text-gray-600 hover:text-blue-600 md:ml-2">Home</Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
-              </svg>
-              <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Outlet Details</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-    );
-  };
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Outlet Details' }
+  ];
 
   // If no outlet is selected, show warning
   if (!hasOutlet) {
@@ -492,9 +637,9 @@ export default function OutletDetails() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-8">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="space-y-4 p-2 sm:p-3">
         {/* Breadcrumb */}
-        <Breadcrumb />
+        <Breadcrumb items={breadcrumbItems} />
         
         {/* Error state */}
         {error && (
@@ -507,89 +652,151 @@ export default function OutletDetails() {
         <div className="space-y-6">
           {/* Outlet Basic Info */}
           <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b border-gray-100">Outlet Details</h1>
+            <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+              <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+                <button 
+                  onClick={() => navigate(-1)} 
+                  className="mr-3 p-1 rounded-full hover:bg-gray-100"
+                  aria-label="Go back"
+                >
+                  <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </button>
+                Outlet Details
+              </h1>
+            </div>
             
-            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
-              <div>
-                <div className="flex items-center mb-2">
-                  <h2 className="text-xl font-semibold text-gray-900 mr-2">
+            {/* Outlet Cards: Name, Type, Food Type and Code */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {/* Outlet Name and Status */}
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-base font-medium">
                     {isLoading ? "Outlet Name" : (outletData.name || "Outlet Name")}
-                  </h2>
-                  
+                  </div>
                   {!isLoading && !isEmpty(outletData.outlet_status) && (
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${outletData.outlet_status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${outletData.outlet_status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {outletData.outlet_status ? "Active" : "Inactive"}
                     </span>
                   )}
                 </div>
-                {!isLoading && (outletData.outlet_type || outletData.veg_nonveg) && (
-                  <p className="text-gray-600 flex items-center">
-                    {outletData.outlet_type && <span className="capitalize">{outletData.outlet_type}</span>}
-                    {outletData.veg_nonveg && (
-                      <span className="ml-3 flex items-center">
-                        <span className="capitalize">{outletData.veg_nonveg}</span>
-                        <FoodTypeIndicator type={outletData.veg_nonveg} />
-                      </span>
-                    )}
-                  </p>
-                )}
+                <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Name</div>
               </div>
 
-              {/* Only show outlet code if it exists or loading */}
-              {(isLoading || !isEmpty(outletData.outlet_code)) && (
-              <div>
-                  <div className="px-4 py-2 bg-gray-50 rounded-md border border-gray-100 inline-block">
-                    <div className="text-xs text-gray-500 mb-1">Outlet Code</div>
-                    <div className="text-lg font-medium text-gray-800">
-                      {isLoading ? "N/A" : outletData.outlet_code}
-                    </div>
+              {/* Outlet Type */}
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-base font-medium capitalize">
+                    {isLoading ? "N/A" : (outletData.outlet_type || "N/A")}
                   </div>
+                  <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                 </div>
-              )}
+                <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Type</div>
+              </div>
+              
+              {/* Food Type */}
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-base font-medium capitalize flex items-center">
+                    {isLoading ? "N/A" : (outletData.veg_nonveg || "N/A")}
+                    {!isLoading && outletData.veg_nonveg && <FoodTypeIndicator type={outletData.veg_nonveg} />}
                   </div>
+                  <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" />
+                  </svg>
+                </div>
+                <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Food Type</div>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
-              {/* Show contact info only if exists or loading */}
+              {/* Outlet Code */}
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-base font-medium">
+                    {isLoading ? "N/A" : (outletData.outlet_code || "N/A")}
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Code</div>
+              </div>
+            </div>
+            
+            {/* Contact and Timing Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              {/* Contact Detail */}
               {(isLoading || !isEmpty(outletData.mobile)) && (
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <div className="text-xs uppercase text-gray-500 tracking-wider mb-1">Contact</div>
-                  <div className="text-base font-medium">
-                    {isLoading ? "N/A" : outletData.mobile}
+                <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-base font-medium">
+                      {isLoading ? "N/A" : outletData.mobile}
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
                   </div>
+                  <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Contact</div>
                 </div>
               )}
               
-              {/* Show created on only if exists or loading */}
+              {/* Created On */}
               {(isLoading || !isEmpty(outletData.created_on)) && (
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <div className="text-xs uppercase text-gray-500 tracking-wider mb-1">Created On</div>
-                  <div className="text-base font-medium">
-                    {isLoading ? "N/A" : outletData.created_on}
+                <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-base font-medium">
+                      {isLoading ? "N/A" : outletData.created_on}
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
+                  <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Created On</div>
                 </div>
               )}
               
-              {/* Show operating hours only if exists or loading */}
+              {/* Operating Hours */}
               {(isLoading || !isEmpty(outletData.opening_time) || !isEmpty(outletData.closing_time)) && (
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <div className="text-xs uppercase text-gray-500 tracking-wider mb-1">Operating Hours</div>
-                  <div className="text-base font-medium">
-                    {isLoading ? "N/A - N/A" : (
-                      `${!isEmpty(outletData.opening_time) ? formatTime(outletData.opening_time) : 'N/A'} - 
-                      ${!isEmpty(outletData.closing_time) ? formatTime(outletData.closing_time) : 'N/A'}`
-                    )}
+                <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-base font-medium flex-1">
+                      {isLoading ? "N/A - N/A" : (
+                        <>
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Opening:</span>
+                            <span>{!isEmpty(outletData.opening_time) ? formatTime(outletData.opening_time) : 'N/A'}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mt-1">
+                            <span>Closing:</span>
+                            <span>{!isEmpty(outletData.closing_time) ? formatTime(outletData.closing_time) : 'N/A'}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
+                  <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Operating Hours</div>
                 </div>
               )}
             </div>
 
-            {/* Show address section only if exists or loading */}
+            {/* Address */}
             {(isLoading || !isEmpty(outletData.address)) && (
-              <div className="pt-4 border-t border-gray-100">
-                <div className="text-xs uppercase text-gray-500 tracking-wider mb-1">Address</div>
-                <p className="text-base font-medium">
-                  {isLoading ? "N/A" : toTitleCase(outletData.address)}
-                </p>
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                <div className="flex items-start justify-between mb-1">
+                  <div className="text-base font-medium pr-2">
+                    {isLoading ? "N/A" : toTitleCase(outletData.address)}
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Address</div>
               </div>
             )}
           </div>
@@ -635,8 +842,8 @@ export default function OutletDetails() {
             }}
             isLoading={isLoading}
           />
-            </div>
-          </div>
+        </div>
+      </div>
     </div>
   );
 } 

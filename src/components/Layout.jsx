@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import OutletHeader from './OutletHeader';
+import OutletStatusBar from './common/OutletStatusBar';
 import { useOutlet } from '../context/OutletContext';
 import { useAuth } from '../context/AuthContext';
+import DateRangePicker from './DateRangePicker';
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -10,6 +12,10 @@ export default function Layout({ children }) {
   const [reportsOpen, setReportsOpen] = useState(false);
   const { currentOutlet } = useOutlet();
   const { logout } = useAuth();
+  const [dateRange, setDateRange] = useState({ type: 'all' });
+
+  const userName = localStorage.getItem('user_name') || 'User';
+  const role = localStorage.getItem('role') || 'User';
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -21,6 +27,13 @@ export default function Layout({ children }) {
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleDateRangeChange = (range) => {
+    setDateRange(range);
+    // Dispatch a custom event that components can listen for
+    const event = new CustomEvent('daterange:changed', { detail: range });
+    window.dispatchEvent(event);
   };
 
   const navigationItems = [
@@ -66,7 +79,7 @@ export default function Layout({ children }) {
           <div className="flex h-16 items-center justify-between px-4 border-b">
             <div className="flex items-center">
               <img
-                src="public/MenuMitra_logo.png"
+                src="/assets/MenuMitra_logo.png"
                 alt="MenuMitra Logo"
                 className="h-8 w-auto"
               />
@@ -92,6 +105,30 @@ export default function Layout({ children }) {
             </button>
           </div>
 
+          {/* User Profile Section - Only visible on mobile */}
+          <div className="border-b border-gray-200 px-4 py-3 md:hidden">
+            <div className="flex items-center">
+              <div className="h-10 w-10 rounded-full bg-primary-500 text-white flex items-center justify-center mr-3">
+                <span className="font-medium">{userName.charAt(0).toUpperCase()}</span>
+              </div>
+              <div>
+                <p className="font-medium text-gray-800">{userName}</p>
+                <p className="text-xs text-gray-500 capitalize">{role}</p>
+              </div>
+            </div>
+            
+            {/* Date Range Picker only - removed refresh and logout buttons */}
+            <div className="mt-3">
+              {/* Date Range Picker on mobile - only when outlet is selected */}
+              {currentOutlet && (
+                <div className="py-2">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Date Range:</p>
+                  <DateRangePicker onChange={handleDateRangeChange} initialValue="all" />
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
             <ul className="space-y-1">
@@ -104,6 +141,7 @@ export default function Layout({ children }) {
                         ? 'bg-primary-50 text-primary-600'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
+                    onClick={() => setIsSidebarOpen(false)}
                   >
                     <SidebarIcon name={item.icon} />
                     <span className="ml-3">{item.name}</span>
@@ -154,6 +192,7 @@ export default function Layout({ children }) {
                               ? 'bg-primary-50 text-primary-600'
                               : 'text-gray-700 hover:bg-gray-100'
                           }`}
+                          onClick={() => setIsSidebarOpen(false)}
                         >
                           <SidebarIcon name={item.icon} />
                           <span className="ml-3">{item.name}</span>
@@ -165,13 +204,26 @@ export default function Layout({ children }) {
               </li>
             </ul>
           </nav>
+          
+          {/* Logout Button at bottom of sidebar - only visible on mobile */}
+          <div className="border-t border-gray-200 p-4 md:hidden mt-auto">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center px-4 py-3 text-sm font-medium text-red-600 rounded-md hover:bg-red-50"
+            >
+              <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header with Outlet Selector */}
-        <header className="bg-white z-10">
+        <header className="bg-white z-10 shadow-sm">
           <div className="flex justify-between items-center px-4 py-2 sm:px-6 lg:px-8">
             <button
               onClick={toggleSidebar}
@@ -196,6 +248,9 @@ export default function Layout({ children }) {
               <OutletHeader />
             </div>
           </div>
+          
+          {/* Outlet Status Bar - shows on all pages */}
+          <OutletStatusBar />
         </header>
 
         {/* Page Content */}

@@ -4,6 +4,7 @@ import { api, API_PATHS } from '../api/index';
 import { useOutlet } from '../context/OutletContext';
 import { useOutletWarning } from '../hooks/useOutletId.jsx';
 import OutletSelector from '../components/OutletSelector';
+import { Breadcrumb } from '../components';
 
 export default function CompareOutlets() {
   const [isLoading, setIsLoading] = useState(false);
@@ -245,42 +246,11 @@ export default function CompareOutlets() {
     return [currentId, ...selectedIds].filter(Boolean);
   }, [currentOutlet, selectedOutlets]);
 
-  // Breadcrumb component
-  const Breadcrumb = () => {
-    return (
-      <nav className="flex mb-5" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <button 
-              onClick={() => navigate(-1)} 
-              className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600"
-            >
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd"></path>
-              </svg>
-              Back
-            </button>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
-              </svg>
-              <Link to="/" className="ml-1 text-sm font-medium text-gray-600 hover:text-blue-600 md:ml-2">Home</Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
-              </svg>
-              <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Compare Outlets</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-    );
-  };
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Compare Outlets' }
+  ];
 
   // If no outlet is selected, show warning
   if (!hasOutlet) {
@@ -295,14 +265,25 @@ export default function CompareOutlets() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-8">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="space-y-4 p-2 sm:p-3">
         {/* Breadcrumb */}
-        <Breadcrumb />
+        <Breadcrumb items={breadcrumbItems} />
         
         {/* Page Header */}
         <div className="bg-white p-3 rounded-lg shadow-sm mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-800">Compare Outlets</h1>
+            <div className="flex items-center">
+              <button 
+                onClick={() => navigate(-1)} 
+                className="mr-3 p-1 rounded-full hover:bg-gray-100"
+                aria-label="Go back"
+              >
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <h1 className="text-xl font-bold text-gray-800">Compare Outlets</h1>
+            </div>
             
             <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
               {selectedOutlets.length} of {MAX_COMPARE_OUTLETS} outlets selected
@@ -314,7 +295,7 @@ export default function CompareOutlets() {
         {error && (
           <div className="mb-6 p-3 bg-white border border-red-200 rounded-lg bg-red-50">
             <p className="text-red-700">{error}</p>
-      </div>
+          </div>
         )}
 
         {/* Comparison Results Table */}

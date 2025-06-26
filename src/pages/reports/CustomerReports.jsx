@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getCustomerReport } from '../../api/reports';
 
@@ -179,13 +180,17 @@ export default function CustomerReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Customer Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Customer Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze customer data across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <div className="overflow-hidden">

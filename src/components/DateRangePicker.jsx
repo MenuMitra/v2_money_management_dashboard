@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
   const [dateRange, setDateRange] = useState(initialValue);
@@ -6,6 +6,34 @@ const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const datePickerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDropdown(false);
+        setShowCustomRange(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Format a date string (YYYY-MM-DD) to display format (DD MMM YYYY)
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${day} ${month} ${year}`;
+  };
 
   const handleRangeChange = (range) => {
     setDateRange(range);
@@ -50,7 +78,7 @@ const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
         return 'Last Month';
       case 'custom':
         return startDate && endDate
-          ? `${startDate} to ${endDate}`
+          ? `${formatDateForDisplay(startDate)} to ${formatDateForDisplay(endDate)}`
           : 'Custom Range';
       default:
         return 'Select Date Range';
@@ -58,27 +86,27 @@ const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
   };
 
   return (
-    <div className="relative inline-block text-left">
+    <div className="relative w-full inline-block text-left" ref={datePickerRef} style={{ zIndex: 1 }}>
       {/* Dropdown button */}
       <button
         type="button"
-        className="inline-flex justify-between w-full rounded-md border border-gray-300 px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        className="inline-flex justify-between w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary-500"
         onClick={() => setShowDropdown(!showDropdown)}
       >
-        <span className="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span className="flex items-center truncate">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          {getDisplayText()}
+          <span className="truncate">{getDisplayText()}</span>
         </span>
-        <svg className="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-4 w-4 text-gray-500 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {/* Dropdown menu */}
       {showDropdown && (
-        <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-10">
+        <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-[10]">
           <div className="py-1">
             {['all', 'today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'lastMonth'].map((range) => (
               <button
@@ -113,7 +141,7 @@ const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
 
       {/* Custom date range picker */}
       {showCustomRange && (
-        <div className="absolute z-10 mt-2 p-4 bg-white rounded-md shadow-lg border border-gray-200">
+        <div className="absolute z-[10] left-0 sm:right-0 sm:left-auto mt-2 p-4 bg-white rounded-md shadow-lg border border-gray-200 w-full sm:w-auto min-w-[280px]">
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700">Start Date</label>

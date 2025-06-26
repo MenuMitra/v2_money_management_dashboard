@@ -1,78 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
-import { getInventoryReport } from '../../api/reports';
 import { api, API_PATHS } from '../../api';
 
 export default function InventoryReports() {
   const [suppliers, setSuppliers] = useState([]);
-  const [summaryData, setSummaryData] = useState(null);
   // Initialize with minimal required parameters
   const [filterParams, setFilterParams] = useState({
     filter_type: 'all'
   });
 
-  // Fetch summary data when inventory data is loaded
-  const onDataLoaded = (data) => {
-    if (data && data.length > 0 && data[0].summaryData) {
-      setSummaryData(data[0].summaryData);
-    }
-  };
-
   // Define columns for the report table - updated to match exact API response structure
   const columns = [
     {
       header: 'Item Name',
-      accessorKey: 'name',
-      cell: info => (
+      accessor: 'name',
+      Cell: (row) => (
         <div>
-          <span className="font-medium">{info.getValue()}</span>
-          {info.row.original.description && (
-            <p className="text-xs text-gray-500 mt-1">{info.row.original.description}</p>
+          <span className="font-medium">{row.name}</span>
+          {row.description && (
+            <p className="text-xs text-gray-500 mt-1">{row.description}</p>
           )}
         </div>
       )
     },
     {
       header: 'Category',
-      accessorKey: 'category',
-      cell: info => info.getValue() || 'Uncategorized'
+      accessor: 'category',
+      Cell: (row) => row.category || 'Uncategorized'
     },
     {
       header: 'Quantity',
-      accessorKey: 'quantity',
-      cell: info => {
-        const item = info.row.original;
-        return `${item.quantity || 0} ${item.unit_of_measure || 'units'}`;
-      }
+      accessor: 'quantity',
+      Cell: (row) => `${row.quantity || 0} ${row.unit_of_measure || 'units'}`
     },
     {
       header: 'Unit Price',
-      accessorKey: 'unit_price',
-      cell: info => `₹${Number(info.getValue() || 0).toFixed(2)}`
+      accessor: 'unit_price',
+      Cell: (row) => `₹${Number(row.unit_price || 0).toFixed(2)}`
     },
     {
       header: 'Total Value',
-      accessorKey: 'total_value',
-      cell: info => {
-        const item = info.row.original;
-        const totalValue = (item.quantity || 0) * (item.unit_price || 0);
+      accessor: 'total_value',
+      Cell: (row) => {
+        const totalValue = (row.quantity || 0) * (row.unit_price || 0);
         return `₹${totalValue.toFixed(2)}`;
       }
     },
     {
       header: 'Supplier',
-      // Changed from supplier.name to match the actual structure
-      accessorKey: 'supplier',
-      cell: info => {
-        const supplier = info.getValue();
+      accessor: 'supplier',
+      Cell: (row) => {
+        const supplier = row.supplier;
         return supplier && supplier.name ? supplier.name : 'N/A';
       }
-    },
-    {
-      header: 'Created On',
-      accessorKey: 'created_on',
-      cell: info => info.getValue() || 'N/A'
     }
   ];
 
@@ -141,6 +123,34 @@ export default function InventoryReports() {
     loadSuppliers();
   }, []);
 
+  // Custom API callback to handle the nested response format
+  const customInventoryApiCallback = async (params) => {
+    try {
+      const response = await api.post(API_PATHS.inventoryReport, {
+        ...params,
+        outlet_id: localStorage.getItem('outlet_id'),
+        user_id: localStorage.getItem('user_id')
+      });
+      
+      if (response.data && response.data.detail) {
+        // Extract inventory items
+        const inventoryItems = response.data.detail.inventory_items || [];
+        
+        // Process inventory items to ensure they have unique IDs for the table
+        const processedItems = inventoryItems.map((item) => ({
+          ...item
+        }));
+        
+        return processedItems;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error fetching inventory report:', error);
+      throw error;
+    }
+  };
+
   // Render filter components
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
@@ -165,57 +175,26 @@ export default function InventoryReports() {
     </div>
   );
 
-  // Render summary cards
-  const renderSummaryCards = () => {
-    if (!summaryData) return null;
-    
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-700">Total Items</h3>
-          <p className="text-2xl font-bold text-primary-600">{summaryData.total_items || 0}</p>
-          <p className="text-sm text-gray-500">Inventory items</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-700">Total Value</h3>
-          <p className="text-2xl font-bold text-primary-600">₹{(summaryData.total_inventory_value || 0).toFixed(2)}</p>
-          <p className="text-sm text-gray-500">Current inventory value</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-700">Low Stock Items</h3>
-          <p className="text-2xl font-bold text-yellow-600">{summaryData.items_below_reorder_level || 0}</p>
-          <p className="text-sm text-gray-500">Items below reorder level</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-700">Categories</h3>
-          <p className="text-2xl font-bold text-primary-600">
-            {summaryData.category_breakdown ? Object.keys(summaryData.category_breakdown).length : 0}
-          </p>
-          <p className="text-sm text-gray-500">Inventory categories</p>
-        </div>
-      </div>
-    );
-  };
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Inventory Reports' }
+  ];
 
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Inventory Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          View and analyze inventory data across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
-      
-      {summaryData && renderSummaryCards()}
       
       <ReportTable
         title="Inventory Reports"
         columns={columns}
-        apiCallback={getInventoryReport}
+        apiCallback={customInventoryApiCallback}
         filterParams={filterParams}
         filterComponent={renderFilters()}
         initialSortConfig={{ key: 'name', direction: 'asc' }}
-        onDataLoaded={onDataLoaded}
       />
     </div>
   );

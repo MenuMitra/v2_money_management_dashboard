@@ -4,7 +4,7 @@ import { utils, write } from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-const RECORDS_PER_PAGE = 15; // Number of records to show initially and on each "Load More" click
+const RECORDS_PER_PAGE_OPTIONS = [50, 100, 200, 500];
 
 const ReportTable = ({
   title,
@@ -21,7 +21,8 @@ const ReportTable = ({
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [displayedData, setDisplayedData] = useState([]);
-  const [visibleRecords, setVisibleRecords] = useState(RECORDS_PER_PAGE);
+  const [visibleRecords, setVisibleRecords] = useState(RECORDS_PER_PAGE_OPTIONS[0]);
+  const [recordsPerPage, setRecordsPerPage] = useState(RECORDS_PER_PAGE_OPTIONS[0]);
   const [sortConfig, setSortConfig] = useState(initialSortConfig);
   const [selectedColumns, setSelectedColumns] = useState({});
   const [selectedRows, setSelectedRows] = useState({});
@@ -29,6 +30,8 @@ const ReportTable = ({
   const [columnSearchQueries, setColumnSearchQueries] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [isReportGenerated, setIsReportGenerated] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Initialize column selection state
   useEffect(() => {
@@ -72,6 +75,14 @@ const ReportTable = ({
       setLoading(true);
       setError(null);
       setIsReportGenerated(false);
+      
+      // Reset search state
+      setSearchQuery('');
+      const initialSearchQueries = {};
+      columns.forEach(column => {
+        initialSearchQueries[column.accessor] = '';
+      });
+      setColumnSearchQueries(initialSearchQueries);
       
       const response = await apiCallback(filterParams);
       
@@ -124,8 +135,8 @@ const ReportTable = ({
     });
     
     setFilteredData(filtered);
-    setVisibleRecords(RECORDS_PER_PAGE); // Reset pagination on new filter
-  }, [searchQuery, columnSearchQueries, data, columns]);
+    setVisibleRecords(recordsPerPage); // Reset pagination on new filter
+  }, [searchQuery, columnSearchQueries, data, columns, recordsPerPage]);
 
   // Update displayed data when filtered data or visible records count changes
   useEffect(() => {
@@ -191,7 +202,7 @@ const ReportTable = ({
 
   // Handle load more
   const handleLoadMore = () => {
-    setVisibleRecords(prev => prev + RECORDS_PER_PAGE);
+    setVisibleRecords(prev => prev + recordsPerPage);
   };
 
   // Toggle column selection
@@ -359,39 +370,51 @@ const ReportTable = ({
   // Calculate stats
   const selectedRowCount = Object.values(selectedRows).filter(Boolean).length;
   const selectedColumnCount = Object.values(selectedColumns).filter(Boolean).length;
+
+  // Handle records per page change
+  const handleRecordsPerPageChange = (e) => {
+    const newRecordsPerPage = parseInt(e.target.value, 10);
+    setRecordsPerPage(newRecordsPerPage);
+    setVisibleRecords(newRecordsPerPage);
+  };
   
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
       {/* Report Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
         <div className="flex flex-wrap items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center mb-3 sm:mb-0">
             <button
               onClick={() => window.history.back()}
-              className="mr-3 text-gray-600 hover:text-gray-800 focus:outline-none"
+              className="flex items-center mr-3 px-3 py-1.5 rounded-full bg-white shadow-sm text-gray-600 hover:text-gray-800 focus:outline-none"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
               </svg>
+              Back
             </button>
             <h2 className="text-lg font-semibold text-gray-800">{title || 'Report'}</h2>
           </div>
         </div>
         
-        {/* Filter Area - Centered with Generate Button */}
-        <div className="mt-4">
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {filterComponent}
+        {/* Filter Area - Stack on mobile, flex on desktop */}
+        <div className="mt-4 relative" style={{ zIndex: 1 }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Custom filters - full width on mobile */}
+            <div className="w-full sm:w-auto relative z-1">
+              {filterComponent}
+            </div>
             
+            {/* Generate Button - full width on mobile */}
             <button
               onClick={handleGenerateReport}
               disabled={loading}
-              className={`px-4 py-2 rounded-md text-white font-medium focus:outline-none ${
+              className={`w-full sm:w-auto px-4 py-2 rounded-md text-white font-medium focus:outline-none ${
                 loading ? 'bg-primary-300' : 'bg-primary-600 hover:bg-primary-700'
               }`}
             >
               {loading ? (
-                <div className="flex items-center">
+                <div className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -404,7 +427,8 @@ const ReportTable = ({
           
           {/* Stats and Settings */}
           {isReportGenerated && (
-            <div className="mt-3 flex items-center justify-between">
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+              {/* Stats - left side */}
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">
                   {filteredData.length} records • {columns.length} columns
@@ -422,60 +446,16 @@ const ReportTable = ({
                 </button>
               </div>
               
-              <div className="flex items-center space-x-3">
-                {/* Export Buttons */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={exportToExcel}
-                    className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                    </svg>
-                    Excel
-                  </button>
-                  
-                  <CSVLink
-                    data={getExportData()}
-                    filename={`${title || 'report'}.csv`}
-                    className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                    </svg>
-                    CSV
-                  </CSVLink>
-                  
-                  <button
-                    onClick={exportToPDF}
-                    className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                    </svg>
-                    PDF
-                  </button>
-                </div>
-                
-                {/* Refresh Button */}
-                <button
-                  onClick={handleGenerateReport}
-                  className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
-                  title="Refresh Report"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-                
+              {/* Search and Export - right side */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
                 {/* Global Search */}
-                <div className="relative">
+                <div className="relative w-full sm:w-auto">
                   <input
                     type="text"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm w-48"
+                    className="w-full pl-8 pr-8 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm"
                   />
                   <svg
                     className="absolute left-2.5 top-2 h-4 w-4 text-gray-400"
@@ -486,6 +466,101 @@ const ReportTable = ({
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1.5 h-5 w-5 text-gray-400 hover:text-gray-600 rounded-full flex items-center justify-center focus:outline-none"
+                      title="Clear search"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Hidden on mobile, visible on desktop */}
+                <div className="hidden sm:flex items-center space-x-2">
+                  {/* Export Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={exportToExcel}
+                      className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                      </svg>
+                      Excel
+                    </button>
+                    
+                    <CSVLink
+                      data={getExportData()}
+                      filename={`${title || 'report'}.csv`}
+                      className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                      </svg>
+                      CSV
+                    </CSVLink>
+                    
+                    <button
+                      onClick={exportToPDF}
+                      className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                      </svg>
+                      PDF
+                    </button>
+                  </div>
+                  
+                  {/* Refresh Button */}
+                  <button
+                    onClick={handleGenerateReport}
+                    className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
+                    title="Refresh Report"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Mobile export menu button */}
+                <div className="sm:hidden w-full flex justify-center mt-3">
+                  <div className="flex space-x-3 w-full">
+                    <button
+                      onClick={exportToExcel}
+                      className="flex-1 px-3 py-2 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                      </svg>
+                      Excel
+                    </button>
+                    
+                    <CSVLink
+                      data={getExportData()}
+                      filename={`${title || 'report'}.csv`}
+                      className="flex-1 px-3 py-2 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                      </svg>
+                      CSV
+                    </CSVLink>
+                    
+                    <button
+                      onClick={exportToPDF}
+                      className="flex-1 px-3 py-2 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
+                      </svg>
+                      PDF
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -494,10 +569,9 @@ const ReportTable = ({
       </div>
       
       {/* Report Content - Only shown after generation */}
+      <div className="relative" style={{ zIndex: 1 }}>
       {isReportGenerated && (
         <>
-          {/* Search and Export Tools - Only shown when settings are enabled */}
-        
           {/* Error Message */}
           {error && (
             <div className="px-6 py-4 bg-red-50 border-b border-red-100">
@@ -510,8 +584,8 @@ const ReportTable = ({
             </div>
           )}
 
-          {/* No Data Message */}
-          {displayedData.length === 0 && !loading && !error && (
+            {/* No Data Message - Only shown when data array is empty */}
+            {data.length === 0 && !loading && !error && (
             <div className="px-6 py-12 text-center">
               <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -521,15 +595,15 @@ const ReportTable = ({
             </div>
           )}
           
-          {/* Table */}
-          {displayedData.length > 0 && !loading && !error && (
+            {/* Table - Always shown when data exists */}
+            {data.length > 0 && !loading && !error && (
             <>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 border-collapse">
                   <thead className="bg-gray-50">
                     {/* Checkboxes Row - Only shown when settings are enabled */}
                     {showSettings && (
-                      <tr>
+                        <tr className="border-b border-gray-200">
                         <th className="px-3 py-2 border-r border-gray-200 text-center">
                           <button
                             onClick={toggleAllRows}
@@ -569,33 +643,14 @@ const ReportTable = ({
                       </tr>
                     )}
                     
-                    {/* Column Search Row - Only shown when settings are enabled */}
-                    {showSettings && (
-                      <tr>
-                        <th className="px-2 py-2 border-r border-gray-200"></th>
-                        <th className="px-2 py-2 border-r border-gray-200"></th>
-                        {columns.map(column => (
-                          <th key={`search-${column.accessor}`} className="px-2 py-2 border-r border-gray-200">
-                            <input
-                              type="text"
-                              placeholder={`Search...`}
-                              value={columnSearchQueries[column.accessor] || ''}
-                              onChange={e => handleColumnSearch(column.accessor, e.target.value)}
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                            />
-                          </th>
-                        ))}
-                      </tr>
-                    )}
-                    
                     {/* Headers Row */}
-                    <tr>
+                      <tr className="border-b border-gray-200">
                       {showSettings && (
                         <>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Select
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Sr No
                           </th>
                         </>
@@ -604,7 +659,7 @@ const ReportTable = ({
                         <th
                           key={column.accessor}
                           scope="col"
-                          className={`px-3 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer whitespace-nowrap border-r border-gray-200 ${
+                            className={`px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer whitespace-nowrap border-r border-gray-200 ${
                             selectedColumns[column.accessor] ? 'text-gray-500' : 'text-gray-400 bg-gray-50'
                           }`}
                           onClick={() => column.sortable !== false && handleSort(column.accessor)}
@@ -616,9 +671,54 @@ const ReportTable = ({
                         </th>
                       ))}
                     </tr>
+                      
+                      {/* Column Search Row - Only shown when settings are enabled */}
+                      {showSettings && (
+                        <tr className="border-b border-gray-200">
+                          <th className="px-2 py-2 border-r border-gray-200"></th>
+                          <th className="px-2 py-2 border-r border-gray-200"></th>
+                          {columns.map(column => (
+                            <th key={`search-${column.accessor}`} className="px-2 py-2 border-r border-gray-200">
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  placeholder={`Search...`}
+                                  value={columnSearchQueries[column.accessor] || ''}
+                                  onChange={e => handleColumnSearch(column.accessor, e.target.value)}
+                                  className="w-full px-2 pr-7 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                                />
+                                {columnSearchQueries[column.accessor] && (
+                                  <button
+                                    onClick={() => handleColumnSearch(column.accessor, '')}
+                                    className="absolute right-1.5 top-1 h-4 w-4 text-gray-400 hover:text-gray-600 rounded-full flex items-center justify-center focus:outline-none"
+                                    title="Clear search"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                      )}
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {displayedData.map((row, index) => {
+                      {displayedData.length === 0 ? (
+                        <tr>
+                          <td colSpan={showSettings ? columns.length + 2 : columns.length} className="px-3 py-6 text-center text-gray-500">
+                            <div className="flex flex-col items-center justify-center">
+                              <svg className="h-10 w-10 text-gray-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="text-gray-500 font-medium">No matching records found</p>
+                              <p className="text-sm text-gray-400 mt-1">Try adjusting your search criteria</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        displayedData.map((row, index) => {
                       const rowId = getRowId(row);
                       const isRowSelected = selectedRows[rowId];
                       return (
@@ -628,7 +728,7 @@ const ReportTable = ({
                         >
                           {showSettings && (
                             <>
-                              <td className="px-3 py-3 whitespace-nowrap border-r border-gray-200">
+                                  <td className="px-3 py-2 whitespace-nowrap border-r border-gray-200">
                                 <button
                                   onClick={() => toggleRowSelection(rowId)}
                                   className={`p-1.5 rounded-full ${isRowSelected ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'} hover:bg-primary-50 focus:outline-none`}
@@ -647,7 +747,7 @@ const ReportTable = ({
                                   )}
                                 </button>
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap border-r border-gray-200 text-center font-medium">
+                                  <td className="px-3 py-2 whitespace-nowrap border-r border-gray-200 text-center font-medium">
                                 {index + 1}
                               </td>
                             </>
@@ -655,7 +755,7 @@ const ReportTable = ({
                           {columns.map(column => (
                             <td 
                               key={`${rowId}-${column.accessor}`} 
-                              className={`px-3 py-3 whitespace-nowrap border-r border-gray-200 ${
+                                  className={`px-3 py-2 whitespace-nowrap border-r border-gray-200 ${
                                 !isRowSelected ? 'bg-gray-50 text-gray-400' : 
                                 selectedColumns[column.accessor] ? '' : 'bg-gray-50 text-gray-400'
                               }`}
@@ -665,7 +765,8 @@ const ReportTable = ({
                           ))}
                         </tr>
                       );
-                    })}
+                        })
+                      )}
                   </tbody>
                 </table>
               </div>
@@ -673,8 +774,36 @@ const ReportTable = ({
               {/* Table Footer */}
               <div className="px-6 py-3 border-t border-gray-200 bg-white">
                 <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      {/* Records Per Page Dropdown - Moved to left side */}
+                      <div className="flex items-center gap-2">
+                        <label htmlFor="recordsPerPage" className="text-sm text-gray-500 whitespace-nowrap mr-1">
+                          Records per page:
+                        </label>
+                        <div className="relative">
+                          <select
+                            id="recordsPerPage"
+                            value={recordsPerPage}
+                            onChange={handleRecordsPerPageChange}
+                            className="px-2 py-1 pr-8 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 appearance-none"
+                          >
+                            {RECORDS_PER_PAGE_OPTIONS.map(option => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      
                   <div className="text-sm text-gray-500">
                     Showing <span className="font-medium">{Math.min(visibleRecords, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span> records
+                      </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -727,6 +856,7 @@ const ReportTable = ({
           )}
         </>
       )}
+      </div>
     </div>
   );
 };

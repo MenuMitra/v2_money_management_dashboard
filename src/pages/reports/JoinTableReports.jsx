@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getJoinTableReport } from '../../api/reports';
 import { api, API_PATHS } from '../../api';
@@ -67,21 +68,21 @@ export default function JoinTableReports() {
         const status = row.status?.toLowerCase();
         if (status === 'joined') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-              Joined
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.status}
+            </div>
           );
         } else if (status === 'separated') {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-              Separated
-            </span>
+            <div className="text-sm capitalize text-gray-700">
+              {row.status}
+            </div>
           );
         } else {
           return (
-            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+            <div className="text-sm capitalize text-gray-700">
               {row.status || 'Unknown'}
-            </span>
+            </div>
           );
         }
       }
@@ -167,13 +168,17 @@ export default function JoinTableReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Join Table Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Join Table Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Track table joining operations across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable

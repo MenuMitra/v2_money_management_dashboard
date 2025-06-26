@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ReportTable } from '../../components/common';
+import { Breadcrumb } from '../../components';
 import DateRangePicker from '../../components/DateRangePicker';
 import { getPaymentSettleReport } from '../../api/reports';
 
@@ -91,13 +92,17 @@ export default function PaymentSettleReports() {
     </div>
   );
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { text: 'Dashboard', url: '/' },
+    { text: 'Reports', url: '/reports' },
+    { text: 'Payment Settlement Reports' }
+  ];
+
   return (
     <div className="py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Payment Settlement Reports</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Track payment settlement changes across your outlet
-        </p>
+      <div className="mb-3">
+        <Breadcrumb items={breadcrumbItems} />
       </div>
       
       <ReportTable
