@@ -60,7 +60,7 @@ export default function Dashboard() {
           {/* Compare Outlets Card */}
           <NavigationCard 
             title="Compare Outlets" 
-            description="Compare performance metrics across outlets" 
+            description="Compare outlet performance" 
             icon={<FaExchangeAlt size={24} />} 
             to="/compare-outlets"
             bgColor="bg-green-50"
