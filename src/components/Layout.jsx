@@ -224,7 +224,7 @@ export default function Layout({ children }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header with Outlet Selector */}
         <header className="bg-white z-10 shadow-sm">
-          <div className="flex justify-between items-center px-4 py-2 sm:px-6 lg:px-8">
+          <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
             <button
               onClick={toggleSidebar}
               className="p-2 rounded-md text-gray-500 lg:hidden"

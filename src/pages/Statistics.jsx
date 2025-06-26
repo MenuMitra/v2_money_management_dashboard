@@ -1020,13 +1020,13 @@ const AppUsageStatsChart = ({ appUsageData }) => {
   if (!appUsageData) return null;
 
   const data = [
-    { name: 'Owner App', value: appUsageData.owner_app || 0 },
-    { name: 'POS App', value: appUsageData.pos_app || 0 },
-    { name: 'Waiter App', value: appUsageData.waiter_app || 0 },
-    { name: 'Captain App', value: appUsageData.captain_app || 0 },
-    { name: 'Customer App', value: appUsageData.user_app || 0 },
-    { name: 'KDS App', value: appUsageData.kds_app || 0 },
-    { name: 'CDS App', value: appUsageData.cds_app || 0 }
+    { name: 'Owner App', value: Math.max(0, appUsageData.owner_app || 0) },
+    { name: 'POS App', value: Math.max(0, appUsageData.pos_app || 0) },
+    { name: 'Waiter App', value: Math.max(0, appUsageData.waiter_app || 0) },
+    { name: 'Captain App', value: Math.max(0, appUsageData.captain_app || 0) },
+    { name: 'Customer App', value: Math.max(0, appUsageData.user_app || 0) },
+    { name: 'KDS App', value: Math.max(0, appUsageData.kds_app || 0) },
+    { name: 'CDS App', value: Math.max(0, appUsageData.cds_app || 0) }
   ];
 
   // Check if any app has usage data
@@ -1055,7 +1055,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
     dataLabels: {
       enabled: true,
       formatter: function (val) {
-        return val;
+        return val > 0 ? val : '';
       },
       style: {
         fontSize: '12px',
@@ -1089,9 +1089,10 @@ const AppUsageStatsChart = ({ appUsageData }) => {
       },
       labels: {
         formatter: function (val) {
-          return val.toFixed(0);
+          return Math.max(0, val).toFixed(0);
         }
       },
+      min: 0,
       max: function(max) {
         // Ensure the max is at least 150 to match the image or 20% higher than the largest value
         return Math.max(150, max * 1.2);
@@ -1120,7 +1121,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
     tooltip: {
       y: {
         formatter: function (val) {
-          return val + " usages";
+          return Math.max(0, val) + " usages";
         }
       }
     },
@@ -1131,7 +1132,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
 
   const series = [{
     name: 'Usage',
-    data: data.map(d => d.value)
+    data: data.map(d => Math.max(0, d.value))
   }];
 
   return (
