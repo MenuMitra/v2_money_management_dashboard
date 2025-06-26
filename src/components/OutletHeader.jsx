@@ -69,7 +69,7 @@ const OutletHeader = () => {
           {/* Outlet selector button */}
           <button 
             onClick={handleOpenModal}
-            className="flex items-center h-10 px-3 text-sm font-medium text-gray-700 focus:outline-none border border-gray-300 rounded-md bg-white hover:bg-gray-50 justify-between min-w-[150px] mr-3"
+            className="flex items-center h-9 px-3 text-sm font-medium text-gray-700 focus:outline-none border border-gray-300 rounded-md bg-white hover:bg-gray-50 justify-between min-w-[150px] mr-3"
           >
             <div className="flex items-center">
               {loading ? (
@@ -95,15 +95,15 @@ const OutletHeader = () => {
         </div>
         
         {/* Right section with refresh button and profile */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 h-9">
           {/* Refresh Button - only show when an outlet is selected */}
           {currentOutlet && (
             <button 
               onClick={handleRefresh}
-              className="h-10 w-10 flex items-center justify-center rounded-full text-gray-600 hover:text-primary-600 hover:bg-gray-100 focus:outline-none transition-colors border border-gray-300 hidden md:flex"
+              className="h-9 w-9 flex items-center justify-center rounded-full text-gray-600 hover:text-primary-600 hover:bg-gray-100 focus:outline-none transition-colors border border-gray-300 hidden md:flex"
               title="Refresh"
             >
-              <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -112,16 +112,16 @@ const OutletHeader = () => {
           {/* Profile with Role - always visible */}
           <div 
             ref={profileRef}
-            className="relative flex items-center h-10"
+            className="relative flex items-center h-9"
             onClick={toggleLogout}
           >
             <div className="flex items-center cursor-pointer">
-              <div className="h-8 w-8 rounded-full bg-primary-500 text-white flex items-center justify-center mr-2">
-                <span className="font-medium">{userName.charAt(0).toUpperCase()}</span>
+              <div className="h-7 w-7 rounded-full bg-primary-500 text-white flex items-center justify-center mr-2">
+                <span className="font-medium text-sm">{userName.charAt(0).toUpperCase()}</span>
               </div>
               <div className="text-sm hidden md:block">
-                <p className="text-gray-700 font-medium">{userName}</p>
-                <p className="text-xs text-gray-500 capitalize">{role}</p>
+                <p className="text-gray-700 font-medium leading-tight">{userName}</p>
+                <p className="text-xs text-gray-500 capitalize leading-tight">{role}</p>
               </div>
             </div>
             
