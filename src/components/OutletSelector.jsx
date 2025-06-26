@@ -307,7 +307,7 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
           </div>
           
           {/* Filter and Sort Options */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
             {/* Status Filter */}
             <div>
               <label htmlFor="status-filter" className="block text-xs font-medium text-gray-700 mb-1">Status</label>
@@ -493,7 +493,7 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
                         </div>
                       </div>
                       
-                      <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <div className="mt-2 flex flex-row flex-wrap items-center gap-2">
                         {/* Owner name */}
                         {outlet.owner_name && (
                           <div className="text-sm text-gray-500 flex items-center">
@@ -503,21 +503,10 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
                             <span>{outlet.owner_name}</span>
                           </div>
                         )}
-
-                        {/* Address */}
-                        {outlet.address && (
-                          <div className="text-sm text-gray-500 flex items-center">
-                            <svg className="flex-shrink-0 h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="break-words">{toTitleCase(outlet.address)}</span>
-                          </div>
-                        )}
                         
                         {/* Outlet code */}
                         {outlet.outlet_code && (
-                          <div className="text-sm text-gray-500 flex items-center sm:ml-auto">
+                          <div className="text-sm text-gray-500 flex items-center ml-auto">
                             <svg className="flex-shrink-0 h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                             </svg>
@@ -525,6 +514,17 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
                           </div>
                         )}
                       </div>
+
+                      {/* Address on separate line */}
+                      {outlet.address && (
+                        <div className="mt-1 text-sm text-gray-500 flex items-center">
+                          <svg className="flex-shrink-0 h-4 w-4 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="break-words">{toTitleCase(outlet.address)}</span>
+                        </div>
+                      )}
                     </div>
                   </li>
                 );

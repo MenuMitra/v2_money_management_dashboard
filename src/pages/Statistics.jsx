@@ -8,7 +8,25 @@ import { useNavigate } from 'react-router-dom';
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
-  if (!foodTypeData) return null;
+  // Early return with empty container if no data
+  if (!foodTypeData) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
+          <p className="text-sm text-gray-500 mb-3">Distribution of food types across days of the week</p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[350px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No chart data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Extract data from the foodTypeData object
   const days = Object.keys(foodTypeData);
@@ -19,8 +37,25 @@ const FoodTypeChart = ({ foodTypeData }) => {
     return foodTypes.some(type => (foodTypeData[day][type] || 0) > 0);
   });
   
-  // Check if there's any data
-  if (filteredDays.length === 0) return null;
+  // Check if there's any data - render empty container if no data
+  if (filteredDays.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
+          <p className="text-sm text-gray-500 mb-3">Distribution of food types across days of the week</p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[350px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No food type data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Food type badge definitions with colors and labels
   const foodTypeBadges = {
@@ -138,14 +173,49 @@ const FoodTypeChart = ({ foodTypeData }) => {
 
 // Revenue Trend Chart Component
 const RevenueTrendChart = ({ revenueData }) => {
-  if (!revenueData || Object.keys(revenueData).length === 0) return null;
+  // Early return with empty container if no data
+  if (!revenueData || Object.keys(revenueData).length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Revenue Trend</h3>
+          <p className="text-sm text-gray-500">Daily revenue over time</p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[350px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No revenue data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Extract dates and revenue values
   const dates = Object.keys(revenueData).sort();
   const revenues = dates.map(date => revenueData[date] || 0);
   
   // Check if there's any non-zero data
-  if (!revenues.some(value => value > 0)) return null;
+  if (!revenues.some(value => value > 0)) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Revenue Trend</h3>
+          <p className="text-sm text-gray-500">Daily revenue over time</p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[350px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No revenue data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Format dates for display
   const formattedDates = dates.map(date => {
@@ -250,14 +320,49 @@ const RevenueTrendChart = ({ revenueData }) => {
 
 // Order Trend Chart Component
 const OrderTrendChart = ({ orderData }) => {
-  if (!orderData || Object.keys(orderData).length === 0) return null;
+  // Early return with empty container if no data
+  if (!orderData || Object.keys(orderData).length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Order Trend</h3>
+          <p className="text-sm text-gray-500">Daily order count over time</p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[350px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No order data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Extract dates and order counts
   const dates = Object.keys(orderData).sort();
   const orders = dates.map(date => orderData[date] || 0);
   
   // Check if there's any non-zero data
-  if (!orders.some(value => value > 0)) return null;
+  if (!orders.some(value => value > 0)) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Order Trend</h3>
+          <p className="text-sm text-gray-500">Daily order count over time</p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[350px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No order data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Format dates for display
   const formattedDates = dates.map(date => {
@@ -553,7 +658,29 @@ const PaymentMethodChart = ({ paymentData }) => {
 
 // Collection Sources Card Component
 const CollectionSourcesCard = ({ collectionData }) => {
-  if (!collectionData) return null;
+  // Early return with empty container if no data
+  if (!collectionData) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
+            <p className="text-sm text-gray-500">
+              <span className="font-medium text-gray-900">Total: ₹0</span>
+            </p>
+          </div>  
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No collection data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -572,8 +699,29 @@ const CollectionSourcesCard = ({ collectionData }) => {
     (collectionData.udhari_amount || 0) +
     (collectionData.advance_payment_amount || 0);
 
-  // If total amount is 0, don't render the card
-  if (totalAmount === 0) return null;
+  // If total amount is 0, show empty container
+  if (totalAmount === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
+            <p className="text-sm text-gray-500">
+              <span className="font-medium text-gray-900">Total: ₹0</span>
+            </p>
+          </div>  
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No collection data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Prepare data for progress bars
   const paymentMethods = [
@@ -616,15 +764,15 @@ const CollectionSourcesCard = ({ collectionData }) => {
   ].filter(method => method.amount > 0);
 
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-              <p className="text-sm text-gray-500">
-                  <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
-              </p>
-              </div>  
-            </div>
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
+          <p className="text-sm text-gray-500">
+            <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
+          </p>
+        </div>  
+      </div>
       <div className="p-5 space-y-4">
         {paymentMethods.map((method, index) => (
           <div key={index} className="space-y-2">
@@ -633,7 +781,7 @@ const CollectionSourcesCard = ({ collectionData }) => {
               <span className="text-sm">
                 <span className="font-medium text-gray-900">{formatCurrency(method.amount)}</span> <span className="text-gray-500">({method.orders} orders)</span>
               </span>
-              </div>
+            </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
                 className={`${method.color} h-2.5 rounded-full`} 
@@ -649,7 +797,24 @@ const CollectionSourcesCard = ({ collectionData }) => {
 
 // Order Statistics Card Component
 const OrderStatisticsCard = ({ orderStats }) => {
-  if (!orderStats) return null;
+  // Early return with empty container if no data
+  if (!orderStats) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No order statistics available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const orderTypes = [
     {
@@ -704,8 +869,24 @@ const OrderStatisticsCard = ({ orderStats }) => {
     }
   ].filter(type => type.count > 0);
 
-  // If no order types have non-zero counts, don't render the card
-  if (orderTypes.length === 0) return null;
+  // If no order types have non-zero counts, show empty container
+  if (orderTypes.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No order statistics available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1213,7 +1394,26 @@ const CategoryPerformanceCard = ({ categoryData }) => {
 
 // Top Combo Orders Card Component
 const TopComboOrdersCard = ({ comboData }) => {
-  if (!comboData || !Array.isArray(comboData) || comboData.length === 0) return null;
+  if (!comboData || !Array.isArray(comboData) || comboData.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Top Combo Orders</h3>
+          <p className="text-sm text-gray-500">
+            Most frequently ordered combinations
+          </p>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No combo order data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1222,11 +1422,11 @@ const TopComboOrdersCard = ({ comboData }) => {
         <p className="text-sm text-gray-500">
           Most frequently ordered combinations
         </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 #
               </th>
@@ -1236,9 +1436,9 @@ const TopComboOrdersCard = ({ comboData }) => {
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Order Count
               </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
             {comboData.map((combo, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -1255,18 +1455,34 @@ const TopComboOrdersCard = ({ comboData }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                   {combo.order_count}
                 </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
 // Advanced Payment Stats Card Component
 const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
-  if (!udhariData && !advancePaymentData) return null;
+  if (!udhariData && !advancePaymentData) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No payment data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Check if there's any non-zero data
   const hasUdhariData = udhariData && 
@@ -1281,7 +1497,23 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
      advancePaymentData.settled_payment.amount > 0 || 
      advancePaymentData.settled_payment.count > 0);
 
-  if (!hasUdhariData && !hasAdvancePaymentData) return null;
+  if (!hasUdhariData && !hasAdvancePaymentData) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
+        </div>
+        <div className="p-5 flex items-center justify-center h-[200px]">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-2">No payment data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -1649,103 +1881,69 @@ export default function Statistics() {
         </div>
       )}
       
-      {!hasAnyData ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No data available</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            There is no statistical data available for this outlet.
-          </p>
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => fetchStatistics({ outlet_id: outletId }, true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none"
-            >
-              Refresh Data
-            </button>
-          </div>
+      {/* Always render all components, they will handle empty states internally */}
+      <>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SummaryCard
+            value={statistics?.analytic_reports?.total_orders || 0}
+            title="Total Orders"
+            icon="orders"
+          />
+          <SummaryCard
+            value={formatCurrency(statistics?.analytic_reports?.total_revenue || 0)}
+            title="Total Revenue"
+            icon="revenue"
+          />
+          <SummaryCard
+            value={formatCurrency(statistics?.analytic_reports?.avg_order_value || 0)}
+            title="Avg. Order Value"
+            icon="average"
+          />
+          <SummaryCard
+            value={formatTurnoverTime(statistics?.analytic_reports?.average_turnover_time || '0 min')}
+            title="Avg. Turnover Time"
+            icon="time"
+          />
         </div>
-      ) : (
-        <>
-          {/* Summary Cards */}
-          {hasAnalytics && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <SummaryCard
-                value={statistics.analytic_reports.total_orders || 0}
-                title="Total Orders"
-                icon="orders"
-              />
-              <SummaryCard
-                value={formatCurrency(statistics.analytic_reports.total_revenue || 0)}
-                title="Total Revenue"
-                icon="revenue"
-              />
-              <SummaryCard
-                value={formatCurrency(statistics.analytic_reports.avg_order_value || 0)}
-                title="Avg. Order Value"
-                icon="average"
-              />
-              <SummaryCard
-                value={formatTurnoverTime(statistics.analytic_reports.average_turnover_time || '0 min')}
-                title="Avg. Turnover Time"
-                icon="time"
-              />
-            </div>
-          )}
-          
-          {/* Collection Sources and Order Statistics */}
-          {(hasCollectionSource || hasOrderStatistics) && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {hasCollectionSource && <CollectionSourcesCard collectionData={statistics.total_collection_source} />}
-              {hasOrderStatistics && <OrderStatisticsCard orderStats={statistics.order_statistics} />}
-            </div>
-          )}
-          
-          {/* Order Type and Food Type Charts */}
-          {(hasOrderTypeData || hasFoodTypeData) && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {hasOrderTypeData && <OrderTypeStatsCard orderTypeData={statistics.order_type_statistics} />}
-              {hasFoodTypeData && <FoodTypeChart foodTypeData={statistics.food_type_statistics} />}
-            </div>
-          )}
-          
-          {/* Products Analysis and Weekly Order Stats */}
-          {(hasCategoryPerformance || hasWeeklyOrderStats) && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {hasCategoryPerformance && <ProductsAnalysisCard categoryData={statistics.category_wise_performance} />}
-              {hasWeeklyOrderStats && <WeeklyOrderStatsChart weeklyData={statistics.weekly_order_stats} />}
-            </div>
-          )}
-          
-          {/* App Usage Chart */}
-          {hasAppUsage && (
-            <div className="grid grid-cols-1 gap-6">
-              <AppUsageStatsChart appUsageData={statistics.app_usage_statistics} />
-            </div>
-          )}
-          
-          {/* Category Performance and Top Combo Orders */}
-          {(hasCategoryPerformance || hasMenuCombos) && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {hasCategoryPerformance && <CategoryPerformanceCard categoryData={statistics.category_wise_performance} />}
-              {hasMenuCombos && <TopComboOrdersCard comboData={statistics.menu_combos} />}
-            </div>
-          )}
-          
-          {/* Payment Statistics */}
-          {(hasUdhariCard || hasAdvancePayment) && (
-            <div className="grid grid-cols-1 gap-6">
-              <AdvancedPaymentStatsCard 
-                udhariData={statistics.udhari_card} 
-                advancePaymentData={statistics.advance_payment_card} 
-              />
-            </div>
-          )}
-        </>
-      )}
+        
+        {/* Collection Sources and Order Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CollectionSourcesCard collectionData={statistics?.total_collection_source} />
+          <OrderStatisticsCard orderStats={statistics?.order_statistics} />
+        </div>
+        
+        {/* Order Type and Food Type Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <OrderTypeStatsCard orderTypeData={statistics?.order_type_statistics} />
+          <FoodTypeChart foodTypeData={statistics?.food_type_statistics} />
+        </div>
+        
+        {/* Products Analysis and Weekly Order Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ProductsAnalysisCard categoryData={statistics?.category_wise_performance} />
+          <WeeklyOrderStatsChart weeklyData={statistics?.weekly_order_stats} />
+        </div>
+        
+        {/* App Usage Chart */}
+        <div className="grid grid-cols-1 gap-6">
+          <AppUsageStatsChart appUsageData={statistics?.app_usage_statistics} />
+        </div>
+        
+        {/* Category Performance and Top Combo Orders */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CategoryPerformanceCard categoryData={statistics?.category_wise_performance} />
+          <TopComboOrdersCard comboData={statistics?.menu_combos} />
+        </div>
+        
+        {/* Payment Statistics */}
+        <div className="grid grid-cols-1 gap-6">
+          <AdvancedPaymentStatsCard 
+            udhariData={statistics?.udhari_card} 
+            advancePaymentData={statistics?.advance_payment_card} 
+          />
+        </div>
+      </>
     </div>
   );
 }
