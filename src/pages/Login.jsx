@@ -245,7 +245,15 @@ export default function Login() {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+      {/* Testing Environment Bar */}
+      <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-500 text-white text-center py-1 px-2 font-medium w-full flex items-center justify-center" style={{ height: '28px' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Testing Environment</span>
+      </div>
+      
+      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8" style={{ paddingTop: 'calc(28px + 3rem)' }}>
         <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-xl shadow-lg">
           {/* Login Testing Badge */}
         
