@@ -1117,23 +1117,9 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     const [activeTab, setActiveTab] = useState('top');
     
     // Get items directly from the sales_performance structure or use defaults
-    const topSellingItems = salesPerformanceData.top_selling || [
-      { name: "Sample Top Item 1", sales_count: 0 },
-      { name: "Sample Top Item 2", sales_count: 0 },
-      { name: "Sample Top Item 3", sales_count: 0 }
-    ];
-    
-    const lowSellingItems = salesPerformanceData.low_selling || [
-      { name: "Sample Low Item 1", sales_count: 0 },
-      { name: "Sample Low Item 2", sales_count: 0 },
-      { name: "Sample Low Item 3", sales_count: 0 }
-    ];
-    
-    const noSellingItems = salesPerformanceData.no_selling || [
-      { name: "Sample No-Sell Item 1", sales_count: 0 },
-      { name: "Sample No-Sell Item 2", sales_count: 0 },
-      { name: "Sample No-Sell Item 3", sales_count: 0 }
-    ];
+    const topSellingItems = salesPerformanceData.top_selling || [];
+    const lowSellingItems = salesPerformanceData.low_selling || [];
+    const noSellingItems = salesPerformanceData.no_selling || [];
     
     console.log("Direct API data:", {
       top: topSellingItems,
@@ -1141,27 +1127,36 @@ const ProductsAnalysisCard = ({ categoryData }) => {
       no: noSellingItems
     });
     
-    // Always show tabs regardless of data
-    const hasTopSellingData = true;
-    const hasLowSellingData = true;
-    const hasNoSellingData = true;
+    // Check which tabs have data
+    const hasTopSellingData = topSellingItems && topSellingItems.length > 0;
+    const hasLowSellingData = lowSellingItems && lowSellingItems.length > 0;
+    const hasNoSellingData = noSellingItems && noSellingItems.length > 0;
     
-    // Default to the no-selling tab if it has data
+    // If no data in any tab, use default data
+    const useDefaultData = !hasTopSellingData && !hasLowSellingData && !hasNoSellingData;
+    
+    // Set default active tab based on available data
     useEffect(() => {
-      if (salesPerformanceData?.no_selling?.length > 0 && activeTab !== 'no') {
+      if (hasTopSellingData) {
+        setActiveTab('top');
+      } else if (hasLowSellingData) {
+        setActiveTab('low');
+      } else if (hasNoSellingData) {
         setActiveTab('no');
       }
-      else if (activeTab === 'top' && !salesPerformanceData?.top_selling?.length) {
-        if (salesPerformanceData?.low_selling?.length) {
-          setActiveTab('low');
-        } else if (salesPerformanceData?.no_selling?.length) {
-          setActiveTab('no');
-        }
-      }
-    }, [activeTab, salesPerformanceData]);
+    }, [hasTopSellingData, hasLowSellingData, hasNoSellingData]);
     
     // Get the items to display based on active tab
     const getItemsToDisplay = () => {
+      if (useDefaultData) {
+        // Return default data if no real data is available
+        return [
+          { name: "Sample Item", sales_count: 0 },
+          { name: "Sample Item", sales_count: 0 },
+          { name: "Sample Item", sales_count: 0 }
+        ];
+      }
+      
       switch (activeTab) {
         case 'top':
           return topSellingItems;
@@ -1170,7 +1165,9 @@ const ProductsAnalysisCard = ({ categoryData }) => {
         case 'no':
           return noSellingItems;
         default:
-          return topSellingItems;
+          return topSellingItems.length > 0 ? topSellingItems : 
+                 lowSellingItems.length > 0 ? lowSellingItems : 
+                 noSellingItems.length > 0 ? noSellingItems : [];
       }
     };
     
@@ -1179,7 +1176,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
         <div className="p-5 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
           <div className="mt-4 flex justify-center">
-            <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-4 w-full max-w-md`}>
+            <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 3 ? 'grid-cols-3' : 'grid-cols-1'} gap-4 w-full max-w-md`}>
               {hasTopSellingData && (
                 <button 
                   onClick={() => setActiveTab('top')}
@@ -1208,6 +1205,11 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                   }`}
                 >
                   No Selling
+                </button>
+              )}
+              {useDefaultData && (
+                <button className="px-6 py-3 text-sm font-medium rounded-md bg-purple-600 text-white">
+                  No Data Available
                 </button>
               )}
             </div>
@@ -1283,9 +1285,6 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     category.no_selling && Array.isArray(category.no_selling) && category.no_selling.length > 0
   );
 
-  // Set initial active tab - prefer no_selling tab if we have direct no_selling data
-  const [activeTab, setActiveTab] = useState(hasDirectNoSellingData ? 'no' : 'top');
-
   // Get top selling items across all categories
   const topSellingItems = data.flatMap(category => 
     category.top_menus.map(menu => ({
@@ -1332,44 +1331,43 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     ? noSellingItemsFromDedicatedField.slice(0, 5) 
     : noSellingItemsFromTopMenus.slice(0, 5);
 
-  // Ensure we have at least some default items if all lists are empty
-  const finalTopSellingItems = topSellingItems.length > 0 ? topSellingItems : [
-    { menu_name: "Sample Top Item 1", sales_count: 0, category_name: "Sample Category" },
-    { menu_name: "Sample Top Item 2", sales_count: 0, category_name: "Sample Category" },
-    { menu_name: "Sample Top Item 3", sales_count: 0, category_name: "Sample Category" }
-  ];
-
-  const finalLowSellingItems = lowSellingItems.length > 0 ? lowSellingItems : [
-    { menu_name: "Sample Low Item 1", sales_count: 0, category_name: "Sample Category" },
-    { menu_name: "Sample Low Item 2", sales_count: 0, category_name: "Sample Category" },
-    { menu_name: "Sample Low Item 3", sales_count: 0, category_name: "Sample Category" }
-  ];
-
-  const finalNoSellingItems = noSellingItems.length > 0 ? noSellingItems : [
-    { menu_name: "Sample No-Sell Item 1", sales_count: 0, category_name: "Sample Category" },
-    { menu_name: "Sample No-Sell Item 2", sales_count: 0, category_name: "Sample Category" },
-    { menu_name: "Sample No-Sell Item 3", sales_count: 0, category_name: "Sample Category" }
-  ];
-
-  // Always show all tabs
-  const hasTopSellingData = true;
-  const hasLowSellingData = true;
-  const hasNoSellingData = true;
+  // Check which tabs have data
+  const hasTopSellingData = topSellingItems.length > 0;
+  const hasLowSellingData = lowSellingItems.length > 0;
+  const hasNoSellingData = noSellingItems.length > 0;
+  
+  // If no data in any tab, use default data
+  const useDefaultData = !hasTopSellingData && !hasLowSellingData && !hasNoSellingData;
+  
+  // Set initial active tab based on available data
+  const [activeTab, setActiveTab] = useState(
+    hasTopSellingData ? 'top' : 
+    hasLowSellingData ? 'low' : 
+    hasNoSellingData ? 'no' : 'top'
+  );
 
   // Get the items to display based on active tab
   const getItemsToDisplay = () => {
-    console.log("Getting items to display for tab:", activeTab);
+    if (useDefaultData) {
+      // Return default data if no real data is available
+      return [
+        { menu_name: "Sample Item", sales_count: 0, category_name: "Sample Category" },
+        { menu_name: "Sample Item", sales_count: 0, category_name: "Sample Category" },
+        { menu_name: "Sample Item", sales_count: 0, category_name: "Sample Category" }
+      ];
+    }
+    
     switch (activeTab) {
       case 'top':
-        return finalTopSellingItems;
+        return topSellingItems;
       case 'low':
-        return finalLowSellingItems;
+        return lowSellingItems;
       case 'no':
-        // Log the no selling items before returning
-        console.log("Returning no selling items:", finalNoSellingItems);
-        return finalNoSellingItems;
+        return noSellingItems;
       default:
-        return finalTopSellingItems;
+        return topSellingItems.length > 0 ? topSellingItems : 
+               lowSellingItems.length > 0 ? lowSellingItems : 
+               noSellingItems.length > 0 ? noSellingItems : [];
     }
   };
 
@@ -1378,7 +1376,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
       <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
         <div className="mt-4 flex justify-center">
-          <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-4 w-full max-w-md`}>
+          <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 3 ? 'grid-cols-3' : 'grid-cols-1'} gap-4 w-full max-w-md`}>
             {hasTopSellingData && (
               <button 
                 onClick={() => setActiveTab('top')}
@@ -1407,6 +1405,11 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
                 }`}
               >
                 No Selling
+              </button>
+            )}
+            {useDefaultData && (
+              <button className="px-6 py-3 text-sm font-medium rounded-md bg-purple-600 text-white">
+                No Data Available
               </button>
             )}
           </div>
