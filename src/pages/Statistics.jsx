@@ -31,15 +31,27 @@ const FoodTypeChart = ({ foodTypeData }) => {
     egg: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '🟡', label: 'Egg' }
   };
 
-  // Prepare series data for all food types
-  const series = foodTypes
+  // Check which food types have non-zero values
+  const foodTypeHasData = {};
+  foodTypes.forEach(type => {
+    foodTypeHasData[type] = days.some(day => chartData[day][type] > 0);
+  });
+
+  // Filter food types to only include those with non-zero values
+  const visibleFoodTypes = foodTypes.filter(type => foodTypeHasData[type]);
+  
+  // If all food types have zero values, show all food types (default behavior)
+  const typesToDisplay = visibleFoodTypes.length > 0 ? visibleFoodTypes : foodTypes;
+
+  // Prepare series data for food types that have data
+  const series = typesToDisplay
     .map(type => {
-    return {
-      name: type === 'veg' ? 'Vegetarian' : 
-            type === 'nonveg' ? 'Non-Vegetarian' : 
-            type === 'vegan' ? 'Vegan' : 'Egg',
+      return {
+        name: type === 'veg' ? 'Vegetarian' : 
+              type === 'nonveg' ? 'Non-Vegetarian' : 
+              type === 'vegan' ? 'Vegan' : 'Egg',
         data: days.map(day => chartData[day][type] || 0)
-    };
+      };
     });
 
   const options = {
@@ -111,7 +123,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
         
         {/* Food Type Badges */}
         <div className="flex flex-wrap gap-2 mt-2">
-          {foodTypes.map(type => (
+          {typesToDisplay.map(type => (
             <div key={type} className={`inline-flex items-center px-3 py-1 rounded-full text-sm border ${foodTypeBadges[type].color}`}>
               <span className="mr-1">{foodTypeBadges[type].icon}</span>
               {foodTypeBadges[type].label}
@@ -687,6 +699,12 @@ const CollectionSourcesCard = ({ collectionData }) => {
     }
   ];
 
+  // Filter out payment methods with zero amounts and orders
+  const visiblePaymentMethods = paymentMethods.filter(method => method.amount > 0 || method.orders > 0);
+  
+  // If all payment methods have zero values, show all methods (default behavior)
+  const methodsToDisplay = visiblePaymentMethods.length > 0 ? visiblePaymentMethods : paymentMethods;
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
@@ -700,7 +718,7 @@ const CollectionSourcesCard = ({ collectionData }) => {
         </div>  
       </div>
       <div className="p-5 space-y-4">
-        {paymentMethods.map((method, index) => (
+        {methodsToDisplay.map((method, index) => (
           <div key={index} className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-700">{method.name}</span>
@@ -785,27 +803,33 @@ const OrderStatisticsCard = ({ orderStats }) => {
     }
   ];
 
+  // Filter out order types with count 0
+  const visibleOrderTypes = orderTypes.filter(type => type.count > 0);
+
+  // If all counts are 0, show all cards (default behavior)
+  const typesToDisplay = visibleOrderTypes.length > 0 ? visibleOrderTypes : orderTypes;
+
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
-            </div>
+      </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {orderTypes.map((type, index) => (
+        {typesToDisplay.map((type, index) => (
           <div 
             key={index} 
             className={`${type.color} rounded-lg p-4 flex items-center`}
           >
             <div className="flex-shrink-0 mr-3 flex items-center self-center">
               {type.icon}
-              </div>
+            </div>
             <div>
               <span className="text-2xl font-bold block">{type.count}</span>
               <span className="text-sm">{type.name}</span>
             </div>
           </div>
         ))}
-        </div>
+      </div>
     </div>
   );
 };
@@ -874,28 +898,34 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
     }
   ];
 
+  // Filter out order types with count 0
+  const visibleOrderTypes = orderTypes.filter(type => type.count > 0);
+
+  // If all counts are 0, show all cards (default behavior)
+  const typesToDisplay = visibleOrderTypes.length > 0 ? visibleOrderTypes : orderTypes;
+
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Order Type Statistics</h3>
-            </div>
+      </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {orderTypes.map((type, index) => (
+        {typesToDisplay.map((type, index) => (
           <div 
             key={index} 
             className={`${type.color} rounded-lg p-4 flex items-center`}
           >
             <div className="flex-shrink-0 mr-3 flex items-center self-center">
               {type.icon}
-                  </div>
+            </div>
             <div>
               <span className="text-2xl font-bold block">{type.count}</span>
-            <span className="text-sm">{type.name}</span>
-            </div>
-                </div>
-              ))}
+              <span className="text-sm">{type.name}</span>
             </div>
           </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -1438,7 +1468,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
   };
 
   // Create data array with app usage values
-  const appData = [
+  const allAppData = [
     { name: 'Owner App', value: Math.max(0, data.owner_app || 0) },
     { name: 'POS App', value: Math.max(0, data.pos_app || 0) },
     { name: 'Waiter App', value: Math.max(0, data.waiter_app || 0) },
@@ -1447,7 +1477,13 @@ const AppUsageStatsChart = ({ appUsageData }) => {
     { name: 'KDS App', value: Math.max(0, data.kds_app || 0) },
     { name: 'CDS App', value: Math.max(0, data.cds_app || 0) }
   ];
-
+  
+  // Filter out apps with zero usage
+  const visibleApps = allAppData.filter(app => app.value > 0);
+  
+  // If all apps have zero usage, show all apps (default behavior)
+  const appData = visibleApps.length > 0 ? visibleApps : allAppData;
+  
   const options = {
     chart: {
       type: 'bar',
@@ -1531,8 +1567,8 @@ const AppUsageStatsChart = ({ appUsageData }) => {
   }];
 
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">App Usage Statistics</h3>
       </div>
       <div className="p-5">
@@ -1567,16 +1603,22 @@ const CategoryPerformanceCard = ({ categoryData }) => {
   // Sort categories by total orders
   const sortedCategoryData = [...data].sort((a, b) => b.total_orders - a.total_orders);
   
+  // Filter out categories with zero orders
+  const visibleCategories = sortedCategoryData.filter(category => category.total_orders > 0);
+  
+  // If all categories have zero orders, show all categories (default behavior)
+  const categoriesToDisplay = visibleCategories.length > 0 ? visibleCategories : sortedCategoryData;
+  
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Category Performance</h3>
         <p className="text-sm text-gray-500">
-          {sortedCategoryData.length} categories
+          {categoriesToDisplay.length} categories
         </p>
       </div>
       <div className="p-5">
-        {sortedCategoryData.map((category, index) => (
+        {categoriesToDisplay.map((category, index) => (
           <div key={index} className="mb-6 last:mb-0">
             <div className="flex justify-between items-center mb-2">
               <div>
@@ -1596,7 +1638,7 @@ const CategoryPerformanceCard = ({ categoryData }) => {
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
                 className="bg-purple-600 h-2.5 rounded-full" 
-                style={{ width: `${(category.total_orders / (sortedCategoryData[0].total_orders || 1)) * 100}%` }}
+                style={{ width: `${(category.total_orders / (categoriesToDisplay[0].total_orders || 1)) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -1628,6 +1670,12 @@ const TopComboOrdersCard = ({ comboData }) => {
         }
       ];
 
+  // Filter out combos with zero orders
+  const visibleCombos = data.filter(combo => combo.order_count > 0);
+  
+  // If all combos have zero orders, show all combos (default behavior)
+  const combosToDisplay = visibleCombos.length > 0 ? visibleCombos : data;
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
@@ -1652,7 +1700,7 @@ const TopComboOrdersCard = ({ comboData }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {data.map((combo, index) => (
+            {combosToDisplay.map((combo, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {index + 1}
@@ -1698,59 +1746,80 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
     }).format(amount);
   };
 
+  // Check if Udhari section has any non-zero values
+  const hasUdhariData = udhariStats.udhari_pending.amount > 0 || 
+                        udhariStats.udhari_pending.count > 0 || 
+                        udhariStats.udhari_paid.amount > 0 || 
+                        udhariStats.udhari_paid.count > 0;
+
+  // Check if Advance Payment section has any non-zero values
+  const hasAdvanceData = advanceStats.partial_payment.amount > 0 || 
+                         advanceStats.partial_payment.count > 0 || 
+                         advanceStats.settled_payment.amount > 0 || 
+                         advanceStats.settled_payment.count > 0;
+  
+  // If both sections have no data, show both sections (default behavior)
+  // If at least one section has data, only show the sections with data
+  const showUdhariSection = hasUdhariData || (!hasUdhariData && !hasAdvanceData);
+  const showAdvanceSection = hasAdvanceData || (!hasUdhariData && !hasAdvanceData);
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
-        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+        {showUdhariSection && (
           <div className="p-5">
             <h4 className="font-medium text-gray-700 mb-4">Udhari Payment</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-amber-50 p-4 rounded-lg">
                 <p className="text-sm text-amber-700 mb-1">Pending</p>
                 <p className="text-xl font-semibold text-amber-900">
-                {formatCurrency(udhariStats.udhari_pending.amount)}
+                  {formatCurrency(udhariStats.udhari_pending.amount)}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
-                {udhariStats.udhari_pending.count} transactions
+                  {udhariStats.udhari_pending.count} transactions
                 </p>
-      </div>
+              </div>
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-green-700 mb-1">Paid</p>
                 <p className="text-xl font-semibold text-green-900">
-                {formatCurrency(udhariStats.udhari_paid.amount)}
+                  {formatCurrency(udhariStats.udhari_paid.amount)}
                 </p>
                 <p className="text-xs text-green-700 mt-1">
-                {udhariStats.udhari_paid.count} transactions
+                  {udhariStats.udhari_paid.count} transactions
                 </p>
               </div>
             </div>
           </div>
+        )}
         
+        {showAdvanceSection && (
           <div className="p-5">
             <h4 className="font-medium text-gray-700 mb-4">Settled Payment</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-700 mb-1">Partial Payment</p>
                 <p className="text-xl font-semibold text-blue-900">
-                {formatCurrency(advanceStats.partial_payment.amount)}
+                  {formatCurrency(advanceStats.partial_payment.amount)}
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                {advanceStats.partial_payment.count} transactions
+                  {advanceStats.partial_payment.count} transactions
                 </p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm text-purple-700 mb-1">Settled Payment</p>
                 <p className="text-xl font-semibold text-purple-900">
-                {formatCurrency(advanceStats.settled_payment.amount)}
+                  {formatCurrency(advanceStats.settled_payment.amount)}
                 </p>
                 <p className="text-xs text-purple-700 mt-1">
-                {advanceStats.settled_payment.count} transactions
+                  {advanceStats.settled_payment.count} transactions
                 </p>
               </div>
             </div>
           </div>
+        )}
       </div>
     </div>
   );
