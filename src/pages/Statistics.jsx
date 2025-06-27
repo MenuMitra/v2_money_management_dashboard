@@ -8,54 +8,20 @@ import { useNavigate } from 'react-router-dom';
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
-  // Early return with empty container if no data
-  if (!foodTypeData) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
-          <p className="text-sm text-gray-500 mb-3">Distribution of food types across days of the week</p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[350px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No chart data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // If no data, use empty data structure
+  const chartData = foodTypeData || {
+    monday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+    tuesday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+    wednesday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+    thursday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+    friday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+    saturday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+    sunday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 }
+  };
   
   // Extract data from the foodTypeData object
-  const days = Object.keys(foodTypeData);
+  const days = Object.keys(chartData);
   const foodTypes = ['veg', 'nonveg', 'vegan', 'egg'];
-  
-  // Filter out days that have no data (all zeros)
-  const filteredDays = days.filter(day => {
-    return foodTypes.some(type => (foodTypeData[day][type] || 0) > 0);
-  });
-  
-  // Check if there's any data - render empty container if no data
-  if (filteredDays.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
-          <p className="text-sm text-gray-500 mb-3">Distribution of food types across days of the week</p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[350px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No food type data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Food type badge definitions with colors and labels
   const foodTypeBadges = {
@@ -65,17 +31,16 @@ const FoodTypeChart = ({ foodTypeData }) => {
     egg: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: '🟡', label: 'Egg' }
   };
 
-  // Prepare series data - only include food types with non-zero values
+  // Prepare series data for all food types
   const series = foodTypes
     .map(type => {
     return {
       name: type === 'veg' ? 'Vegetarian' : 
             type === 'nonveg' ? 'Non-Vegetarian' : 
             type === 'vegan' ? 'Vegan' : 'Egg',
-        data: filteredDays.map(day => foodTypeData[day][type] || 0)
+        data: days.map(day => chartData[day][type] || 0)
     };
-    })
-    .filter(series => series.data.some(value => value > 0)); // Filter out series with all zeros
+    });
 
   const options = {
     chart: {
@@ -103,7 +68,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
       colors: ['transparent']
     },
     xaxis: {
-      categories: filteredDays.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
+      categories: days.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
       labels: {
         style: {
           fontSize: '12px'
@@ -138,11 +103,6 @@ const FoodTypeChart = ({ foodTypeData }) => {
     }
   };
 
-  // Get active food types that have data
-  const activeFoodTypes = foodTypes.filter(type => 
-    filteredDays.some(day => (foodTypeData[day][type] || 0) > 0)
-  );
-
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
@@ -151,7 +111,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
         
         {/* Food Type Badges */}
         <div className="flex flex-wrap gap-2 mt-2">
-          {activeFoodTypes.map(type => (
+          {foodTypes.map(type => (
             <div key={type} className={`inline-flex items-center px-3 py-1 rounded-full text-sm border ${foodTypeBadges[type].color}`}>
               <span className="mr-1">{foodTypeBadges[type].icon}</span>
               {foodTypeBadges[type].label}
@@ -658,26 +618,22 @@ const PaymentMethodChart = ({ paymentData }) => {
 
 // Collection Sources Card Component
 const CollectionSourcesCard = ({ collectionData }) => {
-  // Early return with empty container if no data
-  if (!collectionData) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-          </div>  
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No collection data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Use empty data if none provided
+  const data = collectionData || {
+    upi_amount: 0,
+    cash_amount: 0,
+    card_amount: 0,
+    complementary_amount: 0,
+    udhari_amount: 0,
+    advance_payment_amount: 0,
+    upi_orders: 0,
+    cash_orders: 0,
+    card_orders: 0,
+    complementary_orders: 0,
+    udhari_orders: 0,
+    advance_payment_orders: 0,
+    total_amount: 0
+  };
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -688,84 +644,48 @@ const CollectionSourcesCard = ({ collectionData }) => {
   };
 
   // Use the total from API response if available
-  const hasTotal = collectionData.total_amount !== undefined && collectionData.total_amount !== null;
-  const totalAmount = hasTotal ? collectionData.total_amount : 0;
-
-  // Check if there's any payment method with amount > 0
-  const hasPaymentData = (
-    (collectionData.upi_amount || 0) > 0 ||
-    (collectionData.cash_amount || 0) > 0 ||
-    (collectionData.card_amount || 0) > 0 ||
-    (collectionData.complementary_amount || 0) > 0 ||
-    (collectionData.udhari_amount || 0) > 0 ||
-    (collectionData.advance_payment_amount || 0) > 0
-  );
-
-  // If no payment data, show empty container
-  if (!hasPaymentData) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-            {hasTotal && (
-              <p className="text-sm text-gray-500">
-                <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
-              </p>
-            )}
-          </div>  
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No collection data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const hasTotal = data.total_amount !== undefined && data.total_amount !== null;
+  const totalAmount = hasTotal ? data.total_amount : 0;
 
   // Prepare data for progress bars
   const paymentMethods = [
     {
       name: 'UPI',
-      amount: collectionData.upi_amount || 0,
-      orders: collectionData.upi_orders || 0,
+      amount: data.upi_amount || 0,
+      orders: data.upi_orders || 0,
       color: 'bg-indigo-500'
     },
     {
       name: 'Cash',
-      amount: collectionData.cash_amount || 0,
-      orders: collectionData.cash_orders || 0,
+      amount: data.cash_amount || 0,
+      orders: data.cash_orders || 0,
       color: 'bg-purple-500'
     },
     {
       name: 'Card',
-      amount: collectionData.card_amount || 0,
-      orders: collectionData.card_orders || 0,
+      amount: data.card_amount || 0,
+      orders: data.card_orders || 0,
       color: 'bg-blue-500'
     },
     {
       name: 'Complementary',
-      amount: collectionData.complementary_amount || 0,
-      orders: collectionData.complementary_orders || 0,
+      amount: data.complementary_amount || 0,
+      orders: data.complementary_orders || 0,
       color: 'bg-pink-500'
     },
     {
       name: 'Udhari',
-      amount: collectionData.udhari_amount || 0,
-      orders: collectionData.udhari_orders || 0,
+      amount: data.udhari_amount || 0,
+      orders: data.udhari_orders || 0,
       color: 'bg-yellow-500'
     },
     {
       name: 'Advance Payment',
-      amount: collectionData.advance_payment_amount || 0,
-      orders: collectionData.advance_payment_orders || 0,
+      amount: data.advance_payment_amount || 0,
+      orders: data.advance_payment_orders || 0,
       color: 'bg-green-500'
     }
-  ].filter(method => method.amount > 0);
+  ];
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -803,29 +723,19 @@ const CollectionSourcesCard = ({ collectionData }) => {
 
 // Order Statistics Card Component
 const OrderStatisticsCard = ({ orderStats }) => {
-  // Early return with empty container if no data
-  if (!orderStats) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No order statistics available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Use empty data if none provided
+  const data = orderStats || {
+    success_orders: 0,
+    cancelled_orders: 0,
+    complementary_orders: 0,
+    KOT_orders: 0,
+    udhari_orders: 0
+  };
 
   const orderTypes = [
     {
       name: 'Success Order',
-      count: orderStats.success_orders || 0,
+      count: data.success_orders || 0,
       color: 'bg-green-100 text-green-800',
       icon: (
         <svg className="h-5 w-5 text-green-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -835,7 +745,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
     },
     {
       name: 'Cancelled Order',
-      count: orderStats.cancelled_orders || 0,
+      count: data.cancelled_orders || 0,
       color: 'bg-red-100 text-red-800',
       icon: (
         <svg className="h-5 w-5 text-red-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -845,7 +755,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
     },
     {
       name: 'Complementary Order',
-      count: orderStats.complementary_orders || 0,
+      count: data.complementary_orders || 0,
       color: 'bg-purple-100 text-purple-800',
       icon: (
         <svg className="h-5 w-5 text-purple-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -855,7 +765,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
     },
     {
       name: 'Kitchen Order',
-      count: orderStats.KOT_orders || 0,
+      count: data.KOT_orders || 0,
       color: 'bg-yellow-100 text-yellow-800',
       icon: (
         <svg className="h-5 w-5 text-yellow-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -865,7 +775,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
     },
     {
       name: 'Udhari Order',
-      count: orderStats.udhari_orders || 0,
+      count: data.udhari_orders || 0,
       color: 'bg-blue-100 text-blue-800',
       icon: (
         <svg className="h-5 w-5 text-blue-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -873,26 +783,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
         </svg>
       )
     }
-  ].filter(type => type.count > 0);
-
-  // If no order types have non-zero counts, show empty container
-  if (orderTypes.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No order statistics available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  ];
 
   return (
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -921,12 +812,19 @@ const OrderStatisticsCard = ({ orderStats }) => {
 
 // Order Type Stats Card Component
 const OrderTypeStatsCard = ({ orderTypeData }) => {
-  if (!orderTypeData) return null;
+  // Use empty data if none provided
+  const data = orderTypeData || {
+    'dine-in': 0,
+    'parcel': 0,
+    'delivery': 0,
+    'counter': 0,
+    'drive-through': 0
+  };
 
   const orderTypes = [
     {
       name: 'Dine In',
-      count: orderTypeData['dine-in'] || 0,
+      count: data['dine-in'] || 0,
       color: 'bg-purple-100 text-purple-800',
       icon: (
         <svg className="h-5 w-5 text-purple-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -936,7 +834,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
     },
     {
       name: 'Parcel',
-      count: orderTypeData['parcel'] || 0,
+      count: data['parcel'] || 0,
       color: 'bg-green-100 text-green-800',
       icon: (
         <svg className="h-5 w-5 text-green-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -946,7 +844,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
     },
     {
       name: 'Delivery',
-      count: orderTypeData['delivery'] || 0,
+      count: data['delivery'] || 0,
       color: 'bg-blue-100 text-blue-800',
       icon: (
         <svg className="h-5 w-5 text-blue-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -956,7 +854,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
     },
     {
       name: 'Counter',
-      count: orderTypeData['counter'] || 0,
+      count: data['counter'] || 0,
       color: 'bg-red-100 text-red-800',
       icon: (
         <svg className="h-5 w-5 text-red-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -966,7 +864,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
     },
     {
       name: 'Drive Through',
-      count: orderTypeData['drive-through'] || 0,
+      count: data['drive-through'] || 0,
       color: 'bg-yellow-100 text-yellow-800',
       icon: (
         <svg className="h-5 w-5 text-yellow-500 mt-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -974,7 +872,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
         </svg>
       )
     }
-  ].filter(type => type.count > 0);
+  ];
 
   return (
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1003,17 +901,24 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
 
 // Weekly Order Stats Chart Component
 const WeeklyOrderStatsChart = ({ weeklyData }) => {
-  if (!weeklyData || !weeklyData.data) return null;
-
-  // Filter out days with zero orders
-  const filteredData = weeklyData.data.filter(day => parseInt(day[1]) > 0);
+  // Use empty data if none provided
+  const data = weeklyData || {
+    data: [
+      ['Monday', '0'],
+      ['Tuesday', '0'],
+      ['Wednesday', '0'],
+      ['Thursday', '0'],
+      ['Friday', '0'],
+      ['Saturday', '0'],
+      ['Sunday', '0']
+    ],
+    peak_day: ['None', '0'],
+    low_day: ['None', '0']
+  };
   
-  // Extract days and counts from filtered data
-  const days = filteredData.map(day => day[0]);
-  const counts = filteredData.map(day => parseInt(day[1]));
-  
-  // Check if we have any non-zero data
-  if (filteredData.length === 0) return null;
+  // Extract days and counts
+  const days = data.data.map(day => day[0]);
+  const counts = data.data.map(day => parseInt(day[1]));
   
   const options = {
     chart: {
@@ -1081,10 +986,10 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   };
 
   // Add peak day annotation if it's a valid day (not "None")
-  if (weeklyData.peak_day && weeklyData.peak_day[0] && weeklyData.peak_day[0] !== "None" && days.includes(weeklyData.peak_day[0])) {
+  if (data.peak_day && data.peak_day[0] && data.peak_day[0] !== "None" && days.includes(data.peak_day[0])) {
     options.annotations.points.push({
-      x: weeklyData.peak_day[0],
-      y: parseInt(weeklyData.peak_day[1]),
+      x: data.peak_day[0],
+      y: parseInt(data.peak_day[1]),
       marker: {
         size: 6,
         fillColor: '#FF4560',
@@ -1112,8 +1017,8 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   }];
 
   // Find the peak day and low day
-  const peakDay = weeklyData.peak_day || ["None", "0"];
-  const lowDay = weeklyData.low_day || ["None", "0"];
+  const peakDay = data.peak_day || ["None", "0"];
+  const lowDay = data.low_day || ["None", "0"];
 
   return (
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1146,7 +1051,28 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
 
 // Products Analysis Card Component
 const ProductsAnalysisCard = ({ categoryData }) => {
-  if (!categoryData || !Array.isArray(categoryData) || categoryData.length === 0) return null;
+  // Use empty data if none provided
+  const defaultCategoryData = [
+    {
+      category_name: "Sample Category",
+      total_orders: 0,
+      top_menus: [
+        { menu_name: "Sample Item 1", sales_count: 0 },
+        { menu_name: "Sample Item 2", sales_count: 0 },
+        { menu_name: "Sample Item 3", sales_count: 0 }
+      ],
+      no_selling: [
+        { name: "Sample No-Sell Item 1", item_id: "sample1" },
+        { name: "Sample No-Sell Item 2", item_id: "sample2" },
+        { name: "Sample No-Sell Item 3", item_id: "sample3" }
+      ]
+    }
+  ];
+
+  // Use provided data or default data
+  const data = (categoryData && Array.isArray(categoryData) && categoryData.length > 0) 
+    ? categoryData 
+    : defaultCategoryData;
 
   // Try to get sales_performance from the parent statistics context
   const { statistics } = useStatistics();
@@ -1160,10 +1086,24 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     // Direct API data available - use it
     const [activeTab, setActiveTab] = useState('top');
     
-    // Get items directly from the sales_performance structure
-    const topSellingItems = salesPerformanceData.top_selling || [];
-    const lowSellingItems = salesPerformanceData.low_selling || [];
-    const noSellingItems = salesPerformanceData.no_selling || [];
+    // Get items directly from the sales_performance structure or use defaults
+    const topSellingItems = salesPerformanceData.top_selling || [
+      { name: "Sample Top Item 1", sales_count: 0 },
+      { name: "Sample Top Item 2", sales_count: 0 },
+      { name: "Sample Top Item 3", sales_count: 0 }
+    ];
+    
+    const lowSellingItems = salesPerformanceData.low_selling || [
+      { name: "Sample Low Item 1", sales_count: 0 },
+      { name: "Sample Low Item 2", sales_count: 0 },
+      { name: "Sample Low Item 3", sales_count: 0 }
+    ];
+    
+    const noSellingItems = salesPerformanceData.no_selling || [
+      { name: "Sample No-Sell Item 1", sales_count: 0 },
+      { name: "Sample No-Sell Item 2", sales_count: 0 },
+      { name: "Sample No-Sell Item 3", sales_count: 0 }
+    ];
     
     console.log("Direct API data:", {
       top: topSellingItems,
@@ -1171,39 +1111,24 @@ const ProductsAnalysisCard = ({ categoryData }) => {
       no: noSellingItems
     });
     
-    // Check which tabs have data
-    const hasTopSellingData = topSellingItems.length > 0;
-    const hasLowSellingData = lowSellingItems.length > 0;
-    const hasNoSellingData = noSellingItems.length > 0;
-    
-    // If no data in any tab, don't render the card
-    if (!hasTopSellingData && !hasLowSellingData && !hasNoSellingData) return null;
+    // Always show tabs regardless of data
+    const hasTopSellingData = true;
+    const hasLowSellingData = true;
+    const hasNoSellingData = true;
     
     // Default to the no-selling tab if it has data
     useEffect(() => {
-      if (hasNoSellingData && activeTab !== 'no') {
+      if (salesPerformanceData?.no_selling?.length > 0 && activeTab !== 'no') {
         setActiveTab('no');
       }
-      else if (activeTab === 'top' && !hasTopSellingData) {
-        if (hasLowSellingData) {
+      else if (activeTab === 'top' && !salesPerformanceData?.top_selling?.length) {
+        if (salesPerformanceData?.low_selling?.length) {
           setActiveTab('low');
-        } else if (hasNoSellingData) {
+        } else if (salesPerformanceData?.no_selling?.length) {
           setActiveTab('no');
-        }
-      } else if (activeTab === 'low' && !hasLowSellingData) {
-        if (hasTopSellingData) {
-          setActiveTab('top');
-        } else if (hasNoSellingData) {
-          setActiveTab('no');
-        }
-      } else if (activeTab === 'no' && !hasNoSellingData) {
-        if (hasTopSellingData) {
-          setActiveTab('top');
-        } else if (hasLowSellingData) {
-          setActiveTab('low');
         }
       }
-    }, [activeTab, hasTopSellingData, hasLowSellingData, hasNoSellingData]);
+    }, [activeTab, salesPerformanceData]);
     
     // Get the items to display based on active tab
     const getItemsToDisplay = () => {
@@ -1215,7 +1140,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
         case 'no':
           return noSellingItems;
         default:
-          return [];
+          return topSellingItems;
       }
     };
     
@@ -1300,10 +1225,31 @@ const ProductsAnalysisCard = ({ categoryData }) => {
 
 // Legacy Products Analysis Card Component for backward compatibility
 const ProductsAnalysisCardLegacy = ({ categoryData }) => {
-  if (!categoryData || !Array.isArray(categoryData) || categoryData.length === 0) return null;
+  // Use empty data if none provided
+  const defaultCategoryData = [
+    {
+      category_name: "Sample Category",
+      total_orders: 0,
+      top_menus: [
+        { menu_name: "Sample Item 1", sales_count: 0 },
+        { menu_name: "Sample Item 2", sales_count: 0 },
+        { menu_name: "Sample Item 3", sales_count: 0 }
+      ],
+      no_selling: [
+        { name: "Sample No-Sell Item 1", item_id: "sample1" },
+        { name: "Sample No-Sell Item 2", item_id: "sample2" },
+        { name: "Sample No-Sell Item 3", item_id: "sample3" }
+      ]
+    }
+  ];
+
+  // Use provided data or default data
+  const data = (categoryData && Array.isArray(categoryData) && categoryData.length > 0) 
+    ? categoryData 
+    : defaultCategoryData;
 
   // First check if any category has a no_selling array with items
-  const hasDirectNoSellingData = categoryData.some(category => 
+  const hasDirectNoSellingData = data.some(category => 
     category.no_selling && Array.isArray(category.no_selling) && category.no_selling.length > 0
   );
 
@@ -1311,7 +1257,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
   const [activeTab, setActiveTab] = useState(hasDirectNoSellingData ? 'no' : 'top');
 
   // Get top selling items across all categories
-  const topSellingItems = categoryData.flatMap(category => 
+  const topSellingItems = data.flatMap(category => 
     category.top_menus.map(menu => ({
       ...menu,
       category_name: category.category_name
@@ -1321,7 +1267,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     .slice(0, 5);
 
   // Get low selling items (items with sales count > 0, sorted ascending)
-  const lowSellingItems = categoryData.flatMap(category => 
+  const lowSellingItems = data.flatMap(category => 
     category.top_menus.map(menu => ({
       ...menu,
       category_name: category.category_name
@@ -1331,7 +1277,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     .slice(0, 5);
 
   // Get no selling items - first check if there's a dedicated no_selling array in the response
-  const noSellingItemsFromDedicatedField = categoryData.flatMap(category => 
+  const noSellingItemsFromDedicatedField = data.flatMap(category => 
     (category.no_selling && Array.isArray(category.no_selling)) 
       ? category.no_selling.map(item => ({
           menu_name: item.name,
@@ -1343,7 +1289,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
   );
 
   // If no dedicated field, fall back to filtering top_menus for sales_count === 0
-  const noSellingItemsFromTopMenus = categoryData.flatMap(category => 
+  const noSellingItemsFromTopMenus = data.flatMap(category => 
     category.top_menus.filter(menu => menu.sales_count === 0)
     .map(menu => ({
       ...menu,
@@ -1356,75 +1302,44 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     ? noSellingItemsFromDedicatedField.slice(0, 5) 
     : noSellingItemsFromTopMenus.slice(0, 5);
 
-  // Check which tabs have data
-  const hasTopSellingData = topSellingItems.length > 0;
-  const hasLowSellingData = lowSellingItems.length > 0;
-  // If we have direct no_selling data in any category, force this to true
-  const hasNoSellingData = hasDirectNoSellingData || noSellingItems.length > 0;
+  // Ensure we have at least some default items if all lists are empty
+  const finalTopSellingItems = topSellingItems.length > 0 ? topSellingItems : [
+    { menu_name: "Sample Top Item 1", sales_count: 0, category_name: "Sample Category" },
+    { menu_name: "Sample Top Item 2", sales_count: 0, category_name: "Sample Category" },
+    { menu_name: "Sample Top Item 3", sales_count: 0, category_name: "Sample Category" }
+  ];
 
-  // Debug info for no selling items
-  console.log('No Selling Items (Legacy):', {
-    hasDirectNoSellingData,
-    fromDedicatedField: noSellingItemsFromDedicatedField,
-    fromTopMenus: noSellingItemsFromTopMenus,
-    final: noSellingItems,
-    hasData: hasNoSellingData
-  });
+  const finalLowSellingItems = lowSellingItems.length > 0 ? lowSellingItems : [
+    { menu_name: "Sample Low Item 1", sales_count: 0, category_name: "Sample Category" },
+    { menu_name: "Sample Low Item 2", sales_count: 0, category_name: "Sample Category" },
+    { menu_name: "Sample Low Item 3", sales_count: 0, category_name: "Sample Category" }
+  ];
 
-  // If no data in any tab, don't render the card
-  if (!hasTopSellingData && !hasLowSellingData && !hasNoSellingData) return null;
+  const finalNoSellingItems = noSellingItems.length > 0 ? noSellingItems : [
+    { menu_name: "Sample No-Sell Item 1", sales_count: 0, category_name: "Sample Category" },
+    { menu_name: "Sample No-Sell Item 2", sales_count: 0, category_name: "Sample Category" },
+    { menu_name: "Sample No-Sell Item 3", sales_count: 0, category_name: "Sample Category" }
+  ];
 
-  // If we have direct no_selling data in any category, log it
-  if (hasDirectNoSellingData) {
-    console.log("Direct no_selling data found in categories:", 
-      categoryData.filter(cat => cat.no_selling && cat.no_selling.length > 0)
-        .map(cat => ({ category: cat.category_name, noSellingCount: cat.no_selling.length }))
-    );
-  }
-
-  // Set the active tab to the first one that has data, prioritizing no_selling if it's available
-  useEffect(() => {
-    // If no_selling has data and the current tab isn't 'no', switch to it
-    if (hasNoSellingData && activeTab !== 'no') {
-      console.log("Prioritizing 'no' tab since it has data");
-      setActiveTab('no');
-    }
-    // Otherwise, if current tab has no data, find another tab
-    else if (activeTab === 'top' && !hasTopSellingData) {
-      if (hasLowSellingData) {
-        setActiveTab('low');
-      } else if (hasNoSellingData) {
-        setActiveTab('no');
-      }
-    } else if (activeTab === 'low' && !hasLowSellingData) {
-      if (hasTopSellingData) {
-        setActiveTab('top');
-      } else if (hasNoSellingData) {
-        setActiveTab('no');
-      }
-    } else if (activeTab === 'no' && !hasNoSellingData) {
-      if (hasTopSellingData) {
-        setActiveTab('top');
-      } else if (hasLowSellingData) {
-        setActiveTab('low');
-      }
-    }
-  }, [activeTab, hasTopSellingData, hasLowSellingData, hasNoSellingData]);
+  // Always show all tabs
+  const hasTopSellingData = true;
+  const hasLowSellingData = true;
+  const hasNoSellingData = true;
 
   // Get the items to display based on active tab
   const getItemsToDisplay = () => {
     console.log("Getting items to display for tab:", activeTab);
     switch (activeTab) {
       case 'top':
-        return topSellingItems;
+        return finalTopSellingItems;
       case 'low':
-        return lowSellingItems;
+        return finalLowSellingItems;
       case 'no':
         // Log the no selling items before returning
-        console.log("Returning no selling items:", noSellingItems);
-        return noSellingItems;
+        console.log("Returning no selling items:", finalNoSellingItems);
+        return finalNoSellingItems;
       default:
-        return [];
+        return finalTopSellingItems;
     }
   };
 
@@ -1511,32 +1426,32 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
 
 // App Usage Stats Card Component
 const AppUsageStatsChart = ({ appUsageData }) => {
-  if (!appUsageData) return null;
+  // Use empty data if none provided
+  const data = appUsageData || {
+    owner_app: 0,
+    pos_app: 0,
+    waiter_app: 0,
+    captain_app: 0,
+    user_app: 0,
+    kds_app: 0,
+    cds_app: 0
+  };
 
   // Create data array with app usage values
-  const data = [
-    { name: 'Owner App', value: Math.max(0, appUsageData.owner_app || 0) },
-    { name: 'POS App', value: Math.max(0, appUsageData.pos_app || 0) },
-    { name: 'Waiter App', value: Math.max(0, appUsageData.waiter_app || 0) },
-    { name: 'Captain App', value: Math.max(0, appUsageData.captain_app || 0) },
-    { name: 'Customer App', value: Math.max(0, appUsageData.user_app || 0) },
-    { name: 'KDS App', value: Math.max(0, appUsageData.kds_app || 0) },
-    { name: 'CDS App', value: Math.max(0, appUsageData.cds_app || 0) }
+  const appData = [
+    { name: 'Owner App', value: Math.max(0, data.owner_app || 0) },
+    { name: 'POS App', value: Math.max(0, data.pos_app || 0) },
+    { name: 'Waiter App', value: Math.max(0, data.waiter_app || 0) },
+    { name: 'Captain App', value: Math.max(0, data.captain_app || 0) },
+    { name: 'Customer App', value: Math.max(0, data.user_app || 0) },
+    { name: 'KDS App', value: Math.max(0, data.kds_app || 0) },
+    { name: 'CDS App', value: Math.max(0, data.cds_app || 0) }
   ];
-
-  // Filter out apps with zero usage
-  const filteredData = data.filter(item => item.value > 0);
-  
-  // If no data with non-zero values, don't render the card
-  if (filteredData.length === 0) return null;
-
-  // Sort data by usage count (descending)
-  filteredData.sort((a, b) => b.value - a.value);
 
   const options = {
     chart: {
       type: 'bar',
-      height: Math.max(250, filteredData.length * 50), // Dynamic height based on number of items
+      height: 350, // Fixed height
       fontFamily: 'Inter, sans-serif',
       toolbar: {
         show: false
@@ -1571,7 +1486,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
     },
     colors: ['#8B5CF6', '#7C3AED', '#9333EA', '#A855F7', '#C084FC', '#D8B4FE', '#E9D5FF'],
     xaxis: {
-      categories: filteredData.map(d => d.name),
+      categories: appData.map(d => d.name),
       labels: {
         style: {
           fontSize: '12px',
@@ -1612,7 +1527,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
 
   const series = [{
     name: 'Usage',
-    data: filteredData.map(d => d.value)
+    data: appData.map(d => d.value)
   }];
 
   return (
@@ -1625,7 +1540,7 @@ const AppUsageStatsChart = ({ appUsageData }) => {
           options={options} 
           series={series} 
           type="bar" 
-          height={options.chart.height} 
+          height={350} 
         />
       </div>
     </div>
@@ -1634,25 +1549,34 @@ const AppUsageStatsChart = ({ appUsageData }) => {
 
 // Category Performance Card Component
 const CategoryPerformanceCard = ({ categoryData }) => {
-  if (!categoryData || !Array.isArray(categoryData) || categoryData.length === 0) return null;
-
-  // Check if there are any categories with orders
-  const hasOrders = categoryData.some(category => category.total_orders > 0);
-  if (!hasOrders) return null;
+  // Use empty data if none provided
+  const data = categoryData && Array.isArray(categoryData) && categoryData.length > 0 
+    ? categoryData 
+    : [
+        {
+          category_name: "Sample Category",
+          total_orders: 0,
+          top_menus: [
+            { menu_name: "Sample Item 1", sales_count: 0 },
+            { menu_name: "Sample Item 2", sales_count: 0 },
+            { menu_name: "Sample Item 3", sales_count: 0 }
+          ]
+        }
+      ];
 
   // Sort categories by total orders
-  const sortedCategories = [...categoryData].sort((a, b) => b.total_orders - a.total_orders);
+  const sortedCategoryData = [...data].sort((a, b) => b.total_orders - a.total_orders);
   
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Category Performance</h3>
         <p className="text-sm text-gray-500">
-          {sortedCategories.length} categories
+          {sortedCategoryData.length} categories
         </p>
       </div>
       <div className="p-5">
-        {sortedCategories.map((category, index) => (
+        {sortedCategoryData.map((category, index) => (
           <div key={index} className="mb-6 last:mb-0">
             <div className="flex justify-between items-center mb-2">
               <div>
@@ -1672,7 +1596,7 @@ const CategoryPerformanceCard = ({ categoryData }) => {
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
                 className="bg-purple-600 h-2.5 rounded-full" 
-                style={{ width: `${(category.total_orders / sortedCategories[0].total_orders) * 100}%` }}
+                style={{ width: `${(category.total_orders / (sortedCategoryData[0].total_orders || 1)) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -1684,26 +1608,25 @@ const CategoryPerformanceCard = ({ categoryData }) => {
 
 // Top Combo Orders Card Component
 const TopComboOrdersCard = ({ comboData }) => {
-  if (!comboData || !Array.isArray(comboData) || comboData.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Top Combo Orders</h3>
-          <p className="text-sm text-gray-500">
-            Most frequently ordered combinations
-          </p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No combo order data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Use empty data if none provided
+  const data = comboData && Array.isArray(comboData) && comboData.length > 0
+    ? comboData
+    : [
+        {
+          items: [
+            { name: "Sample Item 1" },
+            { name: "Sample Item 2" }
+          ],
+          order_count: 0
+        },
+        {
+          items: [
+            { name: "Sample Item 3" },
+            { name: "Sample Item 4" }
+          ],
+          order_count: 0
+        }
+      ];
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1729,7 +1652,7 @@ const TopComboOrdersCard = ({ comboData }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {comboData.map((combo, index) => (
+            {data.map((combo, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {index + 1}
@@ -1756,54 +1679,16 @@ const TopComboOrdersCard = ({ comboData }) => {
 
 // Advanced Payment Stats Card Component
 const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
-  if (!udhariData && !advancePaymentData) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No payment data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if there's any non-zero data
-  const hasUdhariData = udhariData && 
-    (udhariData.udhari_pending.amount > 0 || 
-     udhariData.udhari_pending.count > 0 || 
-     udhariData.udhari_paid.amount > 0 || 
-     udhariData.udhari_paid.count > 0);
-     
-  const hasAdvancePaymentData = advancePaymentData && 
-    (advancePaymentData.partial_payment.amount > 0 || 
-     advancePaymentData.partial_payment.count > 0 || 
-     advancePaymentData.settled_payment.amount > 0 || 
-     advancePaymentData.settled_payment.count > 0);
-
-  if (!hasUdhariData && !hasAdvancePaymentData) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[200px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No payment data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Use empty data if none provided
+  const udhariStats = udhariData || {
+    udhari_pending: { amount: 0, count: 0 },
+    udhari_paid: { amount: 0, count: 0 }
+  };
+  
+  const advanceStats = advancePaymentData || {
+    partial_payment: { amount: 0, count: 0 },
+    settled_payment: { amount: 0, count: 0 }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -1819,61 +1704,59 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
         <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
         </div>
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-        {hasUdhariData && (
           <div className="p-5">
             <h4 className="font-medium text-gray-700 mb-4">Udhari Payment</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-amber-50 p-4 rounded-lg">
                 <p className="text-sm text-amber-700 mb-1">Pending</p>
                 <p className="text-xl font-semibold text-amber-900">
-                  {formatCurrency(udhariData.udhari_pending.amount)}
+                {formatCurrency(udhariStats.udhari_pending.amount)}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
-                  {udhariData.udhari_pending.count} transactions
+                {udhariStats.udhari_pending.count} transactions
                 </p>
       </div>
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-green-700 mb-1">Paid</p>
                 <p className="text-xl font-semibold text-green-900">
-                  {formatCurrency(udhariData.udhari_paid.amount)}
+                {formatCurrency(udhariStats.udhari_paid.amount)}
                 </p>
                 <p className="text-xs text-green-700 mt-1">
-                  {udhariData.udhari_paid.count} transactions
+                {udhariStats.udhari_paid.count} transactions
                 </p>
               </div>
             </div>
           </div>
-        )}
         
-        {hasAdvancePaymentData && (
           <div className="p-5">
             <h4 className="font-medium text-gray-700 mb-4">Settled Payment</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-700 mb-1">Partial Payment</p>
                 <p className="text-xl font-semibold text-blue-900">
-                  {formatCurrency(advancePaymentData.partial_payment.amount)}
+                {formatCurrency(advanceStats.partial_payment.amount)}
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  {advancePaymentData.partial_payment.count} transactions
+                {advanceStats.partial_payment.count} transactions
                 </p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm text-purple-700 mb-1">Settled Payment</p>
                 <p className="text-xl font-semibold text-purple-900">
-                  {formatCurrency(advancePaymentData.settled_payment.amount)}
+                {formatCurrency(advanceStats.settled_payment.amount)}
                 </p>
                 <p className="text-xs text-purple-700 mt-1">
-                  {advancePaymentData.settled_payment.count} transactions
+                {advanceStats.settled_payment.count} transactions
                 </p>
               </div>
             </div>
           </div>
-        )}
       </div>
     </div>
   );
 };
+
+
 
 export default function Statistics() {
   const { statistics, fetchStatistics, error, updateDateRange } = useStatistics();
@@ -1882,6 +1765,7 @@ export default function Statistics() {
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
   const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
+  const [isLoading, setIsLoading] = useState(true);
 
   // Add debugging logs for component lifecycle and render
   useEffect(() => {
@@ -1898,9 +1782,15 @@ export default function Statistics() {
       hasData: !!statistics,
       outletId: statistics?.outlet_id,
       currentContextOutletId: outletId,
-      fetchedForOutlet: fetchedForOutletRef.current
+      fetchedForOutlet: fetchedForOutletRef.current,
+      isLoading
     });
-  }, [statistics, outletId]);
+    
+    // Set loading to false when statistics data is available
+    if (statistics && isLoading) {
+      setIsLoading(false);
+    }
+  }, [statistics, outletId, isLoading]);
 
   // Breadcrumb items
   const breadcrumbItems = [
@@ -1913,6 +1803,9 @@ export default function Statistics() {
     const handleDateRangeChange = (event) => {
       const range = event.detail;
       setCurrentDateRange(range);
+      
+      // Set loading to true when fetching new data
+      setIsLoading(true);
       
       // Prepare the API parameters based on the range type
       const params = { outlet_id: outletId };
@@ -1988,10 +1881,16 @@ export default function Statistics() {
     if (outletId && fetchedForOutletRef.current !== outletId) {
       console.log('Fetching statistics for outlet:', outletId);
       
+      // Set loading to true before fetching
+      setIsLoading(true);
+      
       // Check if we already have statistics data for this outlet in context
       if (!statistics || statistics.outlet_id !== parseInt(outletId, 10)) {
         // Only force refresh when the outlet has changed or data doesn't exist
         fetchStatistics({ outlet_id: outletId }, false); // Use context caching - don't force refresh
+      } else {
+        // If we already have data, just stop loading
+        setIsLoading(false);
       }
       
       fetchedForOutletRef.current = outletId; // Remember which outlet we fetched for
@@ -2026,50 +1925,50 @@ export default function Statistics() {
     return timeStr;
   };
 
-  // Check if we have analytics data
-  const hasAnalytics = statistics && statistics.analytic_reports && 
-    (statistics.analytic_reports.total_orders > 0 || statistics.analytic_reports.total_revenue > 0);
-  const hasOrderTypeData = statistics && statistics.order_type_statistics && 
-    Object.values(statistics.order_type_statistics).some(val => val > 0);
-  const hasFoodTypeData = statistics && statistics.food_type_statistics && 
+  // Check if we have analytics data - always show during loading
+  const hasAnalytics = isLoading || (statistics && statistics.analytic_reports && 
+    (statistics.analytic_reports.total_orders > 0 || statistics.analytic_reports.total_revenue > 0));
+  const hasOrderTypeData = isLoading || (statistics && statistics.order_type_statistics && 
+    Object.values(statistics.order_type_statistics).some(val => val > 0));
+  const hasFoodTypeData = isLoading || (statistics && statistics.food_type_statistics && 
     Object.keys(statistics.food_type_statistics).some(day => 
       Object.values(statistics.food_type_statistics[day]).some(val => val > 0)
-    );
-  const hasOrderStatistics = statistics && statistics.order_statistics && 
-    Object.values(statistics.order_statistics).some(val => val > 0);
-  const hasWeeklyOrderStats = statistics && statistics.weekly_order_stats && 
+    ));
+  const hasOrderStatistics = isLoading || (statistics && statistics.order_statistics && 
+    Object.values(statistics.order_statistics).some(val => val > 0));
+  const hasWeeklyOrderStats = isLoading || (statistics && statistics.weekly_order_stats && 
     statistics.weekly_order_stats.data && 
-    statistics.weekly_order_stats.data.some(day => parseInt(day[1]) > 0);
-  const hasCollectionSource = statistics && statistics.total_collection_source && 
+    statistics.weekly_order_stats.data.some(day => parseInt(day[1]) > 0));
+  const hasCollectionSource = isLoading || (statistics && statistics.total_collection_source && 
     (statistics.total_collection_source.upi_amount > 0 || 
      statistics.total_collection_source.cash_amount > 0 ||
      statistics.total_collection_source.card_amount > 0 ||
      statistics.total_collection_source.complementary_amount > 0 ||
      statistics.total_collection_source.udhari_amount > 0 ||
-     statistics.total_collection_source.advance_payment_amount > 0);
-  const hasAppUsage = statistics && statistics.app_usage_statistics && 
-    Object.values(statistics.app_usage_statistics).some(val => val > 0);
-  const hasCategoryPerformance = statistics && statistics.category_wise_performance && 
+     statistics.total_collection_source.advance_payment_amount > 0));
+  const hasAppUsage = isLoading || (statistics && statistics.app_usage_statistics && 
+    Object.values(statistics.app_usage_statistics).some(val => val > 0));
+  const hasCategoryPerformance = isLoading || (statistics && statistics.category_wise_performance && 
     Array.isArray(statistics.category_wise_performance) && 
-    statistics.category_wise_performance.length > 0;
-  const hasMenuCombos = statistics && statistics.menu_combos && 
+    statistics.category_wise_performance.length > 0);
+  const hasMenuCombos = isLoading || (statistics && statistics.menu_combos && 
     Array.isArray(statistics.menu_combos) && 
-    statistics.menu_combos.length > 0;
-  const hasCouponStats = statistics && statistics.coupon_statistics && 
+    statistics.menu_combos.length > 0);
+  const hasCouponStats = isLoading || (statistics && statistics.coupon_statistics && 
     Array.isArray(statistics.coupon_statistics) && 
-    statistics.coupon_statistics.length > 0;
-  const hasUdhariCard = statistics && statistics.udhari_card && 
+    statistics.coupon_statistics.length > 0);
+  const hasUdhariCard = isLoading || (statistics && statistics.udhari_card && 
     (statistics.udhari_card.udhari_pending.count > 0 || 
-     statistics.udhari_card.udhari_paid.count > 0);
-  const hasAdvancePayment = statistics && statistics.advance_payment_card && 
+     statistics.udhari_card.udhari_paid.count > 0));
+  const hasAdvancePayment = isLoading || (statistics && statistics.advance_payment_card && 
     (statistics.advance_payment_card.partial_payment.count > 0 || 
-     statistics.advance_payment_card.settled_payment.count > 0);
+     statistics.advance_payment_card.settled_payment.count > 0));
 
   // Handle case where no data is available yet
-  const hasAnyData = statistics && Object.keys(statistics).length > 0 && 
+  const hasAnyData = isLoading || (statistics && Object.keys(statistics).length > 0 && 
     (hasAnalytics || hasOrderTypeData || hasFoodTypeData || hasOrderStatistics || 
      hasWeeklyOrderStats || hasCollectionSource || hasAppUsage || hasCategoryPerformance || 
-     hasMenuCombos || hasUdhariCard || hasAdvancePayment);
+     hasMenuCombos || hasUdhariCard || hasAdvancePayment));
 
   // If no outlet is selected, show warning
   if (!outletId) {
@@ -2117,6 +2016,89 @@ export default function Statistics() {
 
   const activeDateRangeText = getActiveDateRangeText();
 
+  // Create empty data structures for components during loading
+  const emptyData = {
+    analytic_reports: {
+      total_orders: 0,
+      total_revenue: 0,
+      avg_order_value: 0,
+      average_turnover_time: '0 min'
+    },
+    order_type_statistics: {
+      'dine-in': 0,
+      'parcel': 0,
+      'delivery': 0,
+      'counter': 0,
+      'drive-through': 0
+    },
+    food_type_statistics: {
+      monday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+      tuesday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+      wednesday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+      thursday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+      friday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+      saturday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 },
+      sunday: { veg: 0, nonveg: 0, vegan: 0, egg: 0 }
+    },
+    order_statistics: {
+      success_orders: 0,
+      cancelled_orders: 0,
+      complementary_orders: 0,
+      KOT_orders: 0,
+      udhari_orders: 0
+    },
+    weekly_order_stats: {
+      data: [
+        ['Monday', '0'],
+        ['Tuesday', '0'],
+        ['Wednesday', '0'],
+        ['Thursday', '0'],
+        ['Friday', '0'],
+        ['Saturday', '0'],
+        ['Sunday', '0']
+      ],
+      peak_day: ['None', '0'],
+      low_day: ['None', '0']
+    },
+    total_collection_source: {
+      upi_amount: 0,
+      cash_amount: 0,
+      card_amount: 0,
+      complementary_amount: 0,
+      udhari_amount: 0,
+      advance_payment_amount: 0,
+      upi_orders: 0,
+      cash_orders: 0,
+      card_orders: 0,
+      complementary_orders: 0,
+      udhari_orders: 0,
+      advance_payment_orders: 0,
+      total_amount: 0
+    },
+    app_usage_statistics: {
+      owner_app: 0,
+      pos_app: 0,
+      waiter_app: 0,
+      captain_app: 0,
+      user_app: 0,
+      kds_app: 0,
+      cds_app: 0
+    },
+    category_wise_performance: [],
+    menu_combos: [],
+    udhari_card: {
+      udhari_pending: { amount: 0, count: 0 },
+      udhari_paid: { amount: 0, count: 0 }
+    },
+    advance_payment_card: {
+      partial_payment: { amount: 0, count: 0 },
+      settled_payment: { amount: 0, count: 0 }
+    }
+  };
+  
+  // Use actual data if available, otherwise use empty data during loading
+  const displayData = isLoading ? emptyData : statistics || emptyData;
+
   return (
     <div className="space-y-4 p-2 sm:p-3">
       <Breadcrumb items={breadcrumbItems} />
@@ -2133,6 +2115,13 @@ export default function Statistics() {
             </svg>
           </button>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Statistics Dashboard</h1>
+          {isLoading && (
+            <div className="ml-3 flex items-center">
+              <div className="animate-pulse h-2 w-2 bg-blue-600 rounded-full"></div>
+              <div className="animate-pulse h-2 w-2 bg-blue-600 rounded-full mx-1" style={{ animationDelay: '0.2s' }}></div>
+              <div className="animate-pulse h-2 w-2 bg-blue-600 rounded-full" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+          )}
         </div>
         
         {activeDateRangeText && (
@@ -2173,66 +2162,116 @@ export default function Statistics() {
       
       {/* Always render all components, they will handle empty states internally */}
       <>
-        {/* Summary Cards */}
+        {/* Summary Cards - Always show all cards during loading, otherwise only show non-zero values */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {(isLoading || displayData?.analytic_reports?.total_orders > 0) && (
           <SummaryCard
-            value={statistics?.analytic_reports?.total_orders || 0}
+              value={displayData.analytic_reports.total_orders}
             title="Total Orders"
             icon="orders"
           />
+          )}
+          {(isLoading || displayData?.analytic_reports?.total_revenue > 0) && (
           <SummaryCard
-            value={formatCurrency(statistics?.analytic_reports?.total_revenue || 0)}
+              value={formatCurrency(displayData.analytic_reports.total_revenue)}
             title="Total Revenue"
             icon="revenue"
           />
+          )}
+          {(isLoading || displayData?.analytic_reports?.avg_order_value > 0) && (
           <SummaryCard
-            value={formatCurrency(statistics?.analytic_reports?.avg_order_value || 0)}
+              value={formatCurrency(displayData.analytic_reports.avg_order_value)}
             title="Avg. Order Value"
             icon="average"
           />
+          )}
+          {(isLoading || (displayData?.analytic_reports?.average_turnover_time && 
+            displayData?.analytic_reports?.average_turnover_time !== '0 min')) && (
           <SummaryCard
-            value={formatTurnoverTime(statistics?.analytic_reports?.average_turnover_time || '0 min')}
+              value={formatTurnoverTime(displayData.analytic_reports.average_turnover_time)}
             title="Avg. Turnover Time"
             icon="time"
           />
+          )}
         </div>
         
-        {/* Collection Sources and Order Statistics */}
+        {/* Collection Sources and Order Statistics - Only render grid if at least one component has data */}
+        {(hasCollectionSource || hasOrderStatistics) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CollectionSourcesCard collectionData={statistics?.total_collection_source} />
-          <OrderStatisticsCard orderStats={statistics?.order_statistics} />
+            {hasCollectionSource && (
+              <CollectionSourcesCard collectionData={displayData.total_collection_source} />
+            )}
+            {hasOrderStatistics && (
+              <OrderStatisticsCard orderStats={displayData.order_statistics} />
+            )}
         </div>
+        )}
         
-        {/* Order Type and Food Type Charts */}
+        {/* Order Type and Food Type Charts - Only render grid if at least one component has data */}
+        {(hasOrderTypeData || hasFoodTypeData) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrderTypeStatsCard orderTypeData={statistics?.order_type_statistics} />
-          <FoodTypeChart foodTypeData={statistics?.food_type_statistics} />
+            {hasOrderTypeData && (
+              <OrderTypeStatsCard orderTypeData={displayData.order_type_statistics} />
+            )}
+            {hasFoodTypeData && (
+              <FoodTypeChart foodTypeData={displayData.food_type_statistics} />
+            )}
         </div>
+        )}
         
-        {/* Products Analysis and Weekly Order Stats */}
+        {/* Products Analysis and Weekly Order Stats - Only render grid if at least one component has data */}
+        {(hasCategoryPerformance || hasWeeklyOrderStats) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProductsAnalysisCard categoryData={statistics?.category_wise_performance} />
-          <WeeklyOrderStatsChart weeklyData={statistics?.weekly_order_stats} />
+            {hasCategoryPerformance && (
+              <ProductsAnalysisCard categoryData={displayData.category_wise_performance} />
+            )}
+            {hasWeeklyOrderStats && (
+              <WeeklyOrderStatsChart weeklyData={displayData.weekly_order_stats} />
+            )}
         </div>
+        )}
         
-        {/* App Usage Chart */}
+        {/* App Usage Chart - Only render if it has data */}
+        {hasAppUsage && (
         <div className="grid grid-cols-1 gap-6">
-          <AppUsageStatsChart appUsageData={statistics?.app_usage_statistics} />
+            <AppUsageStatsChart appUsageData={displayData.app_usage_statistics} />
         </div>
+        )}
         
-        {/* Category Performance and Top Combo Orders */}
+        {/* Category Performance and Top Combo Orders - Only render grid if at least one component has data */}
+        {(hasCategoryPerformance || hasMenuCombos) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CategoryPerformanceCard categoryData={statistics?.category_wise_performance} />
-          <TopComboOrdersCard comboData={statistics?.menu_combos} />
+            {hasCategoryPerformance && (
+              <CategoryPerformanceCard categoryData={displayData.category_wise_performance} />
+            )}
+            {hasMenuCombos && (
+              <TopComboOrdersCard comboData={displayData.menu_combos} />
+            )}
         </div>
+        )}
         
-        {/* Payment Statistics */}
+        {/* Payment Statistics - Only render if it has data */}
+        {(hasUdhariCard || hasAdvancePayment) && (
         <div className="grid grid-cols-1 gap-6">
           <AdvancedPaymentStatsCard 
-            udhariData={statistics?.udhari_card} 
-            advancePaymentData={statistics?.advance_payment_card} 
+              udhariData={displayData?.udhari_card} 
+              advancePaymentData={displayData?.advance_payment_card} 
           />
         </div>
+        )}
+
+        {/* Show message if no data available for any section */}
+        {!hasAnyData && (
+          <div className="mt-8 text-center p-10 bg-white rounded-lg shadow">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No statistics data available</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              There is no data available for the selected outlet or time period.
+            </p>
+          </div>
+        )}
       </>
     </div>
   );
@@ -2289,4 +2328,4 @@ const SummaryCard = ({ title, value, icon }) => {
       </div>
     </div>
   );
-}; 
+}
