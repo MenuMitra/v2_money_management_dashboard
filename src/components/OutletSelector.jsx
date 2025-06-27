@@ -106,28 +106,28 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       .join(' ');
   };
 
-  // Process outlet data to create a unique key for each outlet
+  // Process outlet data to remove duplicates with same outlet_id
   const processOutletData = (outlets) => {
-    // Create a counter for duplicate outlet IDs
-    const idCounts = {};
+    // Create a map to keep track of outlets by ID
+    const uniqueOutletsMap = new Map();
     
-    // Create unique outlets with compound keys
-    return outlets.map(outlet => {
+    // Process each outlet, keeping only the first occurrence of each outlet_id
+    outlets.forEach(outlet => {
       const outletId = outlet.outlet_id;
       
-      // Count occurrences of this outlet ID
-      idCounts[outletId] = (idCounts[outletId] || 0) + 1;
-      
-      // Create a unique compound key based on outlet_id and owner_name
-      const uniqueKey = `${outletId}_${outlet.owner_name || 'unknown'}_${idCounts[outletId]}`;
-      
-      return {
-        ...outlet,
-        uniqueKey: uniqueKey,
-        is_open: Boolean(outlet.is_open),
-        outlet_status: Boolean(outlet.outlet_status)
-      };
+      // Only add this outlet if we haven't seen this outlet_id before
+      if (!uniqueOutletsMap.has(outletId)) {
+        uniqueOutletsMap.set(outletId, {
+          ...outlet,
+          uniqueKey: `${outletId}`,
+          is_open: Boolean(outlet.is_open),
+          outlet_status: Boolean(outlet.outlet_status)
+        });
+      }
     });
+    
+    // Convert the map values back to an array
+    return Array.from(uniqueOutletsMap.values());
   };
 
   // Fetch outlets from API with caching
