@@ -1148,7 +1148,167 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
 const ProductsAnalysisCard = ({ categoryData }) => {
   if (!categoryData || !Array.isArray(categoryData) || categoryData.length === 0) return null;
 
-  const [activeTab, setActiveTab] = useState('top');
+  // Try to get sales_performance from the parent statistics context
+  const { statistics } = useStatistics();
+  console.log("Full statistics:", statistics);
+  
+  // Check if we have sales_performance data directly in the statistics object
+  const salesPerformanceData = statistics?.sales_performance;
+  console.log("Sales Performance Data from context:", salesPerformanceData);
+  
+  if (salesPerformanceData) {
+    // Direct API data available - use it
+    const [activeTab, setActiveTab] = useState('top');
+    
+    // Get items directly from the sales_performance structure
+    const topSellingItems = salesPerformanceData.top_selling || [];
+    const lowSellingItems = salesPerformanceData.low_selling || [];
+    const noSellingItems = salesPerformanceData.no_selling || [];
+    
+    console.log("Direct API data:", {
+      top: topSellingItems,
+      low: lowSellingItems,
+      no: noSellingItems
+    });
+    
+    // Check which tabs have data
+    const hasTopSellingData = topSellingItems.length > 0;
+    const hasLowSellingData = lowSellingItems.length > 0;
+    const hasNoSellingData = noSellingItems.length > 0;
+    
+    // If no data in any tab, don't render the card
+    if (!hasTopSellingData && !hasLowSellingData && !hasNoSellingData) return null;
+    
+    // Default to the no-selling tab if it has data
+    useEffect(() => {
+      if (hasNoSellingData && activeTab !== 'no') {
+        setActiveTab('no');
+      }
+      else if (activeTab === 'top' && !hasTopSellingData) {
+        if (hasLowSellingData) {
+          setActiveTab('low');
+        } else if (hasNoSellingData) {
+          setActiveTab('no');
+        }
+      } else if (activeTab === 'low' && !hasLowSellingData) {
+        if (hasTopSellingData) {
+          setActiveTab('top');
+        } else if (hasNoSellingData) {
+          setActiveTab('no');
+        }
+      } else if (activeTab === 'no' && !hasNoSellingData) {
+        if (hasTopSellingData) {
+          setActiveTab('top');
+        } else if (hasLowSellingData) {
+          setActiveTab('low');
+        }
+      }
+    }, [activeTab, hasTopSellingData, hasLowSellingData, hasNoSellingData]);
+    
+    // Get the items to display based on active tab
+    const getItemsToDisplay = () => {
+      switch (activeTab) {
+        case 'top':
+          return topSellingItems;
+        case 'low':
+          return lowSellingItems;
+        case 'no':
+          return noSellingItems;
+        default:
+          return [];
+      }
+    };
+    
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
+          <div className="mt-4 flex justify-center">
+            <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-4 w-full max-w-md`}>
+              {hasTopSellingData && (
+                <button 
+                  onClick={() => setActiveTab('top')}
+                  className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Top Selling
+                </button>
+              )}
+              {hasLowSellingData && (
+                <button 
+                  onClick={() => setActiveTab('low')}
+                  className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Low Selling
+                </button>
+              )}
+              {hasNoSellingData && (
+                <button 
+                  onClick={() => setActiveTab('no')}
+                  className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'no' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  No Selling
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  #
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Menu Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sales Count
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {getItemsToDisplay().map((item, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item.name || 'Unknown Item'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    {item.sales_count}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  } else {
+    // Fall back to the legacy component if no sales_performance data in context
+    return <ProductsAnalysisCardLegacy categoryData={categoryData} />;
+  }
+};
+
+// Legacy Products Analysis Card Component for backward compatibility
+const ProductsAnalysisCardLegacy = ({ categoryData }) => {
+  if (!categoryData || !Array.isArray(categoryData) || categoryData.length === 0) return null;
+
+  // First check if any category has a no_selling array with items
+  const hasDirectNoSellingData = categoryData.some(category => 
+    category.no_selling && Array.isArray(category.no_selling) && category.no_selling.length > 0
+  );
+
+  // Set initial active tab - prefer no_selling tab if we have direct no_selling data
+  const [activeTab, setActiveTab] = useState(hasDirectNoSellingData ? 'no' : 'top');
 
   // Get top selling items across all categories
   const topSellingItems = categoryData.flatMap(category => 
@@ -1170,26 +1330,67 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     .sort((a, b) => a.sales_count - b.sales_count)
     .slice(0, 5);
 
-  // Get no selling items (items with zero sales count)
-  const noSellingItems = categoryData.flatMap(category => 
+  // Get no selling items - first check if there's a dedicated no_selling array in the response
+  const noSellingItemsFromDedicatedField = categoryData.flatMap(category => 
+    (category.no_selling && Array.isArray(category.no_selling)) 
+      ? category.no_selling.map(item => ({
+          menu_name: item.name,
+          sales_count: 0,
+          category_name: category.category_name,
+          item_id: item.item_id
+        }))
+      : []
+  );
+
+  // If no dedicated field, fall back to filtering top_menus for sales_count === 0
+  const noSellingItemsFromTopMenus = categoryData.flatMap(category => 
     category.top_menus.filter(menu => menu.sales_count === 0)
     .map(menu => ({
       ...menu,
       category_name: category.category_name
     }))
-  ).slice(0, 5);
+  );
+
+  // Use dedicated field if available, otherwise use filtered top_menus
+  const noSellingItems = noSellingItemsFromDedicatedField.length > 0 
+    ? noSellingItemsFromDedicatedField.slice(0, 5) 
+    : noSellingItemsFromTopMenus.slice(0, 5);
 
   // Check which tabs have data
   const hasTopSellingData = topSellingItems.length > 0;
   const hasLowSellingData = lowSellingItems.length > 0;
-  const hasNoSellingData = noSellingItems.length > 0;
+  // If we have direct no_selling data in any category, force this to true
+  const hasNoSellingData = hasDirectNoSellingData || noSellingItems.length > 0;
+
+  // Debug info for no selling items
+  console.log('No Selling Items (Legacy):', {
+    hasDirectNoSellingData,
+    fromDedicatedField: noSellingItemsFromDedicatedField,
+    fromTopMenus: noSellingItemsFromTopMenus,
+    final: noSellingItems,
+    hasData: hasNoSellingData
+  });
 
   // If no data in any tab, don't render the card
   if (!hasTopSellingData && !hasLowSellingData && !hasNoSellingData) return null;
 
-  // Set the active tab to the first one that has data
+  // If we have direct no_selling data in any category, log it
+  if (hasDirectNoSellingData) {
+    console.log("Direct no_selling data found in categories:", 
+      categoryData.filter(cat => cat.no_selling && cat.no_selling.length > 0)
+        .map(cat => ({ category: cat.category_name, noSellingCount: cat.no_selling.length }))
+    );
+  }
+
+  // Set the active tab to the first one that has data, prioritizing no_selling if it's available
   useEffect(() => {
-    if (activeTab === 'top' && !hasTopSellingData) {
+    // If no_selling has data and the current tab isn't 'no', switch to it
+    if (hasNoSellingData && activeTab !== 'no') {
+      console.log("Prioritizing 'no' tab since it has data");
+      setActiveTab('no');
+    }
+    // Otherwise, if current tab has no data, find another tab
+    else if (activeTab === 'top' && !hasTopSellingData) {
       if (hasLowSellingData) {
         setActiveTab('low');
       } else if (hasNoSellingData) {
@@ -1212,12 +1413,15 @@ const ProductsAnalysisCard = ({ categoryData }) => {
 
   // Get the items to display based on active tab
   const getItemsToDisplay = () => {
+    console.log("Getting items to display for tab:", activeTab);
     switch (activeTab) {
       case 'top':
         return topSellingItems;
       case 'low':
         return lowSellingItems;
       case 'no':
+        // Log the no selling items before returning
+        console.log("Returning no selling items:", noSellingItems);
         return noSellingItems;
       default:
         return [];
@@ -1279,19 +1483,25 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {getItemsToDisplay().map((item, index) => (
-              <tr key={index}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {index + 1}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.menu_name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                  {item.sales_count}
-                </td>
-              </tr>
-            ))}
+            {getItemsToDisplay().map((item, index) => {
+              // For no_selling items from API, ensure we're displaying properly
+              const isNoSellingItem = activeTab === 'no';
+              const displayName = isNoSellingItem ? (item.menu_name || item.name || 'Unknown Item') : item.menu_name;
+              
+              return (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {displayName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    {isNoSellingItem ? 0 : item.sales_count}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
