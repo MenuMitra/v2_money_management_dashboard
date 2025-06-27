@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
+const DateRangePicker = ({ onChange, initialValue = 'all', disabled = false }) => {
   const [dateRange, setDateRange] = useState(initialValue);
   const [showCustomRange, setShowCustomRange] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -90,22 +90,25 @@ const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
       {/* Dropdown button */}
       <button
         type="button"
-        className="inline-flex justify-between w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary-500"
-        onClick={() => setShowDropdown(!showDropdown)}
+        className={`inline-flex justify-between w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-sm font-medium ${
+          disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50 focus:ring-1 focus:ring-primary-500'
+        }`}
+        onClick={() => !disabled && setShowDropdown(!showDropdown)}
+        disabled={disabled}
       >
         <span className="flex items-center truncate">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 flex-shrink-0 ${disabled ? 'text-gray-400' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span className="truncate">{getDisplayText()}</span>
         </span>
-        <svg className="h-4 w-4 text-gray-500 ml-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className={`h-4 w-4 ml-2 flex-shrink-0 ${disabled ? 'text-gray-400' : 'text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
-      {/* Dropdown menu */}
-      {showDropdown && (
+      {/* Dropdown menu - only show if not disabled */}
+      {showDropdown && !disabled && (
         <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-[10]">
           <div className="py-1">
             {['all', 'today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'lastMonth'].map((range) => (
@@ -139,8 +142,8 @@ const DateRangePicker = ({ onChange, initialValue = 'all' }) => {
         </div>
       )}
 
-      {/* Custom date range picker */}
-      {showCustomRange && (
+      {/* Custom date range picker - only show if not disabled */}
+      {showCustomRange && !disabled && (
         <div className="absolute z-[10] left-0 sm:right-0 sm:left-auto mt-2 p-4 bg-white rounded-md shadow-lg border border-gray-200 w-full sm:w-auto min-w-[280px]">
           <div className="space-y-3">
             <div>

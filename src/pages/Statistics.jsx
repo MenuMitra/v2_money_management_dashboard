@@ -665,9 +665,6 @@ const CollectionSourcesCard = ({ collectionData }) => {
         <div className="p-5 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-            <p className="text-sm text-gray-500">
-              <span className="font-medium text-gray-900">Total: ₹0</span>
-            </p>
           </div>  
         </div>
         <div className="p-5 flex items-center justify-center h-[200px]">
@@ -690,25 +687,32 @@ const CollectionSourcesCard = ({ collectionData }) => {
     }).format(amount);
   };
 
-  // Calculate total collection
-  const totalAmount = 
-    (collectionData.upi_amount || 0) +
-    (collectionData.cash_amount || 0) +
-    (collectionData.card_amount || 0) +
-    (collectionData.complementary_amount || 0) +
-    (collectionData.udhari_amount || 0) +
-    (collectionData.advance_payment_amount || 0);
+  // Use the total from API response if available
+  const hasTotal = collectionData.total_amount !== undefined && collectionData.total_amount !== null;
+  const totalAmount = hasTotal ? collectionData.total_amount : 0;
 
-  // If total amount is 0, show empty container
-  if (totalAmount === 0) {
+  // Check if there's any payment method with amount > 0
+  const hasPaymentData = (
+    (collectionData.upi_amount || 0) > 0 ||
+    (collectionData.cash_amount || 0) > 0 ||
+    (collectionData.card_amount || 0) > 0 ||
+    (collectionData.complementary_amount || 0) > 0 ||
+    (collectionData.udhari_amount || 0) > 0 ||
+    (collectionData.advance_payment_amount || 0) > 0
+  );
+
+  // If no payment data, show empty container
+  if (!hasPaymentData) {
     return (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-5 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-            <p className="text-sm text-gray-500">
-              <span className="font-medium text-gray-900">Total: ₹0</span>
-            </p>
+            {hasTotal && (
+              <p className="text-sm text-gray-500">
+                <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
+              </p>
+            )}
           </div>  
         </div>
         <div className="p-5 flex items-center justify-center h-[200px]">
@@ -768,9 +772,11 @@ const CollectionSourcesCard = ({ collectionData }) => {
       <div className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-          <p className="text-sm text-gray-500">
-            <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
-          </p>
+          {hasTotal && (
+            <p className="text-sm text-gray-500">
+              <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
+            </p>
+          )}
         </div>  
       </div>
       <div className="p-5 space-y-4">
@@ -785,7 +791,7 @@ const CollectionSourcesCard = ({ collectionData }) => {
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
                 className={`${method.color} h-2.5 rounded-full`} 
-                style={{ width: `${(method.amount / totalAmount) * 100}%` }}
+                style={{ width: `${(method.amount / (totalAmount || 1)) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -1150,43 +1156,117 @@ const ProductsAnalysisCard = ({ categoryData }) => {
       ...menu,
       category_name: category.category_name
     }))
-  ).sort((a, b) => b.sales_count - a.sales_count).slice(0, 5);
+  ).filter(item => item.sales_count > 0)
+    .sort((a, b) => b.sales_count - a.sales_count)
+    .slice(0, 5);
 
-  // Get low selling items (reverse of top selling)
-  const lowSellingItems = [...topSellingItems].sort((a, b) => a.sales_count - b.sales_count).slice(0, 5);
+  // Get low selling items (items with sales count > 0, sorted ascending)
+  const lowSellingItems = categoryData.flatMap(category => 
+    category.top_menus.map(menu => ({
+      ...menu,
+      category_name: category.category_name
+    }))
+  ).filter(item => item.sales_count > 0)
+    .sort((a, b) => a.sales_count - b.sales_count)
+    .slice(0, 5);
 
-  // If no items to display, don't render the card
-  if (topSellingItems.length === 0) return null;
+  // Get no selling items (items with zero sales count)
+  const noSellingItems = categoryData.flatMap(category => 
+    category.top_menus.filter(menu => menu.sales_count === 0)
+    .map(menu => ({
+      ...menu,
+      category_name: category.category_name
+    }))
+  ).slice(0, 5);
+
+  // Check which tabs have data
+  const hasTopSellingData = topSellingItems.length > 0;
+  const hasLowSellingData = lowSellingItems.length > 0;
+  const hasNoSellingData = noSellingItems.length > 0;
+
+  // If no data in any tab, don't render the card
+  if (!hasTopSellingData && !hasLowSellingData && !hasNoSellingData) return null;
+
+  // Set the active tab to the first one that has data
+  useEffect(() => {
+    if (activeTab === 'top' && !hasTopSellingData) {
+      if (hasLowSellingData) {
+        setActiveTab('low');
+      } else if (hasNoSellingData) {
+        setActiveTab('no');
+      }
+    } else if (activeTab === 'low' && !hasLowSellingData) {
+      if (hasTopSellingData) {
+        setActiveTab('top');
+      } else if (hasNoSellingData) {
+        setActiveTab('no');
+      }
+    } else if (activeTab === 'no' && !hasNoSellingData) {
+      if (hasTopSellingData) {
+        setActiveTab('top');
+      } else if (hasLowSellingData) {
+        setActiveTab('low');
+      }
+    }
+  }, [activeTab, hasTopSellingData, hasLowSellingData, hasNoSellingData]);
+
+  // Get the items to display based on active tab
+  const getItemsToDisplay = () => {
+    switch (activeTab) {
+      case 'top':
+        return topSellingItems;
+      case 'low':
+        return lowSellingItems;
+      case 'no':
+        return noSellingItems;
+      default:
+        return [];
+    }
+  };
 
   return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
         <div className="mt-4 flex justify-center">
-          <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-          <button 
-            onClick={() => setActiveTab('top')}
-              className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Top Selling
-          </button>
-          <button 
-            onClick={() => setActiveTab('low')}
-              className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Low Selling
-          </button>
+          <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-4 w-full max-w-md`}>
+            {hasTopSellingData && (
+              <button 
+                onClick={() => setActiveTab('top')}
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Top Selling
+              </button>
+            )}
+            {hasLowSellingData && (
+              <button 
+                onClick={() => setActiveTab('low')}
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Low Selling
+              </button>
+            )}
+            {hasNoSellingData && (
+              <button 
+                onClick={() => setActiveTab('no')}
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'no' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                No Selling
+              </button>
+            )}
           </div>
         </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 #
               </th>
@@ -1196,10 +1276,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Sales Count
               </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-            {(activeTab === 'top' ? topSellingItems : lowSellingItems).map((item, index) => (
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {getItemsToDisplay().map((item, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {index + 1}
@@ -1210,12 +1290,12 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                   {item.sales_count}
                 </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 

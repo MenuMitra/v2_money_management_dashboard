@@ -3,6 +3,7 @@ import { useOutlet } from '../context/OutletContext';
 import { useAuth } from '../context/AuthContext';
 import OutletSelector from './OutletSelector';
 import DateRangePicker from './DateRangePicker';
+import { useLocation } from 'react-router-dom';
 
 const OutletHeader = () => {
   const { currentOutlet, loading, updateCurrentOutlet } = useOutlet();
@@ -10,10 +11,15 @@ const OutletHeader = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [dateRange, setDateRange] = useState({ type: 'all' });
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const profileRef = useRef(null);
+  const location = useLocation();
   
   const role = localStorage.getItem('role') || 'User';
   const userName = localStorage.getItem('user_name') || 'User';
+
+  // Check if current page is Statistics
+  const isStatisticsPage = location.pathname === '/statistics';
 
   // Handle clicks outside to close the logout dropdown
   useEffect(() => {
@@ -50,8 +56,13 @@ const OutletHeader = () => {
   };
 
   const handleRefresh = () => {
+    // Start the refresh animation
+    setIsRefreshing(true);
+    
     // Implement refresh logic here
     window.location.reload();
+    
+    // Note: The page will reload, so we don't need to reset isRefreshing
   };
 
   const handleLogout = () => {
@@ -86,10 +97,14 @@ const OutletHeader = () => {
           </svg>
         </button>
         
-          {/* Date Range Picker - only visible when outlet is selected */}
+          {/* Date Range Picker - always visible when outlet is selected but only enabled on Statistics page */}
         {currentOutlet && (
             <div className="hidden md:block ml-4">
-            <DateRangePicker onChange={handleDateRangeChange} initialValue="all" />
+            <DateRangePicker 
+              onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
+              initialValue="all" 
+              disabled={!isStatisticsPage}
+            />
           </div>
         )}
       </div>
@@ -100,12 +115,19 @@ const OutletHeader = () => {
         {currentOutlet && (
         <button 
           onClick={handleRefresh}
-              className="h-9 w-9 flex items-center justify-center rounded-full text-gray-600 hover:text-primary-600 hover:bg-gray-100 focus:outline-none transition-colors border border-gray-300 hidden md:flex"
+              className="group h-9 w-9 flex items-center justify-center rounded-md text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex"
           title="Refresh"
+          disabled={isRefreshing}
         >
-              <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+              <svg 
+                className={`h-4 w-4 transition-transform ${isRefreshing ? 'animate-spin' : ''}`}
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
         </button>
           )}
         

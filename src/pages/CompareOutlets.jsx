@@ -518,7 +518,7 @@ export default function CompareOutlets() {
             
             <div className="flex items-center">
               {/* Only show refresh button if we have outlets to refresh */}
-              {(selectedOutlets.length > 0 || currentOutlet) && <RefreshButton />}
+              {/* {(selectedOutlets.length > 0 || currentOutlet) && <RefreshButton />} */}
               
               <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full ml-2">
                 {selectedOutlets.length} of {MAX_COMPARE_OUTLETS} outlets selected
