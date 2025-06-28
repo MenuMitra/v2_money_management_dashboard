@@ -141,11 +141,17 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     
     try {
+      // Call the logout API
       await authApi.logout();
       
       // Clear auth state
       setUser(null);
       setIsAuthenticated(false);
+      
+      // Dispatch events to reset other components
+      window.dispatchEvent(new CustomEvent('outlet:changed', { detail: null }));
+      window.dispatchEvent(new CustomEvent('daterange:changed', { detail: { type: 'all' } }));
+      window.dispatchEvent(new CustomEvent('cache:clear', { detail: null }));
       
       // Navigate to login
       navigate('/login');

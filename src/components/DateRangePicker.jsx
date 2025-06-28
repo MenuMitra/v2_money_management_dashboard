@@ -8,6 +8,32 @@ const DateRangePicker = ({ onChange, initialValue = 'all', disabled = false }) =
   const [showDropdown, setShowDropdown] = useState(false);
   const datePickerRef = useRef(null);
 
+  // Listen for outlet changes to reset the date range
+  useEffect(() => {
+    const outletChangeHandler = () => {
+      setDateRange('all');
+      setShowCustomRange(false);
+      setStartDate('');
+      setEndDate('');
+    };
+
+    // Listen for a custom event that indicates the outlet has changed
+    window.addEventListener('outlet:changed', outletChangeHandler);
+    
+    // Also listen for cache:clear event (e.g., on logout)
+    window.addEventListener('cache:clear', outletChangeHandler);
+    
+    return () => {
+      window.removeEventListener('outlet:changed', outletChangeHandler);
+      window.removeEventListener('cache:clear', outletChangeHandler);
+    };
+  }, []);
+
+  // Reset date range when initialValue changes (e.g., when outlet changes)
+  useEffect(() => {
+    setDateRange(initialValue);
+  }, [initialValue]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {

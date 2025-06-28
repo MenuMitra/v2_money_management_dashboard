@@ -34,6 +34,21 @@ export const OutletProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
+  
+  // Listen for cache:clear event (e.g., on logout)
+  useEffect(() => {
+    const handleCacheClear = () => {
+      console.log('Clearing outlet context data due to logout');
+      clearCurrentOutlet();
+      setLoading(false);
+    };
+    
+    window.addEventListener('cache:clear', handleCacheClear);
+    
+    return () => {
+      window.removeEventListener('cache:clear', handleCacheClear);
+    };
+  }, []);
 
   // Update the current outlet
   const updateCurrentOutlet = (outlet) => {

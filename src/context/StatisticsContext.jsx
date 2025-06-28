@@ -225,6 +225,35 @@ export const StatisticsProvider = ({ children }) => {
     }
   }, [checkForDataChanges]);
 
+  // Listen for cache:clear event (e.g., on logout)
+  useEffect(() => {
+    const handleCacheClear = () => {
+      console.log('Clearing statistics data due to logout');
+      setStatistics(null);
+      setLastFetched(null);
+      dataHashRef.current = null;
+      currentOutletIdRef.current = null;
+      forcedRefreshTimeRef.current = null;
+      
+      // Clear any ongoing requests
+      if (pendingRequestRef.current) {
+        pendingRequestRef.current = null;
+      }
+      
+      // Clear any interval
+      if (periodicCheckerRef.current) {
+        clearInterval(periodicCheckerRef.current);
+        periodicCheckerRef.current = null;
+      }
+    };
+    
+    window.addEventListener('cache:clear', handleCacheClear);
+    
+    return () => {
+      window.removeEventListener('cache:clear', handleCacheClear);
+    };
+  }, []);
+
   // Context value - we don't expose loading state to prevent UI flashing
   const value = {
     statistics,

@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useCallback } from 'react';
+import { createContext, useState, useContext, useCallback, useEffect } from 'react';
 import axiosInstance from '../api/axios';
 
 // Create context
@@ -11,6 +11,20 @@ const CACHE_EXPIRATION = 5 * 60 * 1000; // 5 minutes
 export const CacheDataProvider = ({ children }) => {
   // Local in-memory cache
   const [cache, setCache] = useState({});
+  
+  // Listen for cache:clear event
+  useEffect(() => {
+    const handleCacheClear = () => {
+      console.log('Clearing cache data due to logout');
+      setCache({});
+    };
+    
+    window.addEventListener('cache:clear', handleCacheClear);
+    
+    return () => {
+      window.removeEventListener('cache:clear', handleCacheClear);
+    };
+  }, []);
   
   // Save data to cache with timestamp
   const saveToCache = useCallback((key, data) => {

@@ -13,9 +13,20 @@ export default function Layout({ children }) {
   const { currentOutlet } = useOutlet();
   const { logout } = useAuth();
   const [dateRange, setDateRange] = useState({ type: 'all' });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const userName = localStorage.getItem('user_name') || 'User';
   const role = localStorage.getItem('role') || 'User';
+
+  // Listen for outlet changes to reset date filter
+  useEffect(() => {
+    if (currentOutlet) {
+      setDateRange({ type: 'all' });
+      // Dispatch event to notify other components
+      const event = new CustomEvent('daterange:changed', { detail: { type: 'all' } });
+      window.dispatchEvent(event);
+    }
+  }, [currentOutlet?.outlet_id]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -35,6 +46,17 @@ export default function Layout({ children }) {
     const event = new CustomEvent('daterange:changed', { detail: range });
     window.dispatchEvent(event);
   };
+  
+  const handleRefresh = () => {
+    // Start the refresh animation
+    setIsRefreshing(true);
+    
+    // Implement refresh logic here
+    window.location.reload();
+  };
+
+  // Check if current page is Statistics
+  const isStatisticsPage = location.pathname === '/statistics';
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: 'dashboard' },
@@ -114,30 +136,6 @@ export default function Layout({ children }) {
               </svg>
             </button>
           </div>
-
-            {/* User Profile Section - Only visible on mobile */}
-            <div className="border-b border-gray-200 px-4 py-3 md:hidden">
-              <div className="flex items-center">
-                <div className="h-10 w-10 rounded-full bg-primary-500 text-white flex items-center justify-center mr-3">
-                  <span className="font-medium">{userName.charAt(0).toUpperCase()}</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">{userName}</p>
-                  <p className="text-xs text-gray-500 capitalize">{role}</p>
-                </div>
-              </div>
-              
-              {/* Date Range Picker only - removed refresh and logout buttons */}
-              <div className="mt-3">
-                {/* Date Range Picker on mobile - only when outlet is selected */}
-                {currentOutlet && (
-                  <div className="py-2">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Date Range:</p>
-                    <DateRangePicker onChange={handleDateRangeChange} initialValue="all" />
-                  </div>
-                )}
-              </div>
-            </div>
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
@@ -258,6 +256,36 @@ export default function Layout({ children }) {
               <OutletHeader />
             </div>
           </div>
+          
+          {/* Mobile Date Filter and Refresh Button - only visible on mobile */}
+          {currentOutlet && (
+            <div className="md:hidden flex items-center justify-end gap-3 py-2 px-4">
+              <button 
+                onClick={handleRefresh}
+                className="h-9 w-9 flex items-center justify-center rounded-md text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none"
+                title="Refresh"
+                disabled={isRefreshing}
+              >
+                <svg 
+                  className={`h-5 w-5 transition-transform ${isRefreshing ? 'animate-spin' : ''}`}
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              
+              <div>
+                <DateRangePicker 
+                  onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
+                  initialValue="all" 
+                  disabled={!isStatisticsPage}
+                />
+              </div>
+            </div>
+          )}
           
           {/* Outlet Status Bar - shows on all pages */}
           <OutletStatusBar />

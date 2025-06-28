@@ -38,6 +38,22 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
                             openFilter !== 'all' || 
                             sortOrder !== 'default' ||
                             searchTerm.trim() !== '';
+  
+  // Listen for cache:clear event (e.g., on logout)
+  useEffect(() => {
+    const handleCacheClear = () => {
+      console.log('Clearing outlet selector data due to logout');
+      setOutlets([]);
+      setFilteredOutlets([]);
+      lastFetchTimestampRef.current = null;
+    };
+    
+    window.addEventListener('cache:clear', handleCacheClear);
+    
+    return () => {
+      window.removeEventListener('cache:clear', handleCacheClear);
+    };
+  }, []);
 
   // Fetch outlets when component mounts or modal opens
   useEffect(() => {
@@ -206,6 +222,14 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       if (outlet.owner_name) {
         localStorage.setItem('owner_name', outlet.owner_name);
       }
+      
+      // Dispatch outlet:changed event to notify other components
+      window.dispatchEvent(new CustomEvent('outlet:changed', { 
+        detail: {
+          outlet_id: outlet.outlet_id,
+          name: outlet.name
+        }
+      }));
     }
     
     // Call onSelect callback

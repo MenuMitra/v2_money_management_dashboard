@@ -51,12 +51,22 @@ export const authApi = {
    * @returns {Promise} - API response
    */
   logout: async () => {
-    // We may not need an actual API call for logout if we're just clearing local storage
-    // but we'll include this for future use
     try {
       const userId = localStorage.getItem('user_id');
-      // Make an API call if there's a logout endpoint
-      // const response = await axios.post(`${COMMON_PREFIX}/logout`, { user_id: userId });
+      const accessToken = localStorage.getItem('access_token');
+      
+      // Make an API call to the logout endpoint
+      if (userId && accessToken) {
+        try {
+          await axios.post(`${COMMON_PREFIX}/logout`, { 
+            user_id: userId,
+            app_source: 'admin'
+          });
+        } catch (apiError) {
+          console.error('Logout API error:', apiError);
+          // Continue with local logout even if API call fails
+        }
+      }
       
       // Clear all auth-related localStorage items
       localStorage.removeItem('access_token');
@@ -67,7 +77,15 @@ export const authApi = {
       localStorage.removeItem('mobile_number');
       localStorage.removeItem('role');
       localStorage.removeItem('outlet_id');
+      localStorage.removeItem('outlet_name');
+      localStorage.removeItem('outlet_code');
+      localStorage.removeItem('outlet_address');
+      localStorage.removeItem('outlet_status');
+      localStorage.removeItem('outlet_is_open');
       localStorage.removeItem('fcm_token');
+      
+      // Clear any session storage items too
+      sessionStorage.clear();
       
       return { success: true, message: 'Successfully logged out' };
     } catch (error) {

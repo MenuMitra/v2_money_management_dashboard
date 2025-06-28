@@ -6,8 +6,8 @@ import DateRangePicker from './DateRangePicker';
 import { useLocation } from 'react-router-dom';
 
 const OutletHeader = () => {
-  const { currentOutlet, loading, updateCurrentOutlet } = useOutlet();
-  const { logout } = useAuth();
+  const { currentOutlet, loading, updateCurrentOutlet, clearCurrentOutlet } = useOutlet();
+  const { logout, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [dateRange, setDateRange] = useState({ type: 'all' });
@@ -17,6 +17,10 @@ const OutletHeader = () => {
   
   const role = localStorage.getItem('role') || 'User';
   const userName = localStorage.getItem('user_name') || 'User';
+  const userId = localStorage.getItem('user_id');
+  
+  // Store the current user ID to detect changes
+  const userIdRef = useRef(userId);
 
   // Check if current page is Statistics
   const isStatisticsPage = location.pathname === '/statistics';
@@ -34,6 +38,18 @@ const OutletHeader = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+  
+  // Check if the user ID has changed (indicating a login with a different user)
+  useEffect(() => {
+    const currentUserId = localStorage.getItem('user_id');
+    
+    // If user ID changed, clear the outlet selection
+    if (userIdRef.current !== currentUserId) {
+      console.log('User changed, clearing outlet selection');
+      clearCurrentOutlet();
+      userIdRef.current = currentUserId;
+    }
+  }, [user, clearCurrentOutlet]);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -45,7 +61,12 @@ const OutletHeader = () => {
 
   const handleSelectOutlet = (outlet) => {
     updateCurrentOutlet(outlet);
-    // You could trigger a data reload here or dispatch an event
+    // Reset date range to 'all' when outlet changes
+    setDateRange({ type: 'all' });
+    
+    // Dispatch an event to notify other components that the outlet has changed
+    const event = new CustomEvent('outlet:changed', { detail: outlet });
+    window.dispatchEvent(event);
   };
 
   const handleDateRangeChange = (range) => {
@@ -111,7 +132,7 @@ const OutletHeader = () => {
       
         {/* Right section with refresh button and profile */}
         <div className="flex items-center gap-3 h-9">
-          {/* Refresh Button - only show when an outlet is selected */}
+          {/* Refresh Button - only show when an outlet is selected and only on desktop */}
         {currentOutlet && (
         <button 
           onClick={handleRefresh}
@@ -137,16 +158,22 @@ const OutletHeader = () => {
             className="relative flex items-center h-9"
           onClick={toggleLogout}
         >
-          <div className="flex items-center cursor-pointer">
+          <div className="flex flex-row items-center cursor-pointer">
               <div className="text-sm hidden md:block mr-2">
                 <p className="text-gray-700 font-medium leading-tight">{userName}</p>
                 <p className="text-xs text-gray-500 capitalize leading-tight">{role}</p>
               </div>
-              <div className="h-7 w-7 rounded-full bg-primary-500 text-white flex items-center justify-center">
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="md:h-7 md:w-7 h-8 w-8 rounded-full bg-primary-500 text-white flex items-center justify-center">
+                {/* Show initial on mobile, icon on desktop */}
+                <span className="font-medium md:hidden">{userName.charAt(0).toUpperCase()}</span>
+                <svg className="h-4 w-4 hidden md:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-            </div>
+              </div>
+              <div className="text-sm md:hidden ml-2">
+                <p className="text-gray-700 font-medium leading-tight">{userName}</p>
+                <p className="text-xs text-gray-500 capitalize leading-tight">{role}</p>
+              </div>
           </div>
           
           {/* Improved Logout button that appears on click */}

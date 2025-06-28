@@ -342,14 +342,30 @@ export default function CompareOutlets() {
 
   // Format value based on its type
   const formatValue = (value, type) => {
-    if (value === null || value === undefined) return '₹0';
+    if (value === null || value === undefined) {
+      return type === 'date' ? '-' : '₹0';
+    }
     
     if (type === 'currency') {
       return formatIndianCurrency(value);
     }
     
     if (type === 'date') {
-      return value || 'N/A'; // Return date as is or N/A if empty
+      try {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return '-';
+        
+        const day = date.getDate().toString().padStart(2, '0');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        
+        return `${day} ${month} ${year}`;
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return '-';
+      }
     }
     
     if (type === 'number') {
@@ -520,7 +536,11 @@ export default function CompareOutlets() {
               {/* Only show refresh button if we have outlets to refresh */}
               {/* {(selectedOutlets.length > 0 || currentOutlet) && <RefreshButton />} */}
               
-              <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full ml-2">
+              <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full ml-2 ${
+                selectedOutlets.length === MAX_COMPARE_OUTLETS 
+                  ? 'bg-orange-100 text-orange-800' 
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
                 {selectedOutlets.length} of {MAX_COMPARE_OUTLETS} outlets selected
               </span>
             </div>

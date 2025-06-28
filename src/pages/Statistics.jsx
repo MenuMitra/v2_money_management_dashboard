@@ -20,8 +20,16 @@ const FoodTypeChart = ({ foodTypeData }) => {
   };
   
   // Extract data from the foodTypeData object
-  const days = Object.keys(chartData);
+  const allDays = Object.keys(chartData);
   const foodTypes = ['veg', 'nonveg', 'vegan', 'egg'];
+
+  // Filter out days that have zero values for all food types
+  const daysWithData = allDays.filter(day => 
+    foodTypes.some(type => chartData[day][type] > 0)
+  );
+  
+  // If all days have zero values for all food types, use all days (default behavior)
+  const daysToDisplay = daysWithData.length > 0 ? daysWithData : allDays;
 
   // Food type badge definitions with colors and labels
   const foodTypeBadges = {
@@ -34,7 +42,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
   // Check which food types have non-zero values
   const foodTypeHasData = {};
   foodTypes.forEach(type => {
-    foodTypeHasData[type] = days.some(day => chartData[day][type] > 0);
+    foodTypeHasData[type] = daysToDisplay.some(day => chartData[day][type] > 0);
   });
 
   // Filter food types to only include those with non-zero values
@@ -50,7 +58,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
         name: type === 'veg' ? 'Vegetarian' : 
               type === 'nonveg' ? 'Non-Vegetarian' : 
               type === 'vegan' ? 'Vegan' : 'Egg',
-        data: days.map(day => chartData[day][type] || 0)
+        data: daysToDisplay.map(day => chartData[day][type] || 0)
       };
     });
 
@@ -80,7 +88,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
       colors: ['transparent']
     },
     xaxis: {
-      categories: days.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
+      categories: daysToDisplay.map(day => day.charAt(0).toUpperCase() + day.slice(1)),
       labels: {
         style: {
           fontSize: '12px'
@@ -143,490 +151,6 @@ const FoodTypeChart = ({ foodTypeData }) => {
   );
 };
 
-// Revenue Trend Chart Component
-const RevenueTrendChart = ({ revenueData }) => {
-  // Early return with empty container if no data
-  if (!revenueData || Object.keys(revenueData).length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Revenue Trend</h3>
-          <p className="text-sm text-gray-500">Daily revenue over time</p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[350px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No revenue data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Extract dates and revenue values
-  const dates = Object.keys(revenueData).sort();
-  const revenues = dates.map(date => revenueData[date] || 0);
-  
-  // Check if there's any non-zero data
-  if (!revenues.some(value => value > 0)) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Revenue Trend</h3>
-          <p className="text-sm text-gray-500">Daily revenue over time</p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[350px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No revenue data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Format dates for display
-  const formattedDates = dates.map(date => {
-    const [year, month, day] = date.split('-');
-    return `${day}/${month}`;
-  });
-  
-  const options = {
-    chart: {
-      type: 'area',
-      height: 350,
-      fontFamily: 'Inter, sans-serif',
-      toolbar: {
-        show: false
-      },
-      zoom: {
-        enabled: false
-      }
-    },
-    dataLabels: {
-      enabled: false
-    },
-    stroke: {
-      curve: 'smooth',
-      width: 3
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.3,
-        stops: [0, 90, 100]
-      }
-    },
-    xaxis: {
-      categories: formattedDates,
-      labels: {
-        rotate: -45,
-        rotateAlways: false,
-        style: {
-          fontSize: '12px'
-        }
-      },
-      tickAmount: Math.min(dates.length, 10)
-    },
-    yaxis: {
-      title: {
-        text: 'Revenue (₹)'
-      },
-      labels: {
-        formatter: function(val) {
-          return val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val;
-        }
-      }
-    },
-    colors: ['#3B82F6'],
-    tooltip: {
-      y: {
-        formatter: function(val) {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-          }).format(val);
-        }
-      }
-    },
-    markers: {
-      size: 4,
-      colors: ['#3B82F6'],
-      strokeColors: '#fff',
-      strokeWidth: 2,
-      hover: {
-        size: 6
-      }
-    }
-  };
-
-  const series = [{
-    name: 'Revenue',
-    data: revenues
-  }];
-
-  return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Revenue Trend</h3>
-        <p className="text-sm text-gray-500">Daily revenue over time</p>
-      </div>
-      <div className="p-5">
-        <ReactApexChart 
-          options={options} 
-          series={series} 
-          type="area" 
-          height={350} 
-        />
-      </div>
-    </div>
-  );
-};
-
-// Order Trend Chart Component
-const OrderTrendChart = ({ orderData }) => {
-  // Early return with empty container if no data
-  if (!orderData || Object.keys(orderData).length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Order Trend</h3>
-          <p className="text-sm text-gray-500">Daily order count over time</p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[350px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No order data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Extract dates and order counts
-  const dates = Object.keys(orderData).sort();
-  const orders = dates.map(date => orderData[date] || 0);
-  
-  // Check if there's any non-zero data
-  if (!orders.some(value => value > 0)) {
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Order Trend</h3>
-          <p className="text-sm text-gray-500">Daily order count over time</p>
-        </div>
-        <div className="p-5 flex items-center justify-center h-[350px]">
-          <div className="text-center text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No order data available</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Format dates for display
-  const formattedDates = dates.map(date => {
-    const [year, month, day] = date.split('-');
-    return `${day}/${month}`;
-  });
-  
-  const options = {
-    chart: {
-      type: 'line',
-      height: 350,
-      fontFamily: 'Inter, sans-serif',
-      toolbar: {
-        show: false
-      },
-      zoom: {
-        enabled: false
-      }
-    },
-    dataLabels: {
-      enabled: false
-    },
-    stroke: {
-      curve: 'straight',
-      width: 3
-    },
-    xaxis: {
-      categories: formattedDates,
-      labels: {
-        rotate: -45,
-        rotateAlways: false,
-        style: {
-          fontSize: '12px'
-        }
-      },
-      tickAmount: Math.min(dates.length, 10)
-    },
-    yaxis: {
-      title: {
-        text: 'Number of Orders'
-      },
-      labels: {
-        formatter: function(val) {
-          return Math.round(val);
-        }
-      }
-    },
-    colors: ['#10B981'],
-    tooltip: {
-      y: {
-        formatter: function(val) {
-          return Math.round(val) + ' orders';
-        }
-      }
-    },
-    markers: {
-      size: 4,
-      colors: ['#10B981'],
-      strokeColors: '#fff',
-      strokeWidth: 2,
-      hover: {
-        size: 6
-      }
-    },
-    grid: {
-      borderColor: '#e0e0e0',
-      row: {
-        colors: ['#f8f9fa', 'transparent'],
-        opacity: 0.5
-      }
-    }
-  };
-
-  const series = [{
-    name: 'Orders',
-    data: orders
-  }];
-
-    return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Order Trend</h3>
-        <p className="text-sm text-gray-500">Daily order count over time</p>
-        </div>
-      <div className="p-5">
-        <ReactApexChart 
-          options={options} 
-          series={series} 
-          type="line" 
-          height={350} 
-        />
-      </div>
-    </div>
-  );
-};
-
-// Top Items Chart Component
-const TopItemsChart = ({ topItems }) => {
-  if (!topItems || !Array.isArray(topItems) || topItems.length === 0) return null;
-  
-  // Sort items by quantity in descending order and take top 10
-  const sortedItems = [...topItems]
-    .sort((a, b) => b.quantity - a.quantity)
-    .slice(0, 10);
-  
-  // Extract names and quantities
-  const names = sortedItems.map(item => item.name);
-  const quantities = sortedItems.map(item => item.quantity);
-  const revenues = sortedItems.map(item => item.revenue);
-  
-  const options = {
-    chart: {
-      type: 'bar',
-      height: 350,
-      fontFamily: 'Inter, sans-serif',
-      toolbar: {
-        show: false
-      }
-    },
-    plotOptions: {
-      bar: {
-        horizontal: true,
-        barHeight: '70%',
-        distributed: false,
-        dataLabels: {
-          position: 'top'
-        }
-      }
-    },
-    colors: ['#3B82F6'],
-    dataLabels: {
-      enabled: true,
-      formatter: function (val) {
-        return val;
-      },
-      offsetX: 20,
-      style: {
-        fontSize: '12px',
-        colors: ['#304758']
-      }
-    },
-    stroke: {
-      width: 1,
-      colors: ['#fff']
-    },
-    xaxis: {
-      categories: names,
-      labels: {
-        formatter: function (val) {
-          return Math.round(val);
-        }
-      }
-    },
-    yaxis: {
-      labels: {
-        formatter: function (val) {
-          return val.length > 15 ? val.substring(0, 15) + '...' : val;
-        }
-      }
-    },
-    tooltip: {
-      y: {
-        formatter: function (val, { seriesIndex, dataPointIndex, w }) {
-          return `${val} orders - ₹${revenues[dataPointIndex]}`;
-        }
-      }
-    },
-    title: {
-      text: 'Top Selling Items',
-      floating: false,
-      offsetY: 0,
-      align: 'center',
-      style: {
-        color: '#444'
-      }
-    }
-  };
-
-  const series = [{
-    name: 'Quantity Sold',
-    data: quantities
-  }];
-
-  return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Top Selling Items</h3>
-        <p className="text-sm text-gray-500">Items with highest sales volume</p>
-          </div>
-      <div className="p-5">
-        <ReactApexChart 
-          options={options} 
-          series={series} 
-          type="bar" 
-          height={350} 
-        />
-        </div>
-    </div>
-  );
-};
-
-// Payment Method Chart Component
-const PaymentMethodChart = ({ paymentData }) => {
-  if (!paymentData) return null;
-  
-  // Extract payment methods and their counts
-  const methods = Object.keys(paymentData).filter(key => key !== 'total');
-  const counts = methods.map(method => paymentData[method] || 0);
-  
-  // Filter out zero values
-  const filteredMethods = [];
-  const filteredCounts = [];
-  methods.forEach((method, index) => {
-    if (counts[index] > 0) {
-      filteredMethods.push(method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' '));
-      filteredCounts.push(counts[index]);
-    }
-  });
-  
-  // If no data, return null
-  if (filteredCounts.length === 0) return null;
-
-  const options = {
-    chart: {
-      type: 'pie',
-      fontFamily: 'Inter, sans-serif',
-    },
-    labels: filteredMethods,
-    colors: ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6'],
-    legend: {
-      position: 'bottom',
-      horizontalAlign: 'center',
-      fontSize: '14px',
-      markers: {
-        width: 12,
-        height: 12,
-        radius: 12
-      },
-    },
-    plotOptions: {
-      pie: {
-        dataLabels: {
-          offset: -10
-        }
-      }
-    },
-    dataLabels: {
-      formatter: function (val, { seriesIndex, dataPointIndex, w }) {
-        return w.config.series[seriesIndex] + ' (' + val.toFixed(1) + '%)';
-      },
-      style: {
-        fontSize: '12px',
-        colors: ['#fff'],
-        textShadow: 'none'
-      },
-      background: {
-        enabled: false
-      },
-      dropShadow: {
-        enabled: false
-      }
-    },
-    responsive: [{
-      breakpoint: 480,
-      options: {
-        chart: {
-          width: 200
-        },
-        legend: {
-          position: 'bottom'
-        }
-      }
-    }]
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Payment Methods</h3>
-        <p className="text-sm text-gray-500">Distribution of payment methods used</p>
-      </div>
-      <div className="p-5">
-        <ReactApexChart 
-          options={options} 
-          series={filteredCounts} 
-          type="pie" 
-          height={350} 
-          />
-        </div>
-    </div>
-  );
-};
 
 // Collection Sources Card Component
 const CollectionSourcesCard = ({ collectionData }) => {
@@ -651,7 +175,7 @@ const CollectionSourcesCard = ({ collectionData }) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
@@ -947,8 +471,17 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   };
   
   // Extract days and counts
-  const days = data.data.map(day => day[0]);
-  const counts = data.data.map(day => parseInt(day[1]));
+  const allDays = data.data.map(day => day[0]);
+  const allCounts = data.data.map(day => parseInt(day[1]));
+  
+  // Filter out days with zero counts
+  const filteredData = data.data.filter(day => parseInt(day[1]) > 0);
+  const days = filteredData.map(day => day[0]);
+  const counts = filteredData.map(day => parseInt(day[1]));
+  
+  // If all days have zero counts, use all days (default behavior)
+  const daysToDisplay = days.length > 0 ? days : allDays;
+  const countsToDisplay = counts.length > 0 ? counts : allCounts;
   
   const options = {
     chart: {
@@ -976,7 +509,7 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
       colors: ['transparent']
     },
     xaxis: {
-      categories: days,
+      categories: daysToDisplay,
       labels: {
         style: {
           fontSize: '12px',
@@ -1016,7 +549,7 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   };
 
   // Add peak day annotation if it's a valid day (not "None")
-  if (data.peak_day && data.peak_day[0] && data.peak_day[0] !== "None" && days.includes(data.peak_day[0])) {
+  if (data.peak_day && data.peak_day[0] && data.peak_day[0] !== "None" && daysToDisplay.includes(data.peak_day[0])) {
     options.annotations.points.push({
       x: data.peak_day[0],
       y: parseInt(data.peak_day[1]),
@@ -1043,7 +576,7 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
 
   const series = [{
     name: 'Orders',
-    data: counts
+    data: countsToDisplay
   }];
 
   // Find the peak day and low day
@@ -1745,7 +1278,7 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
@@ -1974,7 +1507,7 @@ export default function Statistics() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
