@@ -30,8 +30,17 @@ export default function MenuReports() {
       setLoadingCategories(true);
       setError(null);
       
-      // Use the correct API endpoint with GET method
-      const response = await api.get(API_PATHS.reportFilterCategory);
+      // Use POST method instead of GET
+      const outletId = localStorage.getItem('outlet_id');
+      const userId = localStorage.getItem('user_id');
+      
+      const requestBody = {
+        outlet_id: outletId ? parseInt(outletId, 10) : null,
+        user_id: userId ? parseInt(userId, 10) : null,
+        app_source: 'admin'
+      };
+      
+      const response = await api.post(API_PATHS.reportFilterCategory, requestBody);
       
       if (response.data && response.data.detail && Array.isArray(response.data.detail)) {
         setCategories(response.data.detail);
