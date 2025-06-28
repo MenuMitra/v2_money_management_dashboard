@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ReportTable } from '../../components/common';
 import { Breadcrumb } from '../../components';
-import DateRangePicker from '../../components/DateRangePicker';
 import { getStaffReport } from '../../api/reports';
 
 export default function StaffReports() {
@@ -88,38 +87,18 @@ export default function StaffReports() {
     }
   ];
 
-  // Handle date range selection
-  const handleDateRangeChange = (dateRange) => {
-    // Create a new params object
-    const newParams = { filter_type: filterParams.filter_type || 'all' };
-    
-    if (dateRange.type === 'custom') {
-      newParams.start_date = dateRange.startDate;
-      newParams.end_date = dateRange.endDate;
-    } else if (dateRange.type !== 'all') {
-      newParams.date_range = dateRange.type;
-    }
-    
-    setFilterParams(newParams);
-  };
-
   // Handle staff type filter change
   const handleStaffTypeChange = (e) => {
     const value = e.target.value;
     
-    setFilterParams(prev => ({
-      ...prev,
-      filter_type: value
-    }));
+    setFilterParams({
+      filter_type: value,
+    });
   };
 
   // Render filter components
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
-      <div>
-        <DateRangePicker onChange={handleDateRangeChange} />
-      </div>
-      
       <div>
         <select
           value={filterParams.filter_type || 'all'}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
 import { Breadcrumb } from '../../components';
-import DateRangePicker from '../../components/DateRangePicker';
 import { getJoinTableReport } from '../../api/reports';
 import { api, API_PATHS } from '../../api';
 
@@ -23,7 +22,11 @@ export default function JoinTableReports() {
   const fetchSections = async () => {
     try {
       setLoading(true);
-      const response = await api.get(API_PATHS.reportFilterSection);
+      const response = await api.post(API_PATHS.reportFilterSection, {
+        outlet_id: localStorage.getItem('outlet_id'),
+        user_id: localStorage.getItem('user_id'),
+        app_source: "api"
+      });
       
       if (response.data && response.data.detail) {
         setSections(response.data.detail);
@@ -103,41 +106,17 @@ export default function JoinTableReports() {
     }
   ];
 
-  // Handle date range selection
-  const handleDateRangeChange = (dateRange) => {
-    // Create a new params object
-    const newParams = { filter_type: filterParams.filter_type || 'all' };
-    
-    if (dateRange.type === 'custom') {
-      newParams.start_date = dateRange.startDate;
-      newParams.end_date = dateRange.endDate;
-    } else if (dateRange.type !== 'all') {
-      newParams.date_range = dateRange.type;
-    }
-    
-    // Keep section_id if it exists
-    if (filterParams.section_id) {
-      newParams.section_id = filterParams.section_id;
-    }
-    
-    setFilterParams(newParams);
-  };
-
   // Handle section filter change
   const handleSectionChange = (e) => {
     const sectionId = e.target.value;
     
     if (sectionId) {
-      setFilterParams(prev => ({
-        ...prev,
+      setFilterParams({
         filter_type: 'section',
         section_id: parseInt(sectionId, 10)
-      }));
+      });
     } else {
-      // If no section is selected, remove section_id and set filter_type to 'all'
-      const { section_id, ...rest } = filterParams;
       setFilterParams({
-        ...rest,
         filter_type: 'all'
       });
     }
@@ -146,10 +125,6 @@ export default function JoinTableReports() {
   // Render filter components
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
-      <div>
-        <DateRangePicker onChange={handleDateRangeChange} />
-      </div>
-      
       <div>
         <select
           value={filterParams.section_id || ''}

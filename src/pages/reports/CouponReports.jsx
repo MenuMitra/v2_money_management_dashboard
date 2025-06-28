@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ReportTable } from '../../components/common';
 import { Breadcrumb } from '../../components';
-import DateRangePicker from '../../components/DateRangePicker';
 import { getCouponReport } from '../../api/reports';
 
 export default function CouponReports() {
@@ -11,37 +10,20 @@ export default function CouponReports() {
   });
   const [orderType, setOrderType] = useState('all');
   
-  // Handle date range selection
-  const handleDateRangeChange = (dateRange) => {
-    // Create a new params object
-    const newParams = { filter_type: filterParams.filter_type };
-    
-    if (dateRange.type === 'custom') {
-      newParams.start_date = dateRange.startDate;
-      newParams.end_date = dateRange.endDate;
-    } else if (dateRange.type !== 'all') {
-      newParams.date_range = dateRange.type;
-    }
-    
-    setFilterParams(newParams);
-  };
-
   // Handle order type filter change
   const handleOrderTypeChange = (e) => {
     const selectedOrderType = e.target.value;
     setOrderType(selectedOrderType);
     
     if (selectedOrderType === 'all') {
-      setFilterParams(prev => ({
-        ...prev,
+      setFilterParams({
         filter_type: 'all'
-      }));
+      });
     } else {
-      setFilterParams(prev => ({
-        ...prev,
+      setFilterParams({
         filter_type: 'order_type',
         order_type: selectedOrderType
-      }));
+      });
     }
   };
 
@@ -127,10 +109,6 @@ export default function CouponReports() {
   // Render filter components
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
-      <div>
-        <DateRangePicker onChange={handleDateRangeChange} />
-      </div>
-      
       <div>
         <select
           value={orderType}

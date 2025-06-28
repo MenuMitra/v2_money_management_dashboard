@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
 import { Breadcrumb } from '../../components';
-import DateRangePicker from '../../components/DateRangePicker';
 import { getMenuReport } from '../../api/reports';
 import { api, API_PATHS } from '../../api';
+import { formatInputDateForAPI, getDateRangeFromType } from '../../utils/dateUtils';
 
 export default function MenuReports() {
   // Initialize with minimal required parameters
   const [filterParams, setFilterParams] = useState({
     filter_type: 'all'
   });
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [dateFilterType, setDateFilterType] = useState('all');
   
   // State for categories
   const [categories, setCategories] = useState([]);
@@ -119,18 +122,51 @@ export default function MenuReports() {
     }
   ];
 
-  // Handle date range selection
-  const handleDateRangeChange = (dateRange) => {
-    // Create a new params object
-    const newParams = { filter_type: 'all' };
+  // Handle date filter change
+  const handleDateFilterChange = (e) => {
+    const { value } = e.target;
+    setDateFilterType(value);
     
-    if (dateRange.type === 'custom') {
-      newParams.filter_type = 'date_range';
-      newParams.start_date = dateRange.startDate;
-      newParams.end_date = dateRange.endDate;
-    } else if (dateRange.type !== 'all') {
-      newParams.filter_type = 'date_range';
-      newParams.date_range = dateRange.type;
+    // Create a new params object
+    const newParams = { ...filterParams };
+    
+    if (value === 'all') {
+      newParams.filter_type = 'all';
+      delete newParams.start_date;
+      delete newParams.end_date;
+    } else if (value === 'custom') {
+      if (startDate && endDate) {
+        newParams.filter_type = 'date_range';
+        newParams.start_date = formatInputDateForAPI(startDate);
+        newParams.end_date = formatInputDateForAPI(endDate);
+      }
+    } else {
+      // For predefined date ranges, use the utility function
+      const { startDate: calculatedStart, endDate: calculatedEnd } = getDateRangeFromType(value);
+      
+      if (calculatedStart && calculatedEnd) {
+        // Store the HTML input format dates (YYYY-MM-DD) in state
+        const formatDateForInput = (date) => {
+          if (typeof date === 'string' && date.includes(' ')) {
+            // Convert from DD MMM YYYY to input format
+            const [day, month, year] = date.split(' ');
+            const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month);
+            if (monthIndex !== -1) {
+              const dateObj = new Date(parseInt(year), monthIndex, parseInt(day));
+              return dateObj.toISOString().split('T')[0];
+            }
+          }
+          return '';
+        };
+        
+        setStartDate(formatDateForInput(calculatedStart));
+        setEndDate(formatDateForInput(calculatedEnd));
+        
+        // Use the API format dates (DD MMM YYYY) in the params
+        newParams.filter_type = 'date_range';
+        newParams.start_date = calculatedStart;
+        newParams.end_date = calculatedEnd;
+      }
     }
     
     // Preserve any category filter if it exists
@@ -139,6 +175,38 @@ export default function MenuReports() {
     }
     
     setFilterParams(newParams);
+  };
+  
+  // Handle date input changes
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'startDate') {
+      setStartDate(value);
+    } else if (name === 'endDate') {
+      setEndDate(value);
+    }
+    
+    // If both dates are set and custom filter is selected, update params
+    if (dateFilterType === 'custom' && 
+        ((name === 'startDate' && value && endDate) || 
+         (name === 'endDate' && value && startDate))) {
+      
+      const newStartDate = name === 'startDate' ? value : startDate;
+      const newEndDate = name === 'endDate' ? value : endDate;
+      
+      const newParams = { ...filterParams };
+      newParams.filter_type = 'date_range';
+      newParams.start_date = formatInputDateForAPI(newStartDate);
+      newParams.end_date = formatInputDateForAPI(newEndDate);
+      
+      // Preserve any category filter if it exists
+      if (filterParams.category_id && filterParams.category_id !== 'all') {
+        newParams.category_id = parseInt(filterParams.category_id, 10);
+      }
+      
+      setFilterParams(newParams);
+    }
   };
 
   // Handle category filter change
@@ -164,8 +232,44 @@ export default function MenuReports() {
   // Render filter components
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
-      <div>
-        <DateRangePicker onChange={handleDateRangeChange} />
+      <div className="flex flex-wrap gap-2 items-center">
+        <select
+          value={dateFilterType}
+          onChange={handleDateFilterChange}
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        >
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="last7days">Last 7 Days</option>
+          <option value="last30days">Last 30 Days</option>
+          <option value="thisMonth">This Month</option>
+          <option value="lastMonth">Last Month</option>
+          <option value="custom">Custom Range</option>
+        </select>
+        
+        {dateFilterType === 'custom' && (
+          <div className="flex gap-2 items-center">
+            <input
+              type="date"
+              name="startDate"
+              value={startDate}
+              onChange={handleDateChange}
+              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="Start Date"
+            />
+            <span className="text-gray-500">to</span>
+            <input
+              type="date"
+              name="endDate"
+              value={endDate}
+              min={startDate}
+              onChange={handleDateChange}
+              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="End Date"
+            />
+          </div>
+        )}
       </div>
       
       <div>

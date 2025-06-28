@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ReportTable } from '../../components/common';
 import { Breadcrumb } from '../../components';
-import DateRangePicker from '../../components/DateRangePicker';
 import { api, API_PATHS } from '../../api';
 
 export default function InventoryReports() {
   const [suppliers, setSuppliers] = useState([]);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   // Initialize with minimal required parameters
   const [filterParams, setFilterParams] = useState({
     filter_type: 'all'
   });
+  const [inOutFilter, setInOutFilter] = useState('all');
 
   // Define columns for the report table - updated to match exact API response structure
   const columns = [
@@ -58,21 +59,24 @@ export default function InventoryReports() {
     }
   ];
 
-  // Handle date range selection
-  const handleDateRangeChange = (dateRange) => {
-    // Create a new params object
-    const newParams = { filter_type: 'all' };
+  // Handle in/out filter change
+  const handleInOutFilterChange = (e) => {
+    const { value } = e.target;
+    setInOutFilter(value);
     
-    if (dateRange.type === 'custom') {
-      newParams.start_date = dateRange.startDate;
-      newParams.end_date = dateRange.endDate;
-    } else if (dateRange.type !== 'all') {
-      newParams.date_range = dateRange.type;
+    // Create a new params object
+    const newParams = { ...filterParams };
+    
+    if (value === 'all') {
+      delete newParams.filter_type;
+      delete newParams.in_or_out;
+    } else {
+      newParams.filter_type = ['in_or_out'];
+      newParams.in_or_out = value;
     }
     
     // Preserve supplier filter if it exists
     if (filterParams.supplier_id) {
-      newParams.filter_type = 'supplier';
       newParams.supplier_id = filterParams.supplier_id;
     }
     
@@ -82,41 +86,36 @@ export default function InventoryReports() {
   // Handle supplier filter change
   const handleSupplierChange = (e) => {
     const value = e.target.value;
+    const newParams = { ...filterParams };
     
     if (value) {
-      setFilterParams({
-        ...filterParams,
-        filter_type: 'supplier',
-        supplier_id: value
-      });
+      newParams.supplier_id = value;
     } else {
-      // If no supplier is selected, reset to 'all'
-      const newParams = { filter_type: 'all' };
-      
-      // Keep date range if it exists
-      if (filterParams.start_date && filterParams.end_date) {
-        newParams.start_date = filterParams.start_date;
-        newParams.end_date = filterParams.end_date;
-      } else if (filterParams.date_range) {
-        newParams.date_range = filterParams.date_range;
-      }
-      
-      setFilterParams(newParams);
+      delete newParams.supplier_id;
     }
+    
+    setFilterParams(newParams);
   };
 
   // Load suppliers for the filter dropdown
   useEffect(() => {
     const loadSuppliers = async () => {
       try {
-        // Use GET method as specified
-        const response = await api.get(API_PATHS.reportFilterSupplier);
+        setLoadingSuppliers(true);
+        // Use POST method as specified
+        const response = await api.post(API_PATHS.reportFilterSupplier, {
+          outlet_id: localStorage.getItem('outlet_id'),
+          user_id: localStorage.getItem('user_id'),
+          app_source: "owner_app"
+        });
         
         if (response.data && response.data.detail && Array.isArray(response.data.detail)) {
           setSuppliers(response.data.detail);
         }
       } catch (err) {
         console.error('Error fetching suppliers:', err);
+      } finally {
+        setLoadingSuppliers(false);
       }
     };
     
@@ -155,7 +154,15 @@ export default function InventoryReports() {
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
       <div>
-        <DateRangePicker onChange={handleDateRangeChange} />
+        <select
+          value={inOutFilter}
+          onChange={handleInOutFilterChange}
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+        >
+          <option value="all">All Transactions</option>
+          <option value="in">Inventory In</option>
+          <option value="out">Inventory Out</option>
+        </select>
       </div>
       
       <div>
@@ -163,6 +170,7 @@ export default function InventoryReports() {
           value={filterParams.supplier_id || ''}
           onChange={handleSupplierChange}
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          disabled={loadingSuppliers}
         >
           <option value="">All Suppliers</option>
           {suppliers.map(supplier => (
