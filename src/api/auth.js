@@ -10,7 +10,8 @@ export const authApi = {
   login: async (mobile) => {
     const response = await axios.post(`${COMMON_PREFIX}/login`, { 
       mobile,
-      app_source: 'admin' 
+      app_source: 'admin',
+      app_type: 'admin'
     });
     return response.data;
   },
@@ -28,7 +29,8 @@ export const authApi = {
   verifyOtp: async (data) => {
     const response = await axios.post(`${COMMON_PREFIX}/verify_otp`, {
       ...data,
-      app_source: 'admin'
+      app_source: 'admin',
+      app_type: 'admin'
     });
     return response.data;
   },
@@ -41,7 +43,8 @@ export const authApi = {
   resendOtp: async (mobile) => {
     const response = await axios.post(`${COMMON_PREFIX}/resend_otp`, {
       mobile,
-      app_source: 'admin'
+      app_source: 'admin',
+      app_type: 'admin'
     });
     return response.data;
   },
