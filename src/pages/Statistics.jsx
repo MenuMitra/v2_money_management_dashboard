@@ -1837,11 +1837,11 @@ export default function Statistics() {
         )}
         
         {/* App Usage Chart - Only render if it has data */}
-        {hasAppUsage && (
+        {/* {hasAppUsage && (
         <div className="grid grid-cols-1 gap-6">
             <AppUsageStatsChart appUsageData={displayData.app_usage_statistics} />
         </div>
-        )}
+        )} */}
         
         {/* Category Performance and Top Combo Orders - Only render grid if at least one component has data */}
         {(hasCategoryPerformance || hasMenuCombos) && (
