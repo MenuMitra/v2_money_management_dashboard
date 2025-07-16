@@ -100,13 +100,13 @@ const NotificationBell = () => {
           />
         </svg>
         
-        {/* Connection indicator */}
-        <span 
-          className={`absolute top-1 right-1 block h-2 w-2 rounded-full ${
-            isConnected ? 'bg-green-500' : 'bg-red-500'
-          }`} 
-          title={isConnected ? 'Connected' : 'Disconnected'}
-        ></span>
+        {/* Connection indicator - only show when there's a connection issue */}
+        {!isConnected && (
+          <span 
+            className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" 
+            title="Disconnected"
+          ></span>
+        )}
         
         {/* Notification count badge */}
         {unreadCount > 0 && (

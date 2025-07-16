@@ -168,6 +168,14 @@ export const NotificationProvider = ({ children }) => {
               // Process notification history
               const formattedNotifications = data.data.map(formatNotificationData);
               
+              // Check if notifications were cleared previously
+              const wasCleared = localStorage.getItem('notifications_cleared') === 'true';
+              
+              // Skip loading history if notifications were cleared
+              if (wasCleared) {
+                return;
+              }
+              
               // Update notifications state with history
               setNotifications(prev => {
                 // Combine existing notifications with new ones, removing duplicates
@@ -276,6 +284,13 @@ export const NotificationProvider = ({ children }) => {
 
   // Handle new notification
   const handleNewNotification = (notification) => {
+    // Reset notifications_cleared flag when new notifications arrive
+    try {
+      localStorage.removeItem('notifications_cleared');
+    } catch (error) {
+      console.error('Error resetting notifications cleared flag:', error);
+    }
+    
     // Ensure notification has an ID
     const notificationWithId = {
       ...notification,
@@ -321,8 +336,17 @@ export const NotificationProvider = ({ children }) => {
 
   // Clear all notifications
   const clearNotifications = () => {
+    // Clear notifications from state
     setNotifications([]);
     setUnreadCount(0);
+    
+    // Clear notifications from localStorage to prevent them from reappearing on refresh
+    try {
+      localStorage.removeItem('notifications');
+      localStorage.setItem('notifications_cleared', 'true'); // Mark as cleared
+    } catch (error) {
+      console.error('Failed to clear saved notifications:', error);
+    }
   };
 
   // Connect/disconnect WebSocket based on authentication status
@@ -360,6 +384,14 @@ export const NotificationProvider = ({ children }) => {
   // Load saved notifications from localStorage on mount
   useEffect(() => {
     try {
+      // Check if notifications were cleared previously
+      const wasCleared = localStorage.getItem('notifications_cleared') === 'true';
+      
+      // Skip loading if notifications were cleared
+      if (wasCleared) {
+        return;
+      }
+      
       const savedNotifications = localStorage.getItem('notifications');
       if (savedNotifications) {
         const parsedNotifications = JSON.parse(savedNotifications);
