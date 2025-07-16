@@ -5,6 +5,7 @@ import OutletStatusBar from './common/OutletStatusBar';
 import { useOutlet } from '../context/OutletContext';
 import { useAuth } from '../context/AuthContext';
 import DateRangePicker from './DateRangePicker';
+import NotificationBell from './NotificationBell';
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -254,6 +255,13 @@ export default function Layout({ children }) {
             
             <div className="flex-1">
               <OutletHeader />
+            </div>
+
+            {/* User menu and notification bell */}
+            <div className="flex items-center gap-4">
+              <NotificationBell />
+              
+           
             </div>
           </div>
           
