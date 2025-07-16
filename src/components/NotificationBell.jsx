@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, clearNotifications, isConnected } = useNotifications();
+  const { notifications, unreadCount, markAsRead, clearNotifications, deleteNotification, isConnected } = useNotifications();
   const dropdownRef = useRef(null);
 
   // Handle click outside to close dropdown
@@ -33,11 +33,22 @@ const NotificationBell = () => {
 
   // Toggle dropdown
   const toggleDropdown = () => {
-    if (!isOpen && unreadCount > 0) {
-      // Mark all as read when opening if there are unread notifications
-      markAsRead();
-    }
     setIsOpen(!isOpen);
+  };
+
+  // Handle notification click - mark as read
+  const handleNotificationClick = (notificationId) => {
+    if (notificationId) {
+      markAsRead(notificationId);
+    }
+  };
+
+  // Handle delete notification
+  const handleDeleteNotification = (e, notificationId) => {
+    e.stopPropagation(); // Prevent triggering the notification click
+    if (notificationId) {
+      deleteNotification(notificationId);
+    }
   };
 
   // Get notification icon based on type
@@ -141,20 +152,40 @@ const NotificationBell = () => {
             ) : (
               <ul className="divide-y divide-gray-100">
                 {notifications.map((notification, index) => (
-                  <li key={notification.id || index} className="p-4 hover:bg-gray-50">
+                  <li 
+                    key={notification.id || index} 
+                    className={`relative p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-200 ${!notification.read ? 'bg-gray-50' : ''}`}
+                    onClick={() => handleNotificationClick(notification.id)}
+                  >
                     <div className="flex items-start">
+                      {/* Unread indicator dot */}
+                      {!notification.read && (
+                        <span className="absolute top-4 left-0 h-2 w-2 rounded-full bg-blue-500"></span>
+                      )}
+                      
                       {getNotificationIcon(notification.notificationType)}
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-gray-900">
+                      <div className="ml-3 flex-1 pr-6">
+                        <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
                           {notification.title}
                         </p>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className={`mt-1 text-sm ${!notification.read ? 'text-gray-700' : 'text-gray-500'}`}>
                           {notification.message}
                         </p>
                         <p className="mt-1 text-xs text-gray-400">
                           {formatTime(notification.timestamp)}
                         </p>
                       </div>
+                      
+                      {/* Delete button */}
+                      <button 
+                        className="absolute right-4 top-4 text-gray-400 hover:text-red-500 transition-colors duration-200"
+                        onClick={(e) => handleDeleteNotification(e, notification.id)}
+                        aria-label="Delete notification"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
                   </li>
                 ))}

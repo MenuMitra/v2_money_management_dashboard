@@ -215,4 +215,43 @@
   .Toastify__toast-container .Toastify__toast {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   }
+
+  /* Notification styles */
+  .notification-item {
+    @apply relative p-4 transition-all duration-200 cursor-pointer;
+  }
+
+  .notification-item.unread {
+    @apply bg-gray-50;
+  }
+
+  .notification-unread-dot {
+    @apply absolute top-4 left-0 h-2 w-2 rounded-full bg-blue-500;
+    animation: pulse 2s infinite;
+  }
+
+  .notification-delete-btn {
+    @apply absolute right-4 top-4 text-gray-400 hover:text-red-500 transition-colors duration-200 opacity-0 group-hover:opacity-100;
+  }
+
+  .notification-item:hover .notification-delete-btn {
+    @apply opacity-100;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 5px rgba(59, 130, 246, 0);
+    }
+    
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+  }
 } 
