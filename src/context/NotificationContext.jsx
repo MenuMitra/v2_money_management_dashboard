@@ -20,17 +20,13 @@ export const useNotifications = () => {
 // Toast notification configuration
 const toastConfig = {
   position: "top-right",
-  autoClose: 5000,
+  autoClose: 3000,
   hideProgressBar: false,
   closeOnClick: true,
-  pauseOnHover: true,
+  pauseOnHover: false,
   draggable: true,
   progress: undefined,
   theme: "light",
-  className: "rounded-md shadow-lg",
-  bodyClassName: "p-0",
-  closeButton: false,
-  transition: toast.Slide,
 };
 
 // Get toast type based on notification type
@@ -60,11 +56,17 @@ const getToastType = (notificationType) => {
 
 // Format notification data from server format to our internal format
 const formatNotificationData = (serverData) => {
+  // Make sure we're not using the type as the title
+  const notificationType = serverData.type || 'info';
+  
+  // Use a custom title if provided, otherwise leave blank (not using type as title)
+  const title = serverData.title || '';
+  
   return {
     id: serverData.notification_id || `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    title: serverData.type || 'Notification',
+    title: title,
     message: serverData.message || '',
-    notificationType: serverData.type || 'info',
+    notificationType: notificationType,
     timestamp: serverData.timestamp || new Date().toISOString(),
     read: false,
     outlet_id: serverData.outlet_id,
@@ -80,6 +82,52 @@ export const NotificationProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   const { isAuthenticated, user } = useAuth();
+
+  // Helper function to generate a test notification for development
+  const testNotification = useCallback((type = 'info') => {
+    const notificationTypes = [
+      'success', 'info', 'warning', 'error', 'order', 
+      'payment', 'offer', 'alert', 'table', 'menu', 
+      'customer', 'staff', 'inventory'
+    ];
+    
+    const notificationType = type === 'random' 
+      ? notificationTypes[Math.floor(Math.random() * notificationTypes.length)]
+      : notificationTypes.includes(type) ? type : 'info';
+    
+    const testData = {
+      notification_id: `test-${Date.now()}`,
+      type: notificationType,
+      title: '', // Empty title to avoid showing type
+      message: `This is a test notification with ${notificationType} styling`,
+      timestamp: new Date().toISOString(),
+      outlet_id: '123',
+      role: 'admin',
+      user_id: '456'
+    };
+    
+    handleNewNotification(formatNotificationData(testData));
+  }, []);
+
+  // Attach test function to window for development use
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      window.testNotification = testNotification;
+      console.info(
+        'Development mode: Use window.testNotification() to test notifications. ' +
+        'Options: window.testNotification("success"), window.testNotification("info"), ' +
+        'window.testNotification("warning"), window.testNotification("error"), ' +
+        'window.testNotification("order"), window.testNotification("payment"), etc., ' +
+        'or window.testNotification("random") for a random type.'
+      );
+    }
+    
+    return () => {
+      if (process.env.NODE_ENV === 'development') {
+        delete window.testNotification;
+      }
+    };
+  }, [testNotification]);
 
   // Connect to WebSocket
   const connectWebSocket = useCallback(() => {
@@ -195,18 +243,24 @@ export const NotificationProvider = ({ children }) => {
   // Show toast notification
   const showToast = (notification) => {
     try {
-      // Get toast type and use safe method access
-      const toastType = getToastType(notification.notificationType);
-      const toastMethod = toast[toastType] || toast.info;
+      // Create a custom toast config with auto-close explicitly set
+      const customToastConfig = {
+        ...toastConfig,
+        autoClose: 4000,
+        closeOnClick: true,
+        pauseOnHover: false,
+        hideProgressBar: false,
+        className: "toast-custom"
+      };
       
-      // Show toast notification
-      toastMethod(
+      // Show toast with the CustomToast component
+      toast(
         <CustomToast 
           title={notification.title} 
           message={notification.message} 
           type={notification.notificationType} 
         />, 
-        toastConfig
+        customToastConfig
       );
       
       // Play notification sound
@@ -216,14 +270,7 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error('Error showing toast notification:', error);
       // Fallback to default toast
-      toast.info(
-        <CustomToast 
-          title={notification.title} 
-          message={notification.message} 
-          type="info" 
-        />, 
-        toastConfig
-      );
+      toast.info(notification.message || 'New notification received', toastConfig);
     }
   };
 
@@ -304,6 +351,12 @@ export const NotificationProvider = ({ children }) => {
     };
   }, []);
 
+  // Clear existing toasts on mount
+  useEffect(() => {
+    // Clear any existing toasts when the component mounts
+    toast.dismiss();
+  }, []);
+
   // Load saved notifications from localStorage on mount
   useEffect(() => {
     try {
@@ -339,24 +392,33 @@ export const NotificationProvider = ({ children }) => {
         connectionError,
         markAsRead,
         clearNotifications,
+        testNotification, // Add testNotification to the context
       }}
     >
+      {children}
       <NotificationSound />
       <ToastContainer 
         position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
+        autoClose={4000}
+        limit={5}
         newestOnTop
         closeOnClick
         rtl={false}
-        pauseOnFocusLoss
+        pauseOnFocusLoss={false}
+        pauseOnHover={false}
         draggable
-        pauseOnHover
-        theme="light"
-        transition={toast.Slide}
-        className="rounded-md"
+        theme="colored"
+        icon={false}
+        toastClassName="toast-custom"
+        bodyClassName="toast-body-custom"
+        closeButton={true}
+        style={{
+          top: '1rem',
+          right: '1rem',
+          width: 'auto',
+          maxWidth: '420px'
+        }}
       />
-      {children}
     </NotificationContext.Provider>
   );
 }; 
