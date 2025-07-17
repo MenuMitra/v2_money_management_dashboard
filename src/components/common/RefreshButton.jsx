@@ -10,6 +10,7 @@ import { queryKeys } from '../../lib/react-query/constants';
  * @property {string} route - String to identify which part of the app is calling the refresh
  * @property {string} [additionalClasses] - Optional string for additional CSS classes
  * @property {('sm'|'md'|'lg')} [size='md'] - Optional string for button size variants
+ * @property {('none'|'sm'|'md'|'lg'|'xl'|'full')} [borderRadius='md'] - Optional string for border radius variants
  * @property {boolean} [showOnMobile=false] - Optional boolean to control mobile visibility
  * @property {React.ReactNode} [customIcon] - Optional component to override default refresh icon
  */
@@ -24,6 +25,7 @@ export const RefreshButton = ({
   route,
   additionalClasses = '',
   size = 'md',
+  borderRadius = 'md', // New prop with default value
   showOnMobile = false,
   customIcon = null
 }) => {
@@ -43,6 +45,16 @@ export const RefreshButton = ({
     sm: 'h-7 w-7',
     md: 'h-9 w-9',
     lg: 'h-11 w-11'
+  };
+
+  // Add border radius variants mapping
+  const borderRadiusClasses = {
+    none: 'rounded-none',
+    sm: 'rounded-sm',
+    md: 'rounded-md',
+    lg: 'rounded-lg',
+    xl: 'rounded-xl',
+    full: 'rounded-full'
   };
 
   // Default refresh icon
@@ -130,8 +142,8 @@ export const RefreshButton = ({
   const buttonClasses = [
     'group',
     sizeClasses[size] || sizeClasses.md,
+    borderRadiusClasses[borderRadius] || borderRadiusClasses.md, // Use the border radius class
     'flex items-center justify-center',
-    'rounded-md',
     'text-gray-600 hover:text-primary-600',
     'hover:bg-gray-50',
     'focus:outline-none',
@@ -155,12 +167,13 @@ export const RefreshButton = ({
   );
 };
 
-// PropTypes validation
+// Update PropTypes validation
 RefreshButton.propTypes = {
   onRefresh: PropTypes.func.isRequired,
   route: PropTypes.string.isRequired,
   additionalClasses: PropTypes.string,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
+  borderRadius: PropTypes.oneOf(['none', 'sm', 'md', 'lg', 'xl', 'full']),
   showOnMobile: PropTypes.bool,
   customIcon: PropTypes.node
 };
