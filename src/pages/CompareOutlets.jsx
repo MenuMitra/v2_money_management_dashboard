@@ -6,7 +6,7 @@ import { useOutletWarning } from '../hooks/useOutletId.jsx';
 import OutletSelector from '../components/OutletSelector';
 import { Breadcrumb } from '../components';
 import { useOutletComparison, outletCompareKeys } from '../hooks/queries/useOutletComparison';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 export default function CompareOutlets() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,12 +16,12 @@ export default function CompareOutlets() {
   const { hasOutlet, warningElement } = useOutletWarning();
   const queryClient = useQueryClient();
   
-  // Cache-related refs and variables
-  const CACHE_EXPIRATION = 30 * 60 * 1000; // 30 minutes cache expiration
-  const outletDetailsCache = useRef(new Map());
-  const outletDetailsFetchTimestamp = useRef(new Map());
-  const pendingRequestsRef = useRef(new Map());
-  
+  // Remove these manual cache-related refs as we'll use TanStack Query's built-in caching
+  // const CACHE_EXPIRATION = 30 * 60 * 1000; // Remove this
+  // const outletDetailsCache = useRef(new Map()); // Remove this
+  // const outletDetailsFetchTimestamp = useRef(new Map()); // Remove this
+  // const pendingRequestsRef = useRef(new Map()); // Remove this
+
   const MAX_COMPARE_OUTLETS = 3; // Maximum outlets to compare
 
   // Currently selected outlets for comparison (object format with full data)
@@ -127,7 +127,30 @@ export default function CompareOutlets() {
     }
   }, [currentOutlet, queryClient]);
 
-  // Fetch outlet comparison details for a specific outlet
+  // Add this hook at the top level of the component
+  const useOutletCompareDetails = (outletId) => {
+    const userId = localStorage.getItem('user_id');
+    
+    return useQuery({
+      queryKey: outletCompareKeys.detail({
+        user_id: Number(userId),
+        outlet_id: Number(outletId)
+      }),
+      queryFn: async () => {
+        const response = await api.post(API_PATHS.outletCompareDetails, {
+          user_id: Number(userId),
+          outlet_id: Number(outletId)
+        });
+        return response.data?.detail || null;
+      },
+      // Using global config from provider.jsx:
+      // staleTime: 60 seconds
+      // gcTime: 5 minutes
+      enabled: Boolean(outletId && userId)
+    });
+  };
+
+  // Replace the fetchOutletCompareDetails function with this simpler version
   const fetchOutletCompareDetails = async (outletId) => {
     try {
       setIsLoading(true);
@@ -138,7 +161,7 @@ export default function CompareOutlets() {
         return null;
       }
 
-      // Use queryClient directly for one-off queries
+      // Use the prefetchQuery to ensure we have the data
       const data = await queryClient.fetchQuery({
         queryKey: outletCompareKeys.detail({
           user_id: Number(userId),
@@ -150,8 +173,7 @@ export default function CompareOutlets() {
             outlet_id: Number(outletId)
           });
           return response.data?.detail || null;
-        },
-        staleTime: 30 * 60 * 1000 // 30 minutes
+        }
       });
 
       return data;
@@ -169,6 +191,7 @@ export default function CompareOutlets() {
     setRefreshOutletIndex(null);
   };
 
+  // Update the handleOutletSelect function to use the new caching
   const handleOutletSelect = async (outlet) => {
     try {
       if (selectedOutlets.length >= MAX_COMPARE_OUTLETS && refreshOutletIndex === null) {
@@ -187,7 +210,7 @@ export default function CompareOutlets() {
         return;
       }
       
-    setIsLoading(true);
+      setIsLoading(true);
       
       // Fetch comparison data for this outlet
       const outletId = outlet.outlet_id;
@@ -286,20 +309,22 @@ export default function CompareOutlets() {
     if (currentOutlet?.outlet_id) {
       // Check if we have this outlet ID cached already
       const cacheKey = currentOutlet.outlet_id.toString();
-      const isCached = outletDetailsCache.current.has(cacheKey);
-      const fetchTime = outletDetailsFetchTimestamp.current.get(cacheKey);
+      const isCached = queryClient.getQueryData(outletCompareKeys.detail({
+        user_id: Number(localStorage.getItem('user_id')),
+        outlet_id: Number(currentOutlet.outlet_id)
+      }));
       const now = Date.now();
       
       // Only fetch if:
       // 1. The data is not cached yet, OR
       // 2. The cache has expired
-      if (!isCached || (fetchTime && now - fetchTime >= CACHE_EXPIRATION)) {
+      if (!isCached) {
         console.log(`[CompareOutlets] First mount or cache expired, fetching outlet ${currentOutlet.outlet_id}`);
         refreshCurrentOutlet();
       } else {
         console.log(`[CompareOutlets] Component remounted, using cached data for outlet ${currentOutlet.outlet_id}`);
         // Use the cached data without making an API call
-        const cachedData = outletDetailsCache.current.get(cacheKey);
+        // const cachedData = outletDetailsCache.current.get(cacheKey); // This line is removed
         // setCurrentOutletDetails({ // This line is removed
         //   id: currentOutlet.outlet_id,
         //   outlet_id: currentOutlet.outlet_id,
@@ -309,7 +334,7 @@ export default function CompareOutlets() {
         // });
       }
     }
-  }, [currentOutlet, refreshCurrentOutlet, CACHE_EXPIRATION]);
+  }, [currentOutlet, refreshCurrentOutlet, queryClient]);
 
   // Get already selected outlet IDs for the selector
   const getAlreadySelectedOutletIds = useCallback(() => {
@@ -363,16 +388,21 @@ export default function CompareOutlets() {
     }
   }, [currentOutlet, refreshCurrentOutlet, queryClient]);
 
-  // Add a component to handle manual refresh of data
+  // Update the RefreshButton component to use queryClient invalidation
   const RefreshButton = () => (
     <button 
       onClick={() => {
         // Refresh current outlet
         refreshCurrentOutlet();
         
-        // Refresh selected outlets
+        // Refresh selected outlets using queryClient invalidation
         selectedOutlets.forEach(outlet => {
-          invalidateOutletCache(outlet.outlet_id);
+          queryClient.invalidateQueries({
+            queryKey: outletCompareKeys.detail({
+              user_id: Number(localStorage.getItem('user_id')),
+              outlet_id: Number(outlet.outlet_id)
+            })
+          });
         });
         
         // Re-fetch data for all selected outlets
