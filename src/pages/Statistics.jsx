@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { FaDownload } from 'react-icons/fa';
-import { useStatistics } from '../context/StatisticsContext';
+import { useStatistics } from '../api/statistics';
 import ReactApexChart from 'react-apexcharts';
 import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
 import { Breadcrumb } from '../components';
@@ -1364,13 +1364,53 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
 
 
 export default function Statistics() {
-  const { statistics, fetchStatistics, error, updateDateRange } = useStatistics();
   const outletId = useOutletId();
   const { warningElement } = useOutletWarning();
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
   const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Use the statistics hook
+  const { 
+    data: statistics,
+    isLoading,
+    error,
+    refresh,
+    updateDateRange
+  } = useStatistics(
+    { 
+      outlet_id: outletId,
+      // Add date range params if needed
+      ...(currentDateRange.type === 'custom' && {
+        start_date: currentDateRange.startDate,
+        end_date: currentDateRange.endDate
+      })
+    },
+    {
+      // Additional options if needed
+      enabled: !!outletId
+    }
+  );
+
+  // Handle date range changes
+  useEffect(() => {
+    const handleDateRangeChange = (event) => {
+      const range = event.detail;
+      setCurrentDateRange(range);
+      
+      if (range.type === 'custom' && range.startDate && range.endDate) {
+        updateDateRange(
+          formatDateForApi(new Date(range.startDate)),
+          formatDateForApi(new Date(range.endDate))
+        );
+      }
+    };
+
+    window.addEventListener('daterange:changed', handleDateRangeChange);
+    return () => {
+      window.removeEventListener('daterange:changed', handleDateRangeChange);
+    };
+  }, [updateDateRange]);
 
   // Add debugging logs for component lifecycle and render
   useEffect(() => {
@@ -1402,105 +1442,6 @@ export default function Statistics() {
     { text: 'Home', url: '/' },
     { text: 'Statistics' }
   ];
-
-  // Listen for date range changes from the header component
-  useEffect(() => {
-    const handleDateRangeChange = (event) => {
-      const range = event.detail;
-      setCurrentDateRange(range);
-      
-      // Set loading to true when fetching new data
-      setIsLoading(true);
-      
-      // Prepare the API parameters based on the range type
-      const params = { outlet_id: outletId };
-      
-      if (range.type === 'custom' && range.startDate && range.endDate) {
-        // For custom range, convert from YYYY-MM-DD to DD MMM YYYY format
-        params.start_date = formatDateForApi(new Date(range.startDate));
-        params.end_date = formatDateForApi(new Date(range.endDate));
-      } else if (range.type !== 'all') {
-        // For predefined ranges, calculate the dates
-        const today = new Date();
-        let startDate = new Date();
-        let endDate = new Date();
-        
-        switch (range.type) {
-          case 'today':
-            // Just use today for both
-            break;
-          case 'yesterday':
-            startDate.setDate(today.getDate() - 1);
-            endDate.setDate(today.getDate() - 1);
-            break;
-          case 'last7days':
-            startDate.setDate(today.getDate() - 6);
-            break;
-          case 'last30days':
-            startDate.setDate(today.getDate() - 29);
-            break;
-          case 'thisMonth':
-            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-            break;
-          case 'lastMonth':
-            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
-            break;
-          default:
-            // Default case, don't set date parameters
-            break;
-        }
-        
-        if (range.type !== 'all') {
-          params.start_date = formatDateForApi(startDate);
-          params.end_date = formatDateForApi(endDate);
-        }
-      }
-      
-      console.log('Fetching statistics with params:', params);
-      
-      // Fetch statistics with the date range
-      fetchStatistics(params, true);
-    };
-
-    // Format date as "DD MMM YYYY" (e.g. "17 Jun 2025")
-    const formatDateForApi = (date) => {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const day = date.getDate();
-      const month = months[date.getMonth()];
-      const year = date.getFullYear();
-      return `${day} ${month} ${year}`;
-    };
-
-    // Listen for date range change events
-    window.addEventListener('daterange:changed', handleDateRangeChange);
-    
-    return () => {
-      window.removeEventListener('daterange:changed', handleDateRangeChange);
-    };
-  }, [outletId, fetchStatistics]);
-
-  // Fetch statistics data only when component mounts or outlet changes
-  useEffect(() => {
-    // Only fetch if outlet ID exists and is different from the last one we fetched for
-    if (outletId && fetchedForOutletRef.current !== outletId) {
-      console.log('Fetching statistics for outlet:', outletId);
-      
-      // Set loading to true before fetching
-      setIsLoading(true);
-      
-      // Check if we already have statistics data for this outlet in context
-      if (!statistics || statistics.outlet_id !== parseInt(outletId, 10)) {
-        // Only force refresh when the outlet has changed or data doesn't exist
-        fetchStatistics({ outlet_id: outletId }, false); // Use context caching - don't force refresh
-      } else {
-        // If we already have data, just stop loading
-        setIsLoading(false);
-      }
-      
-      fetchedForOutletRef.current = outletId; // Remember which outlet we fetched for
-    }
-  }, [outletId, fetchStatistics, statistics]);
 
   // Format currency in Indian format
   const formatCurrency = (amount) => {
