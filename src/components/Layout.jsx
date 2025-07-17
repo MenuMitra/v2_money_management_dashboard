@@ -60,7 +60,7 @@ export default function Layout({ children }) {
   const isStatisticsPage = location.pathname === '/statistics';
 
   const navigationItems = [
-    { name: 'Dashboard', path: '/', icon: 'dashboard' },
+    { name: 'Home', path: '/', icon: 'home' },
     { name: 'Statistics', path: '/statistics', icon: 'bar-chart' },
     { name: 'Outlet Details', path: '/outlet-details', icon: 'store' },
     { name: 'Compare Outlets', path: '/compare-outlets', icon: 'compare' },
@@ -316,21 +316,9 @@ export default function Layout({ children }) {
 // Icons for the sidebar
 function SidebarIcon({ name }) {
   switch (name) {
-    case 'dashboard':
+    case 'home':
       return (
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-          />
-        </svg>
+        <i class="fa-solid fa-house"></i>
       );
     case 'bar-chart':
       return (
