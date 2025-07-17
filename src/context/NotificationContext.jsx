@@ -141,7 +141,7 @@ export const NotificationProvider = ({ children }) => {
       }
 
       // Create WebSocket connection
-      const ws = new WebSocket(`wss://men4u.xyz/v2/common/ws?token=${accessToken}`);
+    const ws = new WebSocket(`wss://men4u.xyz/v2/common/ws?token=${accessToken}`);
       
       ws.onopen = () => {
         console.log('WebSocket connection established');

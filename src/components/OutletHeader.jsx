@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import OutletSelector from "./OutletSelector";
 import DateRangePicker from "./DateRangePicker";
 import { useLocation } from "react-router-dom";
+import RefreshButton from './common/RefreshButton';
 
 const OutletHeader = () => {
   const { currentOutlet, loading, updateCurrentOutlet, clearCurrentOutlet } =
@@ -12,7 +13,6 @@ const OutletHeader = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [dateRange, setDateRange] = useState({ type: "all" });
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const profileRef = useRef(null);
   const location = useLocation();
 
@@ -77,14 +77,27 @@ const OutletHeader = () => {
     window.dispatchEvent(event);
   };
 
-  const handleRefresh = () => {
-    // Start the refresh animation
-    setIsRefreshing(true);
+  // Update handleRefresh to return a Promise and handle SPA refresh
+  const handleRefresh = async () => {
+    try {
+      // Dispatch daterange event to refresh data
+      window.dispatchEvent(new CustomEvent("daterange:changed", { 
+        detail: dateRange 
+      }));
 
-    // Implement refresh logic here
-    window.location.reload();
+      // Dispatch outlet changed event to refresh outlet data
+      if (currentOutlet) {
+        window.dispatchEvent(new CustomEvent("outlet:changed", { 
+          detail: currentOutlet 
+        }));
+      }
 
-    // Note: The page will reload, so we don't need to reset isRefreshing
+      // Return resolved promise to indicate success
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      return Promise.reject(error);
+    }
   };
 
   const handleLogout = () => {
@@ -145,29 +158,13 @@ const OutletHeader = () => {
                 />
               </div>
                 {currentOutlet && (
-                  <button
-                    onClick={handleRefresh}
-                    className="group h-9 w-9 flex items-center justify-center rounded-md text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
-                    title="Refresh"
-                    disabled={isRefreshing}
-                  >
-                    <svg
-                      className={`h-4 w-4 transition-transform ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                  </button>
+                  <RefreshButton
+                    onRefresh={handleRefresh}
+                    route={location.pathname}
+                    additionalClasses="ml-4"
+                    showOnMobile={false}
+                    size="md"
+                  />
                 )}
             </>
           )}
