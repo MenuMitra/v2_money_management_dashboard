@@ -6,11 +6,14 @@ import { AuthProvider } from './context/AuthContext';
 import { OutletProvider } from './context/OutletContext';
 import { CacheDataProvider } from './context/CacheDataContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { QueryProvider } from './lib/react-query/provider';
 import './index.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+root.render(
+  <QueryProvider>
     <BrowserRouter>
       <AuthProvider>
         <OutletProvider>
@@ -22,5 +25,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </OutletProvider>
       </AuthProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </QueryProvider>
 ); 
