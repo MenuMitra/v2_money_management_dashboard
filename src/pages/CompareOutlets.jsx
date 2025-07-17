@@ -839,7 +839,7 @@ export default function CompareOutlets() {
                               ));
                             }
                           }}
-                          className="text-gray-600 hover:text-primary-600 hover:bg-gray-50 p-1 rounded border border-gray-300 mx-2"
+                          className="group h-9 w-9 rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
                           title="Refresh outlet data"
                         >
                           <svg
