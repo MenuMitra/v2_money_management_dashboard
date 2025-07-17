@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useOutletList } from '../hooks/queries/useOutletList';
+import { toTitleCase } from '../utils/stringUtils';
 
 /**
  * OutletSelector component for outlet dashboard
