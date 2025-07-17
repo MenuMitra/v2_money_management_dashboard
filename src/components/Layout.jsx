@@ -258,11 +258,11 @@ export default function Layout({ children }) {
             </div>
 
             {/* User menu and notification bell */}
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <NotificationBell />
               
            
-            </div>
+            </div> */}
           </div>
           
           {/* Mobile Date Filter and Refresh Button - only visible on mobile */}
