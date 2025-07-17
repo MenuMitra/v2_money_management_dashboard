@@ -60,7 +60,7 @@ export default function Layout({ children }) {
   const isStatisticsPage = location.pathname === '/statistics';
 
   const navigationItems = [
-    { name: 'Home', path: '/', icon: 'home' },
+    { name: 'Home', path: '/', icon: 'store' },
     { name: 'Statistics', path: '/statistics', icon: 'bar-chart' },
     { name: 'Outlet Details', path: '/outlet-details', icon: 'store' },
     { name: 'Compare Outlets', path: '/compare-outlets', icon: 'compare' },
