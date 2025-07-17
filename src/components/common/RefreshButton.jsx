@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import PropTypes from 'prop-types';
+import { outletKeys } from '../../hooks/queries/useOutletDetails';
+import { queryKeys } from '../../lib/react-query/constants';
 
 /**
  * @typedef {Object} RefreshButtonProps
@@ -26,11 +29,11 @@ export const RefreshButton = ({
 }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  const queryClient = useQueryClient();
   
   // Cleanup function for component unmount
   useEffect(() => {
     return () => {
-      // Cleanup any pending operations
       setIsRefreshing(false);
     };
   }, []);
@@ -45,27 +48,53 @@ export const RefreshButton = ({
   // Default refresh icon
   const DefaultRefreshIcon = () => (
     <svg
-    className={`transition-transform ${isRefreshing ? "animate-spin" : ""}`}
-    style={{ 
-      height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
-      width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
-    }}
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <g transform="scale(-1,1) translate(-24,0)">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-      />
-    </g>
-  </svg>
-  
+      className={`transition-transform ${isRefreshing ? "animate-spin" : ""}`}
+      style={{ 
+        height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
+        width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
+      }}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <g transform="scale(-1,1) translate(-24,0)">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+        />
+      </g>
+    </svg>
   );
+
+  // Route-based query invalidation
+  const invalidateRouteQueries = useCallback(async () => {
+    const outlet_id = localStorage.getItem('outlet_id');
+    const user_id = localStorage.getItem('user_id');
+
+    // Map routes to their corresponding query keys
+    switch (route) {
+      case '/outlet-details':
+        return queryClient.invalidateQueries({
+          queryKey: outletKeys.details({ outlet_id, user_id }),
+          refetchType: 'active', // Only refetch if the query is active
+        });
+      
+      case '/statistics':
+        return queryClient.invalidateQueries({
+          queryKey: queryKeys.statistics.root,
+          refetchType: 'active',
+        });
+      
+      // Add more route cases as needed
+      
+      default:
+        // If no specific route match, use the provided onRefresh function
+        return onRefresh?.();
+    }
+  }, [route, queryClient, onRefresh]);
 
   // Debounced refresh handler
   const handleRefresh = useCallback(async () => {
@@ -84,8 +113,8 @@ export const RefreshButton = ({
       // Log refresh attempt
       console.debug(`Refreshing data for route: ${route}`);
 
-      // Call the provided refresh function
-      await onRefresh();
+      // Invalidate and refetch queries based on route
+      await invalidateRouteQueries();
 
     } catch (error) {
       console.error(`Error refreshing data for route ${route}:`, error);
@@ -95,7 +124,7 @@ export const RefreshButton = ({
         setIsRefreshing(false);
       }, 500);
     }
-  }, [onRefresh, route, lastRefreshTime]);
+  }, [invalidateRouteQueries, route, lastRefreshTime]);
 
   // Combine class names
   const buttonClasses = [
@@ -136,5 +165,4 @@ RefreshButton.propTypes = {
   customIcon: PropTypes.node
 };
 
-// Default export
 export default RefreshButton;

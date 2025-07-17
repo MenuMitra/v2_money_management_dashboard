@@ -44,16 +44,24 @@ export const getAllStats = async (params = {}) => {
 }; 
 
 /**
- * React Query hook for fetching all statistics
- * @param {Object} params - Query parameters
- * @param {Object} options - Additional query options
+ * React Query hook for fetching statistics
+ * @param {Object} params - Query parameters including outlet_id and date range
+ * @param {Object} options - Additional React Query options
  * @returns {UseQueryResult} Query result object
  */
 export const useAllStats = (params = {}, options = {}) => {
+  // Ensure we have the required parameters
+  const queryParams = {
+    outlet_id: params.outlet_id || parseInt(localStorage.getItem('outlet_id'), 10),
+    user_id: params.user_id || parseInt(localStorage.getItem('user_id'), 10),
+    ...params
+  };
+
   return useQuery({
-    queryKey: queryKeys.statistics.all(params),
-    queryFn: () => getAllStats(params),
-    // The staleTime will be inherited from the global config (1 minute)
-    ...options,
+    queryKey: queryKeys.statistics.all(queryParams),
+    queryFn: () => getAllStats(queryParams),
+    // Will inherit staleTime from global config (1 minute)
+    enabled: !!queryParams.outlet_id && !!queryParams.user_id,
+    ...options
   });
 }; 
