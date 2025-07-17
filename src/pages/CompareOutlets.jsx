@@ -789,10 +789,61 @@ export default function CompareOutlets() {
                   {selectedOutlets.map((outlet, idx) => (
                     <td key={idx} className="px-4 py-3">
                       <div className="flex justify-between">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0 bg-green-100 w-8 h-8 rounded-full flex items-center justify-center text-green-600">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0 bg-green-100 w-8 h-8 rounded-full flex items-center justify-center text-green-600">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-900">
+                              {outlet.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {outlet.address ||
+                                outlet.location ||
+                                "Address not available"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            // Invalidate the cache for this specific outlet
+                            queryClient.invalidateQueries({
+                              queryKey: outletCompareKeys.detail({
+                                user_id: Number(localStorage.getItem("user_id")),
+                                outlet_id: Number(outlet.outlet_id),
+                              }),
+                            });
+
+                            // Fetch fresh data for this outlet
+                            const freshData = await fetchOutletCompareDetails(outlet.outlet_id);
+                            if (freshData) {
+                              // Update only this outlet's data in the selectedOutlets array
+                              setSelectedOutlets(prev => prev.map((o, i) => 
+                                i === idx ? {
+                                  ...o,
+                                  ...freshData
+                                } : o
+                              ));
+                            }
+                          }}
+                          className="text-gray-600 hover:text-primary-600 hover:bg-gray-50 p-1 rounded border border-gray-300 mx-2"
+                          title="Refresh outlet data"
+                        >
                           <svg
-                            className="w-4 h-4"
+                            className="w-5 h-5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -802,29 +853,10 @@ export default function CompareOutlets() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                             />
                           </svg>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">
-                            {outlet.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {outlet.address ||
-                              outlet.location ||
-                              "Address not available"}
-                          </p>
-                        </div>
-                        </div>
-                        <RefreshButton
-                        onRefresh={refreshCurrentOutlet}
-                        route="/outlet-details"
-                        size="sm"
-                        borderRadius="full"
-                        showOnMobile={true}
-                        additionalClasses="ml-2"
-                      />
+                        </button>
                       </div>
                     </td>
                   ))}
