@@ -318,7 +318,7 @@ function SidebarIcon({ name }) {
   switch (name) {
     case 'home':
       return (
-        <i class="fa-solid fa-house"></i>
+        <i className="fa-solid fa-house"></i>
       );
     case 'bar-chart':
       return (
