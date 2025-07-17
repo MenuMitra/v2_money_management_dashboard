@@ -11,6 +11,7 @@ import {
 } from "../hooks/queries/useOutletComparison";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { RefreshButton } from "../components/common/RefreshButton";
+import { FaExchangeAlt } from "react-icons/fa";
 
 export default function CompareOutlets() {
   const [isLoading, setIsLoading] = useState(false);
@@ -667,20 +668,7 @@ export default function CompareOutlets() {
                             className="text-blue-600 hover:text-blue-800 p-1 rounded border border-gray-300 mx-2"
                             title="Change outlet"
                           >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
+                            <FaExchangeAlt className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleRemoveOutlet(idx)}
@@ -822,21 +810,29 @@ export default function CompareOutlets() {
                             // Invalidate the cache for this specific outlet
                             queryClient.invalidateQueries({
                               queryKey: outletCompareKeys.detail({
-                                user_id: Number(localStorage.getItem("user_id")),
+                                user_id: Number(
+                                  localStorage.getItem("user_id")
+                                ),
                                 outlet_id: Number(outlet.outlet_id),
                               }),
                             });
 
                             // Fetch fresh data for this outlet
-                            const freshData = await fetchOutletCompareDetails(outlet.outlet_id);
+                            const freshData = await fetchOutletCompareDetails(
+                              outlet.outlet_id
+                            );
                             if (freshData) {
                               // Update only this outlet's data in the selectedOutlets array
-                              setSelectedOutlets(prev => prev.map((o, i) => 
-                                i === idx ? {
-                                  ...o,
-                                  ...freshData
-                                } : o
-                              ));
+                              setSelectedOutlets((prev) =>
+                                prev.map((o, i) =>
+                                  i === idx
+                                    ? {
+                                        ...o,
+                                        ...freshData,
+                                      }
+                                    : o
+                                )
+                              );
                             }
                           }}
                           className="group h-9 w-9 rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
