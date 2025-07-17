@@ -1399,7 +1399,7 @@ export default function Statistics() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Statistics' }
   ];
 

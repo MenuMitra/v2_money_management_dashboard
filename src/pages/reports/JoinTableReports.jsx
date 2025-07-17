@@ -145,7 +145,7 @@ export default function JoinTableReports() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Reports', url: '/reports' },
     { text: 'Join Table Reports' }
   ];

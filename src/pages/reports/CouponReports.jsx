@@ -128,7 +128,7 @@ export default function CouponReports() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Reports', url: '/reports' },
     { text: 'Coupon Reports' }
   ];

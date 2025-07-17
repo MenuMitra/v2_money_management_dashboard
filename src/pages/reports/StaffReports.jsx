@@ -115,7 +115,7 @@ export default function StaffReports() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Reports', url: '/reports' },
     { text: 'Staff Reports' }
   ];

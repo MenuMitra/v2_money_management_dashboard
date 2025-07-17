@@ -414,7 +414,7 @@ export default function CompareOutlets() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Compare Outlets' }
   ];
 

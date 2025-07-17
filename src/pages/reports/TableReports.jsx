@@ -153,7 +153,7 @@ export default function TableReports() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Reports', url: '/reports' },
     { text: 'Table Reports' }
   ];

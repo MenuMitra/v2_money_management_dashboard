@@ -150,7 +150,7 @@ export default function PaymentSettleReports() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Reports', url: '/reports' },
     { text: 'Payment Settlement Reports' }
   ];

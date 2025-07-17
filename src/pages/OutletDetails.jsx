@@ -620,7 +620,7 @@ export default function OutletDetails() {
   
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Dashboard', url: '/' },
+    { text: 'Home', url: '/' },
     { text: 'Outlet Details' }
   ];
 
