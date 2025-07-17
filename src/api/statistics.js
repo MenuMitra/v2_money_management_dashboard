@@ -1,9 +1,11 @@
 import axios from './axios';
 import { API_PREFIX } from './axios';
 import { API_PATHS } from './index';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '../lib/react-query/constants';
 
 /**
- * Fetch all statistics data from the API
+ * Base function to fetch all statistics data from the API
  * 
  * @param {Object} params - Parameters for the API request
  * @returns {Promise<Object>} - The statistics data
@@ -39,4 +41,19 @@ export const getAllStats = async (params = {}) => {
     console.error('Error fetching statistics:', error);
     throw error;
   }
+}; 
+
+/**
+ * React Query hook for fetching all statistics
+ * @param {Object} params - Query parameters
+ * @param {Object} options - Additional query options
+ * @returns {UseQueryResult} Query result object
+ */
+export const useAllStats = (params = {}, options = {}) => {
+  return useQuery({
+    queryKey: queryKeys.statistics.all(params),
+    queryFn: () => getAllStats(params),
+    // The staleTime will be inherited from the global config (1 minute)
+    ...options,
+  });
 }; 
