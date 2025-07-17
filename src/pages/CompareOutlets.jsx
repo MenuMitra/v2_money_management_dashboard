@@ -514,7 +514,7 @@ export default function CompareOutlets() {
                         <div className="flex space-x-1">
                           <button 
                             onClick={() => handleRefreshOutlet(idx)}
-                            className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded border border-gray-300 "
                             title="Change outlet"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -523,7 +523,7 @@ export default function CompareOutlets() {
                           </button>
                           <button 
                             onClick={() => handleRemoveOutlet(idx)}
-                            className="text-red-600 hover:text-red-800 p-1 rounded"
+                            className="text-red-600 hover:text-red-800 p-1 rounded border border-gray-300"
                             title="Remove outlet"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
