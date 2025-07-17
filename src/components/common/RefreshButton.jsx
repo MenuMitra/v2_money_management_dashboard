@@ -45,25 +45,26 @@ export const RefreshButton = ({
   // Default refresh icon
   const DefaultRefreshIcon = () => (
     <svg
-      className={`transition-transform ${
-        isRefreshing ? "animate-spin" : ""
-      }`}
-      style={{ 
-        height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
-        width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
-      }}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
+    className={`transition-transform ${isRefreshing ? "animate-spin" : ""}`}
+    style={{ 
+      height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
+      width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
+    }}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <g transform="scale(-1,1) translate(-24,0)">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
       />
-    </svg>
+    </g>
+  </svg>
+  
   );
 
   // Debounced refresh handler
