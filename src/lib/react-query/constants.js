@@ -11,5 +11,9 @@ export const queryKeys = {
     root: ['statistics'],
     all: (params) => [...queryKeys.statistics.root, 'all', params],
     detail: (params) => [...queryKeys.statistics.root, 'detail', params],
+  },
+  outlet: {
+    root: ['outlet'],
+    details: (params) => [...queryKeys.outlet.root, 'details', params],
   }
 }; 

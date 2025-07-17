@@ -213,7 +213,7 @@ export const NotificationProvider = ({ children }) => {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        // console.error('WebSocket error:', error);
         setConnectionError('Failed to connect to notification service');
         setIsConnected(false);
       };

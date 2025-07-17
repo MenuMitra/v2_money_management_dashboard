@@ -5,50 +5,77 @@ import { API_PATHS } from '../api/index';
 import { useOutletWarning } from '../hooks/useOutletId.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { Breadcrumb } from '../components';
+import { useOutletDetails } from '../hooks/queries/useOutletDetails';
 
 export default function OutletDetails() {
-  const [outletData, setOutletData] = useState({
-    name: "",
-    address: "",
-    outlet_status: false,
-    mobile: "",
-    outlet_type: "",
-    veg_nonveg: "",
-    created_on: "",
-    opening_time: "",
-    closing_time: "",
-    outlet_code: "",
-    owner_id: "",
-    owners: [],
-    menu_counts: { total: 0, active: 0, inactive: 0 },
-    menu_category_counts: { total: 0, active: 0, inactive: 0 },
-    section_counts: { total: 0, active: 0, inactive: 0 },
-    table_counts: { total: 0, active: 0, inactive: 0 },
-    waiter_counts: { total: 0, active: 0, inactive: 0 },
-    captain_counts: { total: 0, active: 0, inactive: 0 },
-    manager_counts: { total: 0, active: 0, inactive: 0 },
-    chef_counts: { total: 0, active: 0, inactive: 0 },
-    Inventory_Items_counts: { total: 0, active: 0, inactive: 0 },
-    Inventory_Category_counts: { total: 0, active: 0, inactive: 0 },
-    Inventory_Sub_Category_counts: { total: 0, active: 0, inactive: 0 },
-    supplier_counts: { total: 0, active: 0, inactive: 0 },
-    order_statistics: {
-      total_days_since_menumitra_was_installed: 0,
-      total_orders_since_menumitra_was_installed: 0,
-      total_revenue: 0,
-      first_order_date: ""
-    }
-  });
-  const [error, setError] = useState(null);
-  const { currentOutlet, loading: outletLoading } = useOutlet();
-  const { fetchData, getCachedData } = useCacheData();
-  const { hasOutlet, warningElement } = useOutletWarning();
+  // Remove the local isLoading state since we'll use the query's loading state
+  // const [isLoading, setIsLoading] = useState(true); <- Remove this
+
+  // Keep other necessary state
   const [currentOutletId, setCurrentOutletId] = useState(localStorage.getItem('outlet_id'));
+  const [error, setError] = useState(null);
   const prevOutletIdRef = useRef(null);
   const isInitialMount = useRef(true);
   const outletChangeRef = useRef(false);
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Existing context hooks
+  const { currentOutlet, loading: outletLoading } = useOutlet();
+  const { hasOutlet, warningElement } = useOutletWarning();
+
+  // Query hook with renamed loading state
+  const {
+    data: outletData = {
+      name: "",
+      address: "",
+      outlet_status: false,
+      mobile: "",
+      outlet_type: "",
+      veg_nonveg: "",
+      created_on: "",
+      opening_time: "",
+      closing_time: "",
+      outlet_code: "",
+      owner_id: "",
+      owners: [],
+      menu_counts: { total: 0, active: 0, inactive: 0 },
+      menu_category_counts: { total: 0, active: 0, inactive: 0 },
+      section_counts: { total: 0, active: 0, inactive: 0 },
+      table_counts: { total: 0, active: 0, inactive: 0 },
+      waiter_counts: { total: 0, active: 0, inactive: 0 },
+      captain_counts: { total: 0, active: 0, inactive: 0 },
+      manager_counts: { total: 0, active: 0, inactive: 0 },
+      chef_counts: { total: 0, active: 0, inactive: 0 },
+      Inventory_Items_counts: { total: 0, active: 0, inactive: 0 },
+      Inventory_Category_counts: { total: 0, active: 0, inactive: 0 },
+      Inventory_Sub_Category_counts: { total: 0, active: 0, inactive: 0 },
+      supplier_counts: { total: 0, active: 0, inactive: 0 },
+      order_statistics: {
+        total_days_since_menumitra_was_installed: 0,
+        total_orders_since_menumitra_was_installed: 0,
+        total_revenue: 0,
+        first_order_date: ""
+      }
+    },
+    isLoading: isLoadingOutletDetails,
+    error: outletDetailsError,
+    refetch: refetchOutletDetails
+  } = useOutletDetails(
+    {
+      outlet_id: currentOutletId,
+      user_id: localStorage.getItem('user_id')
+    },
+    {
+      refetchOnWindowFocus: true,
+      onError: (error) => {
+        console.error('Error fetching outlet details:', error);
+        setError(error.message || 'Failed to load outlet details');
+      }
+    }
+  );
+
+  // Create a single loading indicator that combines both loading states
+  const isPageLoading = outletLoading || isLoadingOutletDetails;
 
   // Helper function to check if a value is empty (0, null, undefined, empty string, "N/A")
   const isEmpty = (value) => {
@@ -118,78 +145,32 @@ export default function OutletDetails() {
       .join(' ');
   };
 
-  // Function to fetch outlet details - make it a useCallback to use in dependencies
-  const fetchOutletDetails = useCallback(async (options = {}) => {
-    // Get user and outlet IDs
-    const userId = localStorage.getItem('user_id');
-    const outletId = localStorage.getItem('outlet_id');
-    
-    if (!userId || !outletId) {
-      setError('User ID or outlet ID not found');
-      return;
-    }
-    
-    // Parse IDs as integers for consistent comparison
-    const numericOutletId = parseInt(outletId, 10);
-    
-    // Skip if we're already fetching for the same outlet ID and not forcing refresh
-    if (!options.forceRefresh && !options.isInitialLoad && prevOutletIdRef.current === numericOutletId) {
-      return;
-    }
-    
-    try {
-    setIsLoading(true);
-      console.log(`Fetching outlet details for outlet ID: ${outletId}${options.isInitialLoad ? ' (initial load)' : ''}`);
-      
-      // Remember this outlet ID to prevent duplicate fetches (store as number for consistent comparison)
-      prevOutletIdRef.current = numericOutletId;
-      
-      // If this is triggered by outlet change, set the flag to prevent re-triggering
-      if (options.fromOutletChange) {
-        outletChangeRef.current = true;
-      }
-      
-      // Fetch data
-      const data = await fetchData(API_PATHS.outletDetails, {
-        user_id: Number(userId),
-        outlet_id: numericOutletId
-      }, {
-        forceRefresh: options.forceRefresh || false,
-        transformResponse: (response) => response?.detail || response
-      });
-      
-      if (data) {
-        // Use a functional update to avoid stale state issues
-        setOutletData(prevData => ({...prevData, ...data}));
-        setError(null);
-      }
-    } catch (err) {
-      console.error('Error fetching outlet details:', err);
-      setError('Failed to load outlet details. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchData]);
-
-  // One-time setup on component mount
+  // Keep existing outlet change handling
   useEffect(() => {
-    console.log('OutletDetails component mounted');
-    
-    // Get initial outlet ID
-    const outletId = localStorage.getItem('outlet_id');
-    if (outletId) {
-      // Always fetch data on initial load, regardless of cache
-      fetchOutletDetails({ isInitialLoad: true });
-      
-      // Mark that we're not on initial mount anymore
+    if (isInitialMount.current) {
       isInitialMount.current = false;
+      return;
     }
-    
-    // Set up event listeners
+
+    if (!currentOutlet?.outlet_id) return;
+
+    // Parse IDs as integers for consistent comparison
+    const numericOutletId = parseInt(currentOutlet.outlet_id, 10);
+    const numericPreviousOutletId = prevOutletIdRef.current;
+
+    if (numericPreviousOutletId !== numericOutletId) {
+      console.log(`OutletDetails: Outlet changed in context from ${numericPreviousOutletId} to ${numericOutletId}`);
+      setCurrentOutletId(currentOutlet.outlet_id);
+      // TanStack Query will automatically refetch when currentOutletId changes
+      prevOutletIdRef.current = numericOutletId;
+    }
+  }, [currentOutlet?.outlet_id]);
+
+  // Handle storage events for cross-tab synchronization
+  useEffect(() => {
     const handleOutletChange = (newOutletId) => {
       if (!newOutletId) return;
       
-      // Parse to number for consistent comparison
       const numericNewOutletId = parseInt(newOutletId, 10);
       const numericPrevOutletId = prevOutletIdRef.current;
       
@@ -197,50 +178,28 @@ export default function OutletDetails() {
       
       console.log(`OutletDetails: Outlet changed to ${newOutletId} via event`);
       setCurrentOutletId(newOutletId);
-      fetchOutletDetails({ forceRefresh: true });
+      // TanStack Query will automatically refetch
     };
     
-    // Handle custom events
     const onCustomEvent = (e) => {
       const newOutletId = e.detail?.outletId || localStorage.getItem('outlet_id');
       handleOutletChange(newOutletId);
     };
     
-    // Handle storage events (for changes in other tabs)
     const onStorageChange = (e) => {
       if (e.key === 'outlet_id') {
         handleOutletChange(e.newValue);
       }
     };
     
-    // Set up event listeners
     window.addEventListener('outlet:changed', onCustomEvent);
     window.addEventListener('storage', onStorageChange);
     
     return () => {
-      // Clean up event listeners
       window.removeEventListener('outlet:changed', onCustomEvent);
       window.removeEventListener('storage', onStorageChange);
     };
-  }, []); // Empty deps = run once on mount
-
-  // Listen for outlet changes from context
-  useEffect(() => {
-    if (isInitialMount.current || !currentOutlet?.outlet_id) {
-      return; // Skip on initial mount or if no outlet is selected
-    }
-    
-    // Parse IDs as integers for consistent comparison
-    const numericOutletId = parseInt(currentOutlet.outlet_id, 10);
-    const numericPreviousOutletId = prevOutletIdRef.current;
-    
-    // Only fetch if the outlet ID has changed from what we last fetched
-    if (numericPreviousOutletId !== numericOutletId) {
-      console.log(`OutletDetails: Outlet changed in context from ${numericPreviousOutletId} to ${numericOutletId}`);
-      setCurrentOutletId(currentOutlet.outlet_id);
-      fetchOutletDetails({ forceRefresh: true, fromOutletChange: true });
-    }
-  }, [currentOutlet?.outlet_id, fetchOutletDetails]);
+  }, []);
 
   // Food type indicator component - simplified
   const FoodTypeIndicator = ({ type }) => {
@@ -642,9 +601,9 @@ export default function OutletDetails() {
         <Breadcrumb items={breadcrumbItems} />
         
         {/* Error state */}
-        {error && (
+        {(error || outletDetailsError) && (
           <div className="mb-6 p-4 bg-white border border-red-200 rounded-lg bg-red-50">
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700">{error || outletDetailsError?.message}</p>
           </div>
         )}
         
@@ -673,9 +632,9 @@ export default function OutletDetails() {
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium">
-                    {isLoading ? "Outlet Name" : (outletData.name || "Outlet Name")}
+                    {isPageLoading ? "Outlet Name" : (outletData.name || "Outlet Name")}
                   </div>
-                  {!isLoading && !isEmpty(outletData.outlet_status) && (
+                  {!isPageLoading && !isEmpty(outletData.outlet_status) && (
                     <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${outletData.outlet_status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {outletData.outlet_status ? "Active" : "Inactive"}
                     </span>
@@ -688,7 +647,7 @@ export default function OutletDetails() {
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium capitalize">
-                    {isLoading ? "N/A" : (outletData.outlet_type || "N/A")}
+                    {isPageLoading ? "N/A" : (outletData.outlet_type || "N/A")}
                   </div>
                   <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -701,8 +660,8 @@ export default function OutletDetails() {
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium capitalize flex items-center">
-                    {isLoading ? "N/A" : (outletData.veg_nonveg || "N/A")}
-                    {!isLoading && outletData.veg_nonveg && <FoodTypeIndicator type={outletData.veg_nonveg} />}
+                    {isPageLoading ? "N/A" : (outletData.veg_nonveg || "N/A")}
+                    {!isPageLoading && outletData.veg_nonveg && <FoodTypeIndicator type={outletData.veg_nonveg} />}
                   </div>
                   <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" />
@@ -715,7 +674,7 @@ export default function OutletDetails() {
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium">
-                    {isLoading ? "N/A" : (outletData.outlet_code || "N/A")}
+                    {isPageLoading ? "N/A" : (outletData.outlet_code || "N/A")}
                   </div>
                   <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -728,11 +687,11 @@ export default function OutletDetails() {
             {/* Contact and Timing Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {/* Contact Detail */}
-              {(isLoading || !isEmpty(outletData.mobile)) && (
+              {(isPageLoading || !isEmpty(outletData.mobile)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium">
-                    {isLoading ? "N/A" : outletData.mobile}
+                    {isPageLoading ? "N/A" : outletData.mobile}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -743,11 +702,11 @@ export default function OutletDetails() {
               )}
               
               {/* Created On */}
-              {(isLoading || !isEmpty(outletData.created_on)) && (
+              {(isPageLoading || !isEmpty(outletData.created_on)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium">
-                    {isLoading ? "N/A" : outletData.created_on}
+                    {isPageLoading ? "N/A" : outletData.created_on}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -758,11 +717,11 @@ export default function OutletDetails() {
               )}
               
               {/* Operating Hours */}
-              {(isLoading || !isEmpty(outletData.opening_time) || !isEmpty(outletData.closing_time)) && (
+              {(isPageLoading || !isEmpty(outletData.opening_time) || !isEmpty(outletData.closing_time)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-base font-medium flex-1">
-                    {isLoading ? "N/A - N/A" : (
+                    {isPageLoading ? "N/A - N/A" : (
                         <>
                           <div className="flex items-center justify-between text-sm">
                             <span>Opening:</span>
@@ -785,11 +744,11 @@ export default function OutletDetails() {
             </div>
 
             {/* Address */}
-            {(isLoading || !isEmpty(outletData.address)) && (
+            {(isPageLoading || !isEmpty(outletData.address)) && (
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-start justify-between mb-1">
                   <div className="text-base font-medium pr-2">
-                  {isLoading ? "N/A" : toTitleCase(outletData.address)}
+                  {isPageLoading ? "N/A" : toTitleCase(outletData.address)}
                   </div>
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -802,10 +761,10 @@ export default function OutletDetails() {
           </div>
 
           {/* Owners Section - always show */}
-          <OwnersSection owners={outletData.owners} isLoading={isLoading} />
+          <OwnersSection owners={outletData.owners} isLoading={isPageLoading} />
           
           {/* Usage Stats - show only if has data */}
-          <UsageStatsSection data={outletData.order_statistics} isLoading={isLoading} />
+          <UsageStatsSection data={outletData.order_statistics} isLoading={isPageLoading} />
           
           {/* Menu Information - show only if has data */}
           <CountsSection 
@@ -816,7 +775,7 @@ export default function OutletDetails() {
               section: outletData.section_counts || {},
               table: outletData.table_counts || {}
             }}
-            isLoading={isLoading}
+            isLoading={isPageLoading}
           />
           
           {/* Staff Information - show only if has data */}
@@ -828,7 +787,7 @@ export default function OutletDetails() {
               manager: outletData.manager_counts || {},
               chef: outletData.chef_counts || {}
             }}
-            isLoading={isLoading}
+            isLoading={isPageLoading}
           />
           
           {/* Inventory Information - show only if has data */}
@@ -840,7 +799,7 @@ export default function OutletDetails() {
               Inventory_Sub_Category: outletData.Inventory_Sub_Category_counts || {},
               supplier: outletData.supplier_counts || {}
             }}
-            isLoading={isLoading}
+            isLoading={isPageLoading}
           />
         </div>
       </div>
