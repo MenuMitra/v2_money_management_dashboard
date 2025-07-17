@@ -15,5 +15,6 @@ export const queryKeys = {
   outlet: {
     root: ['outlet'],
     details: (params) => [...queryKeys.outlet.root, 'details', params],
+    list: (params) => [...queryKeys.outlet.root, 'list', params], // Add this line
   }
 }; 

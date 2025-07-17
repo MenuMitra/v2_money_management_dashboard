@@ -1,71 +1,68 @@
-import { useState, useEffect, useRef } from 'react';
-import axios from '../api/axios';
-import { COMMON_PREFIX } from '../api/axios';
-import { useCacheData } from '../context/CacheDataContext';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useOutletList } from '../hooks/queries/useOutletList';
 
 /**
  * OutletSelector component for outlet dashboard
- * Allows users to select outlets from a modal
- * @param {boolean} isOpen - Whether the modal is open
- * @param {function} onClose - Function to call when modal is closed
- * @param {function} onSelect - Function to call when outlet is selected
- * @param {boolean} updateContextOnSelect - Whether to update localStorage with selected outlet (true for header, false for comparison)
- * @param {array} excludedOutletIds - Array of outlet IDs to exclude from selection
+ * @param {Object} props Component props
+ * @param {boolean} props.isOpen Whether the modal is open
+ * @param {function} props.onClose Function to call when modal is closed
+ * @param {function} props.onSelect Function to call when outlet is selected
+ * @param {boolean} props.updateContextOnSelect Whether to update localStorage with selected outlet
+ * @param {array} props.excludedOutletIds Array of outlet IDs to exclude from selection
  */
-const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = true, excludedOutletIds = [] }) => {
+const OutletSelector = ({ 
+  isOpen, 
+  onClose, 
+  onSelect, 
+  updateContextOnSelect = true, 
+  excludedOutletIds = [] 
+}) => {
   const modalRef = useRef(null);
-  const [outlets, setOutlets] = useState([]);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredOutlets, setFilteredOutlets] = useState([]);
-  const { fetchData, getCachedData, generateCacheKey } = useCacheData();
-  
-  // Add lastFetchTimestamp ref to track when data was last fetched
-  const lastFetchTimestampRef = useRef(null);
-  
-  // Define cache duration (15 minutes in milliseconds)
-  const CACHE_DURATION = 15 * 60 * 1000;
-  
-  // Filter states
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
-  const [accountFilter, setAccountFilter] = useState('all'); // 'all', 'live', 'test'
-  const [openFilter, setOpenFilter] = useState('all'); // 'all', 'open', 'closed'
-  const [sortOrder, setSortOrder] = useState('default'); // 'default', 'asc', 'desc'
-  
-  // Check if any filter is active
-  const isAnyFilterActive = statusFilter !== 'all' || 
-                            accountFilter !== 'all' || 
-                            openFilter !== 'all' || 
-                            sortOrder !== 'default' ||
-                            searchTerm.trim() !== '';
-  
-  // Listen for cache:clear event (e.g., on logout)
-  useEffect(() => {
-    const handleCacheClear = () => {
-      console.log('Clearing outlet selector data due to logout');
-      setOutlets([]);
-      setFilteredOutlets([]);
-      lastFetchTimestampRef.current = null;
-    };
-    
-    window.addEventListener('cache:clear', handleCacheClear);
-    
-    return () => {
-      window.removeEventListener('cache:clear', handleCacheClear);
-    };
-  }, []);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [accountFilter, setAccountFilter] = useState('all');
+  const [openFilter, setOpenFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('default');
 
-  // Fetch outlets when component mounts or modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchOutlets();
+  // Get user_id from localStorage
+  const userId = localStorage.getItem('user_id');
+
+  // Process outlet data to remove duplicates (moving this BEFORE the hook usage)
+  const processOutletData = (outlets) => {
+    const uniqueOutletsMap = new Map();
+    outlets.forEach(outlet => {
+      const outletId = outlet.outlet_id;
+      if (!uniqueOutletsMap.has(outletId)) {
+        uniqueOutletsMap.set(outletId, {
+          ...outlet,
+          uniqueKey: `${outletId}`,
+          is_open: Boolean(outlet.is_open),
+          outlet_status: Boolean(outlet.outlet_status)
+        });
+      }
+    });
+    return Array.from(uniqueOutletsMap.values());
+  };
+
+  // Fetch outlets using TanStack Query
+  const { 
+    data: outlets = [], 
+    error,
+    refetch: fetchOutlets,
+    isLoading 
+  } = useOutletList(
+    { 
+      owner_id: userId,
+      outlet_id: localStorage.getItem('outlet_id')
+    },
+    { 
+      enabled: Boolean(userId && isOpen),
+      select: (data) => processOutletData(data)
     }
-  }, [isOpen]);
+  );
 
-  // Apply filters and search when any filtering condition changes
-  useEffect(() => {
-    if (!outlets || outlets.length === 0) return;
-    
+  // Filter and sort outlets using useMemo for performance
+  const filteredOutlets = useMemo(() => {
     let filtered = [...outlets];
     
     // Apply search filter
@@ -109,110 +106,19 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       filtered.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
     }
     
-    setFilteredOutlets(filtered);
-  }, [searchTerm, outlets, statusFilter, accountFilter, openFilter, sortOrder]);
+    return filtered;
+  }, [outlets, searchTerm, statusFilter, accountFilter, openFilter, sortOrder]);
 
-  // Helper function to title case text
-  const toTitleCase = (str) => {
-    if (!str) return '';
-    return str
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+  // Check if any filter is active
+  const isAnyFilterActive = statusFilter !== 'all' || 
+                          accountFilter !== 'all' || 
+                          openFilter !== 'all' || 
+                          sortOrder !== 'default' ||
+                          searchTerm.trim() !== '';
 
-  // Process outlet data to remove duplicates with same outlet_id
-  const processOutletData = (outlets) => {
-    // Create a map to keep track of outlets by ID
-    const uniqueOutletsMap = new Map();
-    
-    // Process each outlet, keeping only the first occurrence of each outlet_id
-    outlets.forEach(outlet => {
-      const outletId = outlet.outlet_id;
-      
-      // Only add this outlet if we haven't seen this outlet_id before
-      if (!uniqueOutletsMap.has(outletId)) {
-        uniqueOutletsMap.set(outletId, {
-          ...outlet,
-          uniqueKey: `${outletId}`,
-          is_open: Boolean(outlet.is_open),
-          outlet_status: Boolean(outlet.outlet_status)
-        });
-      }
-    });
-    
-    // Convert the map values back to an array
-    return Array.from(uniqueOutletsMap.values());
-  };
-
-  // Fetch outlets from API with caching
-  const fetchOutlets = async () => {
-    try {
-      setError(null);
-      
-      const userId = localStorage.getItem('user_id');
-      if (!userId) {
-        setError('User not authenticated');
-        return;
-      }
-
-      const requestBody = {
-        owner_id: Number(userId),
-        app_source: 'admin'
-      };
-      
-      // Generate cache key
-      const cacheKey = generateCacheKey(`${COMMON_PREFIX}/get_outlet_list`, requestBody);
-      
-      // Check for cached data first and display it immediately if available
-      const cachedData = getCachedData(cacheKey);
-      let shouldFetchFreshData = true;
-      
-      if (cachedData && cachedData.outlets) {
-        const processedOutlets = processOutletData(cachedData.outlets);
-        setOutlets(processedOutlets);
-        setFilteredOutlets(processedOutlets);
-        
-        // Determine if we need to fetch fresh data based on last fetch time
-        const now = Date.now();
-        if (lastFetchTimestampRef.current && (now - lastFetchTimestampRef.current < CACHE_DURATION)) {
-          shouldFetchFreshData = false;
-          console.log('Using cached outlet data, last fetched:', new Date(lastFetchTimestampRef.current).toLocaleTimeString());
-        }
-      }
-      
-      // Fetch fresh data only if needed
-      if (shouldFetchFreshData) {
-        console.log('Fetching fresh outlet data');
-        
-        const freshData = await fetchData(`${COMMON_PREFIX}/get_outlet_list`, requestBody, {
-          forceRefresh: true,
-          transformResponse: (data) => data
-        });
-        
-        if (freshData && freshData.outlets) {
-          const processedOutlets = processOutletData(freshData.outlets);
-          setOutlets(processedOutlets);
-          setFilteredOutlets(processedOutlets);
-          
-          // Update the last fetch timestamp
-          lastFetchTimestampRef.current = Date.now();
-      } else {
-        setError('No outlets found');
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching outlets:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch outlets');
-    }
-  };
-
-  // Handle outlet selection
+  // Handle outlet selection (keeping existing logic)
   const handleOutletSelect = (outlet) => {
-    // Only update localStorage if updateContextOnSelect is true (for main header)
     if (updateContextOnSelect) {
-      // Store selected outlet details in localStorage
       localStorage.setItem('outlet_id', outlet.outlet_id);
       localStorage.setItem('outlet_name', outlet.name);
       localStorage.setItem('outlet_code', outlet.outlet_code || '');
@@ -223,7 +129,6 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
         localStorage.setItem('owner_name', outlet.owner_name);
       }
       
-      // Dispatch outlet:changed event to notify other components
       window.dispatchEvent(new CustomEvent('outlet:changed', { 
         detail: {
           outlet_id: outlet.outlet_id,
@@ -232,14 +137,11 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
       }));
     }
     
-    // Call onSelect callback
     if (onSelect) onSelect(outlet);
-    
-    // Close modal
     onClose();
   };
-  
-  // Reset all filters
+
+  // Reset filters
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -248,20 +150,16 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
     setSortOrder('default');
   };
 
-  // Toggle sort order (default -> asc -> desc -> default)
+  // Toggle sort order
   const toggleSortOrder = () => {
-    if (sortOrder === 'default') {
-      setSortOrder('asc');
-    }
-    else if (sortOrder === 'asc') {
-      setSortOrder('desc');
-    }
-    else {
-      setSortOrder('default');
-    }
+    setSortOrder(current => 
+      current === 'default' ? 'asc' : 
+      current === 'asc' ? 'desc' : 
+      'default'
+    );
   };
 
-  // Handle click outside to close modal
+  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
@@ -278,15 +176,27 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
     };
   }, [isOpen, onClose]);
 
-  // Don't render anything if the modal isn't open
+  // Listen for cache:clear event
+  useEffect(() => {
+    const handleCacheClear = () => {
+      console.log('Clearing outlet selector data due to logout');
+      // The query cache will be cleared automatically by React Query
+    };
+    
+    window.addEventListener('cache:clear', handleCacheClear);
+    return () => window.removeEventListener('cache:clear', handleCacheClear);
+  }, []);
+
   if (!isOpen) return null;
 
+  // The rest of your JSX remains exactly the same, just update the data rendering part
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div 
         ref={modalRef} 
         className="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
       >
+        {/* Keep existing JSX structure, just update the data rendering part */}
         {/* Modal Header */}
         <div className="px-4 sm:px-6 py-3 sm:py-4 bg-primary-50 border-b flex justify-between items-center">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">Select Outlet</h3>
@@ -421,20 +331,28 @@ const OutletSelector = ({ isOpen, onClose, onSelect, updateContextOnSelect = tru
           )}
         </div>
         
-        {/* Outlet List */}
+        {/* Outlet List - Update only the error and loading states */}
         <div className="overflow-y-auto flex-grow" style={{ maxHeight: 'calc(90vh - 240px)' }}>
           {error ? (
             <div className="px-4 sm:px-6 py-4 text-center text-red-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="mt-2">{error}</p>
+              <p className="mt-2">{error.message || 'Failed to fetch outlets'}</p>
               <button
-                onClick={fetchOutlets}
+                onClick={() => fetchOutlets()}
                 className="mt-2 text-primary-600 hover:text-primary-800 font-medium"
               >
                 Try Again
               </button>
+            </div>
+          ) : isLoading ? (
+            <div className="px-4 sm:px-6 py-4 text-center text-gray-500">
+              <svg className="mx-auto h-8 w-8 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <p className="mt-2">Loading outlets...</p>
             </div>
           ) : filteredOutlets.length === 0 ? (
             <div className="px-4 sm:px-6 py-4 text-center text-gray-500">
