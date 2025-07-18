@@ -13,7 +13,7 @@ export default function Layout({ children }) {
   const [reportsOpen, setReportsOpen] = useState(false);
   const { currentOutlet } = useOutlet();
   const { logout } = useAuth();
-  const [dateRange, setDateRange] = useState({ type: 'all' });
+  const [dateRange, setDateRange] = useState({ type: 'today' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const userName = localStorage.getItem('user_name') || 'User';
@@ -288,7 +288,7 @@ export default function Layout({ children }) {
               <div>
                 <DateRangePicker 
                   onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
-                  initialValue="all" 
+                  initialValue="today" 
                   disabled={!isStatisticsPage}
                 />
               </div>
