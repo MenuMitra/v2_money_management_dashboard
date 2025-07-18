@@ -80,15 +80,32 @@ export const useStatistics = (params = {}, options = {}) => {
 
   // Helper function for date range updates
   const updateDateRange = async (startDate, endDate) => {
+    // Create new parameters with date range
     const newParams = {
       ...queryParams,
       start_date: startDate,
       end_date: endDate
     };
     
+    console.log('Updating statistics with date range:', { startDate, endDate, newParams });
+    
+    // Invalidate the old query
     await queryClient.invalidateQueries({
-      queryKey: queryKeys.statistics.all(newParams)
+      queryKey: queryKeys.statistics.all(queryParams)
     });
+    
+    // Make a new API call with updated parameters
+    try {
+      const result = await getAllStats(newParams);
+      
+      // Update the cache with the new result
+      queryClient.setQueryData(queryKeys.statistics.all(newParams), result);
+      
+      return result;
+    } catch (error) {
+      console.error('Error updating date range:', error);
+      throw error;
+    }
   };
 
   return {

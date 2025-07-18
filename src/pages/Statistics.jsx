@@ -5,6 +5,7 @@ import ReactApexChart from 'react-apexcharts';
 import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
 import { Breadcrumb } from '../components';
 import { useNavigate } from 'react-router-dom';
+import { getDateRangeFromType, formatDateForAPI } from '../utils/dateUtils';
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
@@ -1729,7 +1730,7 @@ export default function Statistics() {
   const { warningElement } = useOutletWarning();
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
-  const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
+  const [currentDateRange, setCurrentDateRange] = useState({ type: 'today' });
   
   // Use the statistics hook
   const { 
@@ -1741,11 +1742,24 @@ export default function Statistics() {
   } = useStatistics(
     { 
       outlet_id: outletId,
-      // Add date range params if needed
-      ...(currentDateRange.type === 'custom' && {
-        start_date: currentDateRange.startDate,
-        end_date: currentDateRange.endDate
-      })
+      // Add date range params for all filter types
+      ...(currentDateRange.type !== 'all' && (() => {
+        // For custom date range, use the provided dates
+        if (currentDateRange.type === 'custom' && currentDateRange.startDate && currentDateRange.endDate) {
+          return {
+            start_date: formatDateForAPI(new Date(currentDateRange.startDate)),
+            end_date: formatDateForAPI(new Date(currentDateRange.endDate))
+          };
+        }
+        // For predefined date ranges (today, yesterday, etc.), calculate the dates
+        else {
+          const { startDate, endDate } = getDateRangeFromType(currentDateRange.type);
+          return {
+            start_date: startDate,
+            end_date: endDate
+          };
+        }
+      })())
     },
     {
       // Additional options if needed
@@ -1759,11 +1773,20 @@ export default function Statistics() {
       const range = event.detail;
       setCurrentDateRange(range);
       
+      // Refresh data with new date range
       if (range.type === 'custom' && range.startDate && range.endDate) {
+        // For custom date range
         updateDateRange(
-          formatDateForApi(new Date(range.startDate)),
-          formatDateForApi(new Date(range.endDate))
+          formatDateForAPI(new Date(range.startDate)),
+          formatDateForAPI(new Date(range.endDate))
         );
+      } else if (range.type !== 'all') {
+        // For predefined date ranges (today, yesterday, etc.)
+        const { startDate, endDate } = getDateRangeFromType(range.type);
+        updateDateRange(startDate, endDate);
+      } else {
+        // For 'all' time range, refresh without date parameters
+        refresh();
       }
     };
 
@@ -1771,7 +1794,7 @@ export default function Statistics() {
     return () => {
       window.removeEventListener('daterange:changed', handleDateRangeChange);
     };
-  }, [updateDateRange]);
+  }, [updateDateRange, refresh]);
 
   // Add debugging logs for component lifecycle and render
   useEffect(() => {
@@ -2005,6 +2028,27 @@ export default function Statistics() {
   
   // Use actual data if available, otherwise use empty data during loading
   const displayData = isLoading ? emptyData : statistics || emptyData;
+
+  // Apply initial date filter when component mounts
+  useEffect(() => {
+    if (outletId && currentDateRange.type !== 'all') {
+      console.log('Applying initial date filter:', currentDateRange.type);
+      
+      // For custom date range
+      if (currentDateRange.type === 'custom' && currentDateRange.startDate && currentDateRange.endDate) {
+        updateDateRange(
+          formatDateForAPI(new Date(currentDateRange.startDate)),
+          formatDateForAPI(new Date(currentDateRange.endDate))
+        );
+      } 
+      // For predefined date ranges (today, yesterday, etc.)
+      else {
+        const { startDate, endDate } = getDateRangeFromType(currentDateRange.type);
+        console.log('Initial date range:', { startDate, endDate });
+        updateDateRange(startDate, endDate);
+      }
+    }
+  }, [outletId, currentDateRange.type]);
 
   return (
     <div className="space-y-4 p-2 sm:p-3">

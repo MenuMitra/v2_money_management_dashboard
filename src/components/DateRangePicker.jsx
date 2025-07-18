@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const DateRangePicker = ({ onChange, initialValue = 'all', disabled = false }) => {
+const DateRangePicker = ({ onChange, initialValue = 'today', disabled = false }) => {
   const [dateRange, setDateRange] = useState(initialValue);
   const [showCustomRange, setShowCustomRange] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -11,7 +11,7 @@ const DateRangePicker = ({ onChange, initialValue = 'all', disabled = false }) =
   // Listen for outlet changes to reset the date range
   useEffect(() => {
     const outletChangeHandler = () => {
-      setDateRange('all');
+      setDateRange('today');
       setShowCustomRange(false);
       setStartDate('');
       setEndDate('');

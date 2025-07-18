@@ -174,6 +174,20 @@ export const StatisticsProvider = ({ children }) => {
         // Update our data hash for change detection
         dataHashRef.current = generateDataHash(dataWithOutlet);
         
+        // Debug log to check sales_performance data structure
+        if (dataWithOutlet.sales_performance) {
+          console.log('[StatisticsContext] Sales performance data structure:', {
+            hasTopSelling: !!dataWithOutlet.sales_performance.top_selling?.items,
+            hasLowSelling: !!dataWithOutlet.sales_performance.low_selling?.items,
+            hasNoSelling: !!dataWithOutlet.sales_performance.no_selling?.items,
+            topSellingCount: dataWithOutlet.sales_performance.top_selling?.items?.length || 0,
+            lowSellingCount: dataWithOutlet.sales_performance.low_selling?.items?.length || 0,
+            noSellingCount: dataWithOutlet.sales_performance.no_selling?.items?.length || 0
+          });
+        } else {
+          console.log('[StatisticsContext] No sales_performance data in response');
+        }
+        
         setStatistics(dataWithOutlet);
         setLastFetched(Date.now());
         
