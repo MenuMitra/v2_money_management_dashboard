@@ -692,15 +692,90 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     setSearchQuery('');
   }, [activeTab]);
   
-  // If loading, show loading state
+  // If loading, show sample menu items instead of skeleton loading
   if (loading) {
+    const sampleMenuItems = [
+      { name: "Sample Item 1", sales_count: "--" },
+      { name: "Sample Item 2", sales_count: "--" },
+      { name: "Sample Item 3", sales_count: "--" },
+    ];
+    
     return (
-      <div className="bg-white rounded-lg shadow overflow-hidden p-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-4">Products Analysis</h3>
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded mb-4"></div>
-          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
+          <div className="mt-4 flex justify-center">
+            <div className="grid grid-cols-3 gap-4 w-full">
+              <button className="px-10 py-3 text-sm font-medium rounded-md bg-purple-600 text-white w-full">
+                Top Selling
+              </button>
+              <button className="px-10 py-3 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 w-full">
+                Low Selling
+              </button>
+              <button className="px-10 py-3 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 w-full">
+                No Selling
+              </button>
+            </div>
+          </div>
+          
+          {/* Search bar */}
+          <div className="mt-4">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search menu items..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+                disabled
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  #
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Menu Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sales Count
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {sampleMenuItems.map((item, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    {item.sales_count}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination info */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing sample data while loading...
+          </div>
+          <div className="text-sm text-gray-500">
+            5 entries
+          </div>
         </div>
       </div>
     );
@@ -944,10 +1019,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
       
       {/* Pagination Controls */}
       {filteredItems.length > 0 && (
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center">
-          {/* Items per page selector */}
-          <div className="mb-4 sm:mb-0 flex items-center">
-            <span className="text-sm text-gray-700 mr-2">Show entries:</span>
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          {/* Show entries selector on the left */}
+          <div className="flex items-center">
+            <span className="text-sm text-gray-700 mr-2">Show:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => {
@@ -963,16 +1038,21 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             </select>
           </div>
           
-          {/* Pagination buttons */}
+          {/* Showing records text in center */}
+          <div className="text-center text-sm text-gray-700">
+            Showing {startIndex + 1} to {Math.min(startIndex + displayedItems.length, filteredItems.length)} of {filteredItems.length} records
+          </div>
+          
+          {/* Pagination buttons on the right */}
           <div className="flex items-center">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md mr-1 ${
+              className={`relative inline-flex items-center px-2 py-1 border border-gray-300 text-sm font-medium rounded-md mr-1 ${
                 currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Previous
+              Prev
             </button>
             
             {totalPages <= 5 ? (
@@ -981,7 +1061,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md ${
+                  className={`relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md ${
                     currentPage === i + 1
                       ? 'z-10 bg-purple-600 border-purple-600 text-white'
                       : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
@@ -995,7 +1075,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               <>
                 <button
                   onClick={() => setCurrentPage(1)}
-                  className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md ${
+                  className={`relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md ${
                     currentPage === 1
                       ? 'z-10 bg-purple-600 border-purple-600 text-white'
                       : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
@@ -1011,7 +1091,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 {currentPage > 2 && currentPage < totalPages && (
                   <button
                     onClick={() => setCurrentPage(currentPage)}
-                    className="z-10 bg-purple-600 border-purple-600 text-white relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md"
+                    className="z-10 bg-purple-600 border-purple-600 text-white relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md"
                   >
                     {currentPage}
                   </button>
@@ -1023,7 +1103,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 
                 <button
                   onClick={() => setCurrentPage(totalPages)}
-                  className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md ${
+                  className={`relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md ${
                     currentPage === totalPages
                       ? 'z-10 bg-purple-600 border-purple-600 text-white'
                       : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
@@ -1037,7 +1117,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className={`relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md ml-1 ${
+              className={`relative inline-flex items-center px-2 py-1 border border-gray-300 text-sm font-medium rounded-md ml-1 ${
                 currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -1146,9 +1226,11 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     if (useDefaultData) {
       // Return default data if no real data is available
       return [
-        { menu_name: "Sample Item", sales_count: 0, category_name: "Sample Category" },
-        { menu_name: "Sample Item", sales_count: 0, category_name: "Sample Category" },
-        { menu_name: "Sample Item", sales_count: 0, category_name: "Sample Category" }
+        { menu_name: "Butter Chicken", sales_count: 0, category_name: "Main Course" },
+        { menu_name: "Paneer Tikka", sales_count: 0, category_name: "Starters" },
+        { menu_name: "Masala Dosa", sales_count: 0, category_name: "Breakfast" },
+        { menu_name: "Veg Biryani", sales_count: 0, category_name: "Rice" },
+        { menu_name: "Chocolate Brownie", sales_count: 0, category_name: "Desserts" }
       ];
     }
     
@@ -1247,6 +1329,23 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
             })}
           </tbody>
         </table>
+      </div>
+      {/* Add entries count footer */}
+      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+        {/* Left section */}
+        <div className="text-sm text-gray-700">
+          {useDefaultData ? 'Sample data' : `${activeTab === 'top' ? 'Top' : activeTab === 'low' ? 'Low' : 'Non'} selling items`}
+        </div>
+        
+        {/* Center section */}
+        <div className="text-center text-sm text-gray-700">
+          Showing {getItemsToDisplay().length} records
+        </div>
+        
+        {/* Right section - empty to maintain layout */}
+        <div className="invisible">
+          Placeholder
+        </div>
       </div>
     </div>
   );
