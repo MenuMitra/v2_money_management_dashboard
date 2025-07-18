@@ -4,6 +4,7 @@ import NotificationSound from '../components/NotificationSound';
 import { toast, ToastContainer } from 'react-toastify';
 import CustomToast from '../components/CustomToast';
 import 'react-toastify/dist/ReactToastify.css';
+import { useOutletId } from '../hooks/useOutletId'; 
 
 // Create notification context
 export const NotificationContext = createContext();
@@ -82,7 +83,9 @@ export const NotificationProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   const { isAuthenticated, user } = useAuth();
-
+  // Fix: Get outletId directly without destructuring to avoid the error
+  const outletId = useOutletId();
+  
   // Helper function to generate a test notification for development
   const testNotification = useCallback((type = 'info') => {
     const notificationTypes = [
@@ -140,8 +143,14 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
+      // Fix: Check if outletId exists before creating WebSocket connection
+      if (!outletId) {
+        setConnectionError('No outlet selected');
+        return;
+      }
+
       // Create WebSocket connection
-    const ws = new WebSocket(`wss://men4u.xyz/v2/common/ws?token=${accessToken}`);
+      const ws = new WebSocket(`wss://men4u.xyz/v2/common/ws/${outletId}`);
       
       ws.onopen = () => {
         console.log('WebSocket connection established');
@@ -237,7 +246,7 @@ export const NotificationProvider = ({ children }) => {
       console.error('Error setting up WebSocket:', error);
       setConnectionError(`Failed to setup WebSocket: ${error.message}`);
     }
-  }, [isAuthenticated, socket]);
+  }, [isAuthenticated, socket, outletId]);
 
   // Disconnect WebSocket
   const disconnectWebSocket = useCallback(() => {
@@ -334,6 +343,24 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  // Delete a notification
+  const deleteNotification = (notificationId) => {
+    if (!notificationId) return;
+    
+    // Remove notification from state
+    setNotifications(prev => {
+      const filtered = prev.filter(notification => notification.id !== notificationId);
+      return filtered;
+    });
+    
+    // Recalculate unread count
+    setNotifications(prev => {
+      const unread = prev.filter(n => !n.read).length;
+      setUnreadCount(unread);
+      return prev;
+    });
+  };
+
   // Clear all notifications
   const clearNotifications = () => {
     // Clear notifications from state
@@ -424,7 +451,8 @@ export const NotificationProvider = ({ children }) => {
         connectionError,
         markAsRead,
         clearNotifications,
-        testNotification, // Add testNotification to the context
+        deleteNotification, // Add deleteNotification to the context
+        testNotification,
       }}
     >
       {children}

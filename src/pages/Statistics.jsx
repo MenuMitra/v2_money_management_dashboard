@@ -614,160 +614,304 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
 
 // Products Analysis Card Component
 const ProductsAnalysisCard = ({ categoryData }) => {
-  // Use empty data if none provided
-  const defaultCategoryData = [
-    {
-      category_name: "Sample Category",
-      total_orders: 0,
-      top_menus: [
-        { menu_name: "Sample Item 1", sales_count: 0 },
-        { menu_name: "Sample Item 2", sales_count: 0 },
-        { menu_name: "Sample Item 3", sales_count: 0 }
-      ],
-      no_selling: [
-        { name: "Sample No-Sell Item 1", item_id: "sample1" },
-        { name: "Sample No-Sell Item 2", item_id: "sample2" },
-        { name: "Sample No-Sell Item 3", item_id: "sample3" }
-      ]
-    }
-  ];
-
-  // Use provided data or default data
-  const data = (categoryData && Array.isArray(categoryData) && categoryData.length > 0) 
-    ? categoryData 
-    : defaultCategoryData;
-
-  // Try to get sales_performance from the parent statistics context
-  const { statistics } = useStatistics();
-  console.log("Full statistics:", statistics);
+  const outletId = useOutletId();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [salesData, setSalesData] = useState({
+    topSelling: { items: [], pagination: {} },
+    lowSelling: { items: [], pagination: {} },
+    noSelling: { items: [], pagination: {} }
+  });
   
-  // Check if we have sales_performance data directly in the statistics object
-  const salesPerformanceData = statistics?.sales_performance;
-  console.log("Sales Performance Data from context:", salesPerformanceData);
+  // Set up state for active tab, search, and pagination
+  const [activeTab, setActiveTab] = useState('top');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  if (salesPerformanceData) {
-    // Direct API data available - use it
-    const [activeTab, setActiveTab] = useState('top');
-    
-    // Get items directly from the sales_performance structure or use defaults
-    const topSellingItems = salesPerformanceData.top_selling || [];
-    const lowSellingItems = salesPerformanceData.low_selling || [];
-    const noSellingItems = salesPerformanceData.no_selling || [];
-    
-    console.log("Direct API data:", {
-      top: topSellingItems,
-      low: lowSellingItems,
-      no: noSellingItems
-    });
-    
-    // Check which tabs have data
-    const hasTopSellingData = topSellingItems && topSellingItems.length > 0;
-    const hasLowSellingData = lowSellingItems && lowSellingItems.length > 0;
-    const hasNoSellingData = noSellingItems && noSellingItems.length > 0;
-    
-    // If no data in any tab, use default data
-    const useDefaultData = !hasTopSellingData && !hasLowSellingData && !hasNoSellingData;
-    
-    // Set default active tab based on available data
-    useEffect(() => {
-      if (hasTopSellingData) {
-        setActiveTab('top');
-      } else if (hasLowSellingData) {
-        setActiveTab('low');
-      } else if (hasNoSellingData) {
-        setActiveTab('no');
-      }
-    }, [hasTopSellingData, hasLowSellingData, hasNoSellingData]);
-    
-    // Get the items to display based on active tab
-    const getItemsToDisplay = () => {
-      if (useDefaultData) {
-        // Return default data if no real data is available
-        return [
-          { name: "Sample Item", sales_count: 0 },
-          { name: "Sample Item", sales_count: 0 },
-          { name: "Sample Item", sales_count: 0 }
-        ];
-      }
+  // Directly fetch sales performance data from the API
+  useEffect(() => {
+    const fetchSalesPerformanceData = async () => {
+      if (!outletId) return;
       
-      switch (activeTab) {
-        case 'top':
-          return topSellingItems;
-        case 'low':
-          return lowSellingItems;
-        case 'no':
-          return noSellingItems;
-        default:
-          return topSellingItems.length > 0 ? topSellingItems : 
-                 lowSellingItems.length > 0 ? lowSellingItems : 
-                 noSellingItems.length > 0 ? noSellingItems : [];
+      try {
+        setLoading(true);
+        console.log("Fetching sales performance data for outlet:", outletId);
+        
+        // Create API params
+        const params = {
+          outlet_id: outletId,
+          user_id: localStorage.getItem('user_id')
+        };
+        
+        // Import API directly to avoid context issues
+        const { api } = await import('../lib/react-query/queryClient');
+        const { API_PATHS } = await import('../api');
+        
+        // Make the API call
+        const response = await api.post(API_PATHS.getAllStatsWithoutFilter, params);
+        
+        if (response.data?.detail?.sales_performance) {
+          const salesPerformance = response.data.detail.sales_performance;
+          console.log("Direct API call success, sales performance data:", salesPerformance);
+          
+          // Extract the data we need
+          setSalesData({
+            topSelling: salesPerformance.top_selling || { items: [], pagination: {} },
+            lowSelling: salesPerformance.low_selling || { items: [], pagination: {} },
+            noSelling: salesPerformance.no_selling || { items: [], pagination: {} }
+          });
+          
+          // Set initial active tab based on available data
+          if (salesPerformance.top_selling?.items?.length > 0) {
+            setActiveTab('top');
+          } else if (salesPerformance.low_selling?.items?.length > 0) {
+            setActiveTab('low');
+          } else if (salesPerformance.no_selling?.items?.length > 0) {
+            setActiveTab('no');
+          }
+        } else {
+          console.log("API response doesn't contain sales_performance data, falling back to legacy component");
+          // If we don't have the data in the expected format, we'll use the legacy component
+          throw new Error("No sales performance data in API response");
+        }
+      } catch (err) {
+        console.error("Error fetching sales performance data:", err);
+        setError(err.message || "Failed to fetch sales performance data");
+      } finally {
+        setLoading(false);
       }
     };
     
+    fetchSalesPerformanceData();
+  }, [outletId]);
+  
+  // Reset page and search when changing tabs
+  useEffect(() => {
+    setCurrentPage(1);
+    setSearchQuery('');
+  }, [activeTab]);
+  
+  // If loading, show loading state
+  if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
-          <div className="mt-4 flex justify-center">
-            <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 3 ? 'grid-cols-3' : 'grid-cols-1'} gap-4 w-full max-w-md`}>
-              {hasTopSellingData && (
-                <button 
-                  onClick={() => setActiveTab('top')}
-                  className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Top Selling
-                </button>
-              )}
-              {hasLowSellingData && (
-                <button 
-                  onClick={() => setActiveTab('low')}
-                  className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Low Selling
-                </button>
-              )}
-              {hasNoSellingData && (
-                <button 
-                  onClick={() => setActiveTab('no')}
-                  className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'no' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  No Selling
-                </button>
-              )}
-              {useDefaultData && (
-                <button className="px-6 py-3 text-sm font-medium rounded-md bg-purple-600 text-white">
-                  No Data Available
-                </button>
-              )}
+      <div className="bg-white rounded-lg shadow overflow-hidden p-6">
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Products Analysis</h3>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded mb-4"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // If error or no data, fall back to legacy component
+  if (error || 
+      !salesData.topSelling || 
+      !salesData.lowSelling || 
+      !salesData.noSelling) {
+    console.log("Error or missing data, falling back to legacy component");
+    return <ProductsAnalysisCardLegacy categoryData={categoryData} />;
+  }
+  
+  // Extract items from each category
+  const topSellingItems = salesData.topSelling.items || [];
+  const lowSellingItems = salesData.lowSelling.items || [];
+  const noSellingItems = salesData.noSelling.items || [];
+  
+  // Log the extracted data for debugging
+  console.log("Extracted data from direct API call:", {
+    topSellingItems,
+    lowSellingItems,
+    noSellingItems,
+    topSellingLength: topSellingItems.length,
+    lowSellingLength: lowSellingItems.length,
+    noSellingLength: noSellingItems.length
+  });
+  
+  // Extract pagination data
+  const topSellingPagination = salesData.topSelling.pagination;
+  const lowSellingPagination = salesData.lowSelling.pagination;
+  const noSellingPagination = salesData.noSelling.pagination;
+  
+  // Check which tabs have data
+  const hasTopSellingData = topSellingItems && topSellingItems.length > 0;
+  const hasLowSellingData = lowSellingItems && lowSellingItems.length > 0;
+  const hasNoSellingData = noSellingItems && noSellingItems.length > 0;
+  
+  console.log("Tab visibility flags:", {
+    hasTopSellingData,
+    hasLowSellingData,
+    hasNoSellingData,
+    topCount: topSellingItems.length,
+    lowCount: lowSellingItems.length,
+    noCount: noSellingItems.length
+  });
+  
+  // Get current items based on active tab
+  const getCurrentItems = () => {
+    switch (activeTab) {
+      case 'top':
+        return topSellingItems;
+      case 'low':
+        return lowSellingItems;
+      case 'no':
+        return noSellingItems;
+      default:
+        return [];
+    }
+  };
+  
+  // Get pagination data for the current tab
+  const getCurrentPagination = () => {
+    switch (activeTab) {
+      case 'top':
+        return topSellingPagination || {
+          total_items: topSellingItems.length,
+          current_page: 1,
+          total_pages: Math.ceil(topSellingItems.length / itemsPerPage),
+          items_per_page: itemsPerPage
+        };
+      case 'low':
+        return lowSellingPagination || {
+          total_items: lowSellingItems.length,
+          current_page: 1,
+          total_pages: Math.ceil(lowSellingItems.length / itemsPerPage),
+          items_per_page: itemsPerPage
+        };
+      case 'no':
+        return noSellingPagination || {
+          total_items: noSellingItems.length,
+          current_page: 1,
+          total_pages: Math.ceil(noSellingItems.length / itemsPerPage),
+          items_per_page: itemsPerPage
+        };
+      default:
+        return {
+          total_items: 0,
+          current_page: 1,
+          total_pages: 1,
+          items_per_page: itemsPerPage
+        };
+    }
+  };
+  
+  // Filter items based on search query
+  const getFilteredItems = () => {
+    const items = getCurrentItems();
+    
+    if (!searchQuery) {
+      return items;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return items.filter(item => {
+      const name = item.name || '';
+      return name.toLowerCase().includes(query);
+    });
+  };
+  
+  // Get items to display based on pagination
+  const filteredItems = getFilteredItems();
+  const paginationData = getCurrentPagination();
+  const totalPages = Math.max(1, paginationData.total_pages);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedItems = filteredItems.slice(startIndex, endIndex);
+  
+  // Debug logs
+  console.log("ProductsAnalysisCard data:", {
+    activeTab,
+    currentItems: getCurrentItems(),
+    filteredItems,
+    displayedItems,
+    paginationData
+  });
+  
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
+        <div className="mt-4 flex justify-center">
+          <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 3 ? 'grid-cols-3' : 'grid-cols-1'} gap-4 w-full`}>
+            {hasTopSellingData && (
+              <button 
+                onClick={() => setActiveTab('top')}
+                className={`px-10 py-3 text-sm font-medium rounded-md transition-colors w-full ${
+                  activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Top Selling
+              </button>
+            )}
+            {hasLowSellingData && (
+              <button 
+                onClick={() => setActiveTab('low')}
+                className={`px-10 py-3 text-sm font-medium rounded-md transition-colors w-full ${
+                  activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Low Selling
+              </button>
+            )}
+            {hasNoSellingData && (
+              <button 
+                onClick={() => setActiveTab('no')}
+                className={`px-10 py-3 text-sm font-medium rounded-md transition-colors w-full ${
+                  activeTab === 'no' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                No Selling
+              </button>
+            )}
+            {!hasTopSellingData && !hasLowSellingData && !hasNoSellingData && (
+              <button className="px-10 py-3 text-sm font-medium rounded-md bg-purple-600 text-white w-full">
+                No Data Available
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {/* Search bar */}
+        <div className="mt-4">
+          <div className="relative w-full">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search menu items..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  #
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Menu Name
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sales Count
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {getItemsToDisplay().map((item, index) => (
-                <tr key={index}>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                #
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Menu Name
+              </th>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Sales Count
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {displayedItems.length > 0 ? (
+              displayedItems.map((item, index) => (
+                <tr key={item.item_id || index}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {index + 1}
+                    {startIndex + index + 1}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {item.name || 'Unknown Item'}
@@ -776,16 +920,134 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                     {item.sales_count}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3" className="px-6 py-8 text-center text-sm text-gray-500">
+                  <div className="flex flex-col items-center justify-center">
+                    <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-500 font-medium">No menu items found</p>
+                    {searchQuery && (
+                      <p className="text-gray-400 text-sm mt-1">
+                        Try adjusting your search or filter to find what you're looking for
+                      </p>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-    );
-  } else {
-    // Fall back to the legacy component if no sales_performance data in context
-    return <ProductsAnalysisCardLegacy categoryData={categoryData} />;
-  }
+      
+      {/* Pagination Controls */}
+      {filteredItems.length > 0 && (
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center">
+          {/* Items per page selector */}
+          <div className="mb-4 sm:mb-0 flex items-center">
+            <span className="text-sm text-gray-700 mr-2">Show entries:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          
+          {/* Pagination buttons */}
+          <div className="flex items-center">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md mr-1 ${
+                currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Previous
+            </button>
+            
+            {totalPages <= 5 ? (
+              // Show all page numbers if 5 or fewer
+              [...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md ${
+                    currentPage === i + 1
+                      ? 'z-10 bg-purple-600 border-purple-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))
+            ) : (
+              // Show limited page numbers with ellipsis for larger page counts
+              <>
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md ${
+                    currentPage === 1
+                      ? 'z-10 bg-purple-600 border-purple-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  1
+                </button>
+                
+                {currentPage > 3 && (
+                  <span className="mx-1 text-gray-500">...</span>
+                )}
+                
+                {currentPage > 2 && currentPage < totalPages && (
+                  <button
+                    onClick={() => setCurrentPage(currentPage)}
+                    className="z-10 bg-purple-600 border-purple-600 text-white relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md"
+                  >
+                    {currentPage}
+                  </button>
+                )}
+                
+                {currentPage < totalPages - 2 && (
+                  <span className="mx-1 text-gray-500">...</span>
+                )}
+                
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium mx-1 rounded-md ${
+                    currentPage === totalPages
+                      ? 'z-10 bg-purple-600 border-purple-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
+            
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className={`relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md ml-1 ${
+                currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 // Legacy Products Analysis Card Component for backward compatibility
