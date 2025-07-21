@@ -13,6 +13,8 @@ const OutletHeader = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [dateRange, setDateRange] = useState({ type: "all" });
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [refreshCooldown, setRefreshCooldown] = useState(false);
   const profileRef = useRef(null);
   const location = useLocation();
 
@@ -37,6 +39,33 @@ const OutletHeader = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Listen for loading state changes from Statistics page
+  useEffect(() => {
+    const handleLoadingStart = () => {
+      console.log('Statistics data loading started');
+      setIsDataLoading(true);
+    };
+
+    const handleLoadingEnd = () => {
+      console.log('Statistics data loading ended');
+      setIsDataLoading(false);
+      
+      // Start the cooldown period
+      setRefreshCooldown(true);
+      setTimeout(() => {
+        setRefreshCooldown(false);
+      }, 10000); // 10 seconds cooldown
+    };
+
+    window.addEventListener('statistics:loading:start', handleLoadingStart);
+    window.addEventListener('statistics:loading:end', handleLoadingEnd);
+
+    return () => {
+      window.removeEventListener('statistics:loading:start', handleLoadingStart);
+      window.removeEventListener('statistics:loading:end', handleLoadingEnd);
     };
   }, []);
 
@@ -80,6 +109,17 @@ const OutletHeader = () => {
   // Update handleRefresh to return a Promise and handle SPA refresh
   const handleRefresh = async () => {
     try {
+      // If in cooldown period or already loading, don't allow refresh
+      if (refreshCooldown || isDataLoading) {
+        console.warn('Refresh action blocked: ' + 
+          (refreshCooldown ? 'In cooldown period' : 'Data is still loading'));
+        return Promise.resolve();
+      }
+
+      // Trigger loading state
+      setIsDataLoading(true);
+      window.dispatchEvent(new CustomEvent('statistics:loading:start'));
+
       // Dispatch daterange event to refresh data
       window.dispatchEvent(new CustomEvent("daterange:changed", { 
         detail: dateRange 
@@ -96,6 +136,8 @@ const OutletHeader = () => {
       return Promise.resolve();
     } catch (error) {
       console.error('Error refreshing data:', error);
+      setIsDataLoading(false);
+      window.dispatchEvent(new CustomEvent('statistics:loading:end'));
       return Promise.reject(error);
     }
   };
@@ -164,6 +206,7 @@ const OutletHeader = () => {
                     additionalClasses="ml-4"
                     showOnMobile={false}
                     size="md"
+                    isDataLoading={isDataLoading || refreshCooldown}
                   />
                 )}
             </>

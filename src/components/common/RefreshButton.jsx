@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import PropTypes from 'prop-types';
 import { outletKeys } from '../../hooks/queries/useOutletDetails';
@@ -13,7 +13,7 @@ import { queryKeys } from '../../lib/react-query/constants';
  * @property {('none'|'sm'|'md'|'lg'|'xl'|'full')} [borderRadius='md'] - Optional string for border radius variants
  * @property {boolean} [showOnMobile=false] - Optional boolean to control mobile visibility
  * @property {React.ReactNode} [customIcon] - Optional component to override default refresh icon
- * @property {boolean} [isDataLoading=false] - Optional boolean to control spinner state based on data loading
+ * @property {boolean} [isDataLoading=false] - Optional boolean to control spinner state based on external loading state
  */
 
 /**
@@ -33,14 +33,49 @@ export const RefreshButton = ({
 }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const tooltipTimerRef = useRef(null);
+  const cooldownTimerRef = useRef(null);
   const queryClient = useQueryClient();
   
   // Cleanup function for component unmount
   useEffect(() => {
     return () => {
       setIsRefreshing(false);
+      if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current);
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
     };
   }, []);
+
+  // Effect to handle cooldown timer display
+  useEffect(() => {
+    if (isDataLoading && !isRefreshing) {
+      // If external loading is active but not from this button's action,
+      // we'll show the spinner but not start a cooldown timer
+      return;
+    }
+
+    if (isRefreshing) {
+      // When refreshing starts, initialize cooldown seconds
+      setCooldownSeconds(10);
+    } else if (cooldownSeconds > 0) {
+      // Start countdown timer
+      cooldownTimerRef.current = setInterval(() => {
+        setCooldownSeconds(prev => {
+          if (prev <= 1) {
+            clearInterval(cooldownTimerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    };
+  }, [isRefreshing, cooldownSeconds, isDataLoading]);
 
   // Size variants mapping
   const sizeClasses = {
@@ -113,9 +148,15 @@ export const RefreshButton = ({
   // Debounced refresh handler
   const handleRefresh = useCallback(async () => {
     try {
-      // Debounce check - prevent refreshes within 1 second
+      // If external data loading is in progress, don't allow refresh
+      if (isDataLoading) {
+        console.warn('Refresh action blocked: Data is still loading or in cooldown period');
+        return;
+      }
+
+      // Debounce check - prevent refreshes within 10 seconds
       const now = Date.now();
-      if (now - lastRefreshTime < 1000) {
+      if (now - lastRefreshTime < 10000) {
         console.warn('Refresh action debounced. Please wait before trying again.');
         return;
       }
@@ -147,6 +188,17 @@ export const RefreshButton = ({
     }
   }, [invalidateRouteQueries, route, lastRefreshTime, isDataLoading]);
 
+  // Handle tooltip display
+  const handleMouseEnter = () => {
+    if (isDataLoading || cooldownSeconds > 0) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+  };
+
   // Combine class names
   const buttonClasses = [
     'group',
@@ -162,17 +214,30 @@ export const RefreshButton = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <button
-      onClick={handleRefresh}
-      className={buttonClasses}
-      title="Refresh"
-      disabled={isRefreshing || isDataLoading}
-      aria-label="Refresh data"
-      aria-busy={isRefreshing || isDataLoading}
-      data-route={route}
-    >
-      {customIcon || <DefaultRefreshIcon />}
-    </button>
+    <div className="relative inline-block">
+      <button
+        onClick={handleRefresh}
+        className={buttonClasses}
+        title={isDataLoading || cooldownSeconds > 0 ? "Please wait" : "Refresh"}
+        disabled={isRefreshing || isDataLoading || cooldownSeconds > 0}
+        aria-label="Refresh data"
+        aria-busy={isRefreshing || isDataLoading}
+        data-route={route}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {customIcon || <DefaultRefreshIcon />}
+      </button>
+      
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded-md shadow-sm z-10 whitespace-nowrap">
+          {cooldownSeconds > 0 
+            ? `Please wait ${cooldownSeconds}s before refreshing again` 
+            : 'Data is loading...'}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+        </div>
+      )}
+    </div>
   );
 };
 

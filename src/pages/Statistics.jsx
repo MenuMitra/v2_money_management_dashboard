@@ -1730,7 +1730,7 @@ export default function Statistics() {
   const { warningElement } = useOutletWarning();
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
-  const [currentDateRange, setCurrentDateRange] = useState({ type: 'today' });
+  const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
   
   // Use the statistics hook
   const { 
@@ -1766,6 +1766,15 @@ export default function Statistics() {
       enabled: !!outletId
     }
   );
+
+  // Notify about loading state changes
+  useEffect(() => {
+    if (isLoading) {
+      window.dispatchEvent(new CustomEvent('statistics:loading:start'));
+    } else {
+      window.dispatchEvent(new CustomEvent('statistics:loading:end'));
+    }
+  }, [isLoading]);
 
   // Handle date range changes
   useEffect(() => {
