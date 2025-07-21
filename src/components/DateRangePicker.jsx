@@ -11,7 +11,7 @@ const DateRangePicker = ({ onChange, initialValue = 'today', disabled = false })
   // Listen for outlet changes to reset the date range
   useEffect(() => {
     const outletChangeHandler = () => {
-      setDateRange('today');
+      setDateRange('all');
       setShowCustomRange(false);
       setStartDate('');
       setEndDate('');

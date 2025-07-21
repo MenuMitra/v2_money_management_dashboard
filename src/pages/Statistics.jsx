@@ -1186,9 +1186,9 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     (category.no_selling && Array.isArray(category.no_selling)) 
       ? category.no_selling.map(item => ({
           menu_name: item.name,
-        sales_count: 0,
-        category_name: category.category_name,
-        item_id: item.item_id
+          sales_count: 0,
+          category_name: category.category_name,
+          item_id: item.item_id
         }))
       : []
   );
@@ -1336,18 +1336,18 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
         {/* Left section */}
         <div className="text-sm text-gray-700">
           {useDefaultData ? 'Sample data' : `${activeTab === 'top' ? 'Top' : activeTab === 'low' ? 'Low' : 'Non'} selling items`}
-      </div>
-      
+        </div>
+        
         {/* Center section */}
         <div className="text-center text-sm text-gray-700">
           Showing {getItemsToDisplay().length} records
-          </div>
-          
+        </div>
+        
         {/* Right section - empty to maintain layout */}
         <div className="invisible">
           Placeholder
-          </div>
         </div>
+      </div>
     </div>
   );
 };

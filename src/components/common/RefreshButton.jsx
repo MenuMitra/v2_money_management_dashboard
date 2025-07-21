@@ -13,6 +13,7 @@ import { queryKeys } from '../../lib/react-query/constants';
  * @property {('none'|'sm'|'md'|'lg'|'xl'|'full')} [borderRadius='md'] - Optional string for border radius variants
  * @property {boolean} [showOnMobile=false] - Optional boolean to control mobile visibility
  * @property {React.ReactNode} [customIcon] - Optional component to override default refresh icon
+ * @property {boolean} [isDataLoading=false] - Optional boolean to control spinner state based on data loading
  */
 
 /**
@@ -27,7 +28,8 @@ export const RefreshButton = ({
   size = 'md',
   borderRadius = 'md', // New prop with default value
   showOnMobile = false,
-  customIcon = null
+  customIcon = null,
+  isDataLoading = false // New prop to control spinner based on external loading state
 }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
@@ -60,7 +62,7 @@ export const RefreshButton = ({
   // Default refresh icon
   const DefaultRefreshIcon = () => (
     <svg
-      className={`transition-transform ${isRefreshing ? "animate-spin" : ""}`}
+      className={`transition-transform ${isRefreshing || isDataLoading ? "animate-spin" : ""}`}
       style={{ 
         height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
         width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
@@ -131,12 +133,19 @@ export const RefreshButton = ({
     } catch (error) {
       console.error(`Error refreshing data for route ${route}:`, error);
     } finally {
-      // Ensure minimum loading state duration of 500ms for UX
-      setTimeout(() => {
+      // Only stop the internal refresh spinner if data loading is not in progress
+      if (!isDataLoading) {
+        // Ensure minimum loading state duration of 500ms for UX
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      } else {
+        // If data is still loading, keep the internal state as refreshing
+        // The spinner will stop when isDataLoading becomes false
         setIsRefreshing(false);
-      }, 500);
+      }
     }
-  }, [invalidateRouteQueries, route, lastRefreshTime]);
+  }, [invalidateRouteQueries, route, lastRefreshTime, isDataLoading]);
 
   // Combine class names
   const buttonClasses = [
@@ -157,9 +166,9 @@ export const RefreshButton = ({
       onClick={handleRefresh}
       className={buttonClasses}
       title="Refresh"
-      disabled={isRefreshing}
+      disabled={isRefreshing || isDataLoading}
       aria-label="Refresh data"
-      aria-busy={isRefreshing}
+      aria-busy={isRefreshing || isDataLoading}
       data-route={route}
     >
       {customIcon || <DefaultRefreshIcon />}
@@ -175,7 +184,8 @@ RefreshButton.propTypes = {
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   borderRadius: PropTypes.oneOf(['none', 'sm', 'md', 'lg', 'xl', 'full']),
   showOnMobile: PropTypes.bool,
-  customIcon: PropTypes.node
+  customIcon: PropTypes.node,
+  isDataLoading: PropTypes.bool
 };
 
 export default RefreshButton;
