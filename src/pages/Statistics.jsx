@@ -1730,7 +1730,7 @@ export default function Statistics() {
   const { warningElement } = useOutletWarning();
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
-  const [currentDateRange, setCurrentDateRange] = useState({ type: 'all' });
+  const [currentDateRange, setCurrentDateRange] = useState({ type: 'today' });
   
   // Use the statistics hook
   const { 

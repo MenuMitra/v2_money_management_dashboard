@@ -13,7 +13,7 @@ export default function Layout({ children }) {
   const [reportsOpen, setReportsOpen] = useState(false);
   const { currentOutlet } = useOutlet();
   const { logout } = useAuth();
-  const [dateRange, setDateRange] = useState({ type: 'all' });
+  const [dateRange, setDateRange] = useState({ type: 'today' });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const userName = localStorage.getItem('user_name') || 'User';
@@ -22,9 +22,9 @@ export default function Layout({ children }) {
   // Listen for outlet changes to reset date filter
   useEffect(() => {
     if (currentOutlet) {
-      setDateRange({ type: 'all' });
+      setDateRange({ type: 'today' });
       // Dispatch event to notify other components
-      const event = new CustomEvent('daterange:changed', { detail: { type: 'all' } });
+      const event = new CustomEvent('daterange:changed', { detail: { type: 'today' } });
       window.dispatchEvent(event);
     }
   }, [currentOutlet?.outlet_id]);
@@ -288,7 +288,7 @@ export default function Layout({ children }) {
               <div>
                 <DateRangePicker 
                   onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
-                  initialValue="all" 
+                  initialValue="today" 
                   disabled={!isStatisticsPage}
                 />
               </div>

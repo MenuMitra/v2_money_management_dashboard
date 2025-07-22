@@ -12,7 +12,7 @@ const OutletHeader = () => {
   const { logout, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
-  const [dateRange, setDateRange] = useState({ type: "all" });
+  const [dateRange, setDateRange] = useState({ type: "today" });
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(false);
   const profileRef = useRef(null);
@@ -91,8 +91,8 @@ const OutletHeader = () => {
 
   const handleSelectOutlet = (outlet) => {
     updateCurrentOutlet(outlet);
-    // Reset date range to 'all' when outlet changes
-    setDateRange({ type: "all" });
+    // Reset date range to 'today' when outlet changes
+    setDateRange({ type: "today" });
 
     // Dispatch an event to notify other components that the outlet has changed
     const event = new CustomEvent("outlet:changed", { detail: outlet });
@@ -195,7 +195,7 @@ const OutletHeader = () => {
                   onChange={
                     isStatisticsPage ? handleDateRangeChange : undefined
                   }
-                  initialValue="all"
+                  initialValue="today"
                   disabled={!isStatisticsPage}
                 />
               </div>
