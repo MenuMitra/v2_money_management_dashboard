@@ -14,6 +14,7 @@ import { queryKeys } from '../../lib/react-query/constants';
  * @property {boolean} [showOnMobile=false] - Optional boolean to control mobile visibility
  * @property {React.ReactNode} [customIcon] - Optional component to override default refresh icon
  * @property {boolean} [isDataLoading=false] - Optional boolean to control spinner state based on external loading state
+ * @property {boolean} [disabled=false] - Optional boolean to disable the button
  */
 
 /**
@@ -26,10 +27,11 @@ export const RefreshButton = ({
   route,
   additionalClasses = '',
   size = 'md',
-  borderRadius = 'md', // New prop with default value
+  borderRadius = 'md',
   showOnMobile = false,
   customIcon = null,
-  isDataLoading = false // New prop to control spinner based on external loading state
+  isDataLoading = false,
+  disabled = false
 }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
@@ -51,16 +53,12 @@ export const RefreshButton = ({
   // Effect to handle cooldown timer display
   useEffect(() => {
     if (isDataLoading && !isRefreshing) {
-      // If external loading is active but not from this button's action,
-      // we'll show the spinner but not start a cooldown timer
       return;
     }
 
     if (isRefreshing) {
-      // When refreshing starts, initialize cooldown seconds
       setCooldownSeconds(10);
     } else if (cooldownSeconds > 0) {
-      // Start countdown timer
       cooldownTimerRef.current = setInterval(() => {
         setCooldownSeconds(prev => {
           if (prev <= 1) {
@@ -97,7 +95,7 @@ export const RefreshButton = ({
   // Default refresh icon
   const DefaultRefreshIcon = () => (
     <svg
-      className={`transition-transform ${isRefreshing || isDataLoading ? "animate-spin" : ""}`}
+      className={`transition-transform ${(isRefreshing || isDataLoading) ? "animate-spin" : ""}`}
       style={{ 
         height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
         width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
@@ -123,12 +121,11 @@ export const RefreshButton = ({
     const outlet_id = localStorage.getItem('outlet_id');
     const user_id = localStorage.getItem('user_id');
 
-    // Map routes to their corresponding query keys
     switch (route) {
       case '/outlet-details':
         return queryClient.invalidateQueries({
           queryKey: outletKeys.details({ outlet_id, user_id }),
-          refetchType: 'active', // Only refetch if the query is active
+          refetchType: 'active',
         });
       
       case '/statistics':
@@ -137,38 +134,30 @@ export const RefreshButton = ({
           refetchType: 'active',
         });
       
-      // Add more route cases as needed
-      
       default:
-        // If no specific route match, use the provided onRefresh function
         return onRefresh?.();
     }
   }, [route, queryClient, onRefresh]);
 
   // Debounced refresh handler
   const handleRefresh = useCallback(async () => {
-    try {
-      // If external data loading is in progress, don't allow refresh
-      if (isDataLoading) {
-        console.warn('Refresh action blocked: Data is still loading or in cooldown period');
-        return;
-      }
+    // Don't proceed if button is disabled or data is loading
+    if (disabled || isDataLoading || isRefreshing || cooldownSeconds > 0) {
+      console.warn('Refresh action blocked: Button is disabled or data is loading');
+      return;
+    }
 
-      // Debounce check - prevent refreshes within 10 seconds
+    try {
       const now = Date.now();
       if (now - lastRefreshTime < 10000) {
         console.warn('Refresh action debounced. Please wait before trying again.');
         return;
       }
 
-      // Set loading state and update last refresh time
       setIsRefreshing(true);
       setLastRefreshTime(now);
-
-      // Log refresh attempt
       console.debug(`Refreshing data for route: ${route}`);
 
-      // Invalidate and refetch queries based on route
       await invalidateRouteQueries();
 
     } catch (error) {
@@ -176,21 +165,18 @@ export const RefreshButton = ({
     } finally {
       // Only stop the internal refresh spinner if data loading is not in progress
       if (!isDataLoading) {
-        // Ensure minimum loading state duration of 500ms for UX
         setTimeout(() => {
           setIsRefreshing(false);
         }, 500);
       } else {
-        // If data is still loading, keep the internal state as refreshing
-        // The spinner will stop when isDataLoading becomes false
         setIsRefreshing(false);
       }
     }
-  }, [invalidateRouteQueries, route, lastRefreshTime, isDataLoading]);
+  }, [invalidateRouteQueries, route, lastRefreshTime, isDataLoading, disabled, isRefreshing, cooldownSeconds]);
 
   // Handle tooltip display
   const handleMouseEnter = () => {
-    if (isDataLoading || cooldownSeconds > 0) {
+    if (disabled || isDataLoading || cooldownSeconds > 0) {
       setShowTooltip(true);
     }
   };
@@ -203,10 +189,10 @@ export const RefreshButton = ({
   const buttonClasses = [
     'group',
     sizeClasses[size] || sizeClasses.md,
-    borderRadiusClasses[borderRadius] || borderRadiusClasses.md, // Use the border radius class
+    borderRadiusClasses[borderRadius] || borderRadiusClasses.md,
     'flex items-center justify-center',
-    'text-gray-600 hover:text-primary-600',
-    'hover:bg-gray-50',
+    'text-gray-600',
+    !disabled && !isDataLoading && cooldownSeconds === 0 ? 'hover:text-primary-600 hover:bg-gray-50' : 'opacity-60 cursor-not-allowed',
     'focus:outline-none',
     'border border-gray-300',
     showOnMobile ? 'flex' : 'hidden md:flex',
@@ -218,8 +204,13 @@ export const RefreshButton = ({
       <button
         onClick={handleRefresh}
         className={buttonClasses}
-        title={isDataLoading || cooldownSeconds > 0 ? "Please wait" : "Refresh"}
-        disabled={isRefreshing || isDataLoading || cooldownSeconds > 0}
+        title={
+          disabled ? "Button is disabled" :
+          isDataLoading ? "Data is loading..." :
+          cooldownSeconds > 0 ? `Please wait ${cooldownSeconds}s` :
+          "Refresh"
+        }
+        disabled={disabled || isRefreshing || isDataLoading || cooldownSeconds > 0}
         aria-label="Refresh data"
         aria-busy={isRefreshing || isDataLoading}
         data-route={route}
@@ -231,9 +222,9 @@ export const RefreshButton = ({
       
       {showTooltip && (
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded-md shadow-sm z-10 whitespace-nowrap">
-          {cooldownSeconds > 0 
-            ? `Please wait ${cooldownSeconds}s before refreshing again` 
-            : 'Data is loading...'}
+          {disabled ? "Button is disabled" :
+           cooldownSeconds > 0 ? `Please wait ${cooldownSeconds}s before refreshing again` :
+           'Data is loading...'}
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
         </div>
       )}
@@ -250,7 +241,8 @@ RefreshButton.propTypes = {
   borderRadius: PropTypes.oneOf(['none', 'sm', 'md', 'lg', 'xl', 'full']),
   showOnMobile: PropTypes.bool,
   customIcon: PropTypes.node,
-  isDataLoading: PropTypes.bool
+  isDataLoading: PropTypes.bool,
+  disabled: PropTypes.bool
 };
 
 export default RefreshButton;

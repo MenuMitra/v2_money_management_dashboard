@@ -109,30 +109,27 @@ const OutletHeader = () => {
   // Update handleRefresh to return a Promise and handle SPA refresh
   const handleRefresh = async () => {
     try {
-      // If in cooldown period or already loading, don't allow refresh
-      if (refreshCooldown || isDataLoading) {
+      // If already loading or in cooldown, don't allow refresh
+      if (isDataLoading || refreshCooldown) {
         console.warn('Refresh action blocked: ' + 
-          (refreshCooldown ? 'In cooldown period' : 'Data is still loading'));
+          (isDataLoading ? 'Data is still loading' : 'In cooldown period'));
         return Promise.resolve();
       }
 
-      // Trigger loading state
-      setIsDataLoading(true);
-      window.dispatchEvent(new CustomEvent('statistics:loading:start'));
+      // Dispatch refresh request event before starting the refresh
+      window.dispatchEvent(new CustomEvent('refresh:requested'));
 
-      // Dispatch daterange event to refresh data
+      // Dispatch events to refresh data
       window.dispatchEvent(new CustomEvent("daterange:changed", { 
         detail: dateRange 
       }));
 
-      // Dispatch outlet changed event to refresh outlet data
       if (currentOutlet) {
         window.dispatchEvent(new CustomEvent("outlet:changed", { 
           detail: currentOutlet 
         }));
       }
 
-      // Return resolved promise to indicate success
       return Promise.resolve();
     } catch (error) {
       console.error('Error refreshing data:', error);
@@ -199,24 +196,23 @@ const OutletHeader = () => {
                   disabled={!isStatisticsPage}
                 />
               </div>
-                {currentOutlet && (
-                  <RefreshButton
-                    onRefresh={handleRefresh}
-                    route={location.pathname}
-                    additionalClasses="ml-4"
-                    showOnMobile={false}
-                    size="md"
-                    isDataLoading={isDataLoading || refreshCooldown}
-                  />
-                )}
+              {currentOutlet && (
+                <RefreshButton
+                  onRefresh={handleRefresh}
+                  route={location.pathname}
+                  additionalClasses="ml-4"
+                  showOnMobile={false}
+                  size="md"
+                  isDataLoading={isDataLoading}
+                  disabled={isDataLoading || refreshCooldown}
+                />
+              )}
             </>
           )}
         </div>
 
         {/* Right section with refresh button and profile */}
         <div className="flex items-center gap-3 h-9">
-          {/* Refresh Button - only show when an outlet is selected and only on desktop */}
-
           {/* Profile with Role - always visible */}
           <div
             ref={profileRef}

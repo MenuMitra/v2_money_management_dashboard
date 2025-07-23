@@ -1731,6 +1731,7 @@ export default function Statistics() {
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
   const [currentDateRange, setCurrentDateRange] = useState({ type: 'today' });
+  const [isManualRefresh, setIsManualRefresh] = useState(false);
   
   // Use the statistics hook
   const { 
@@ -1767,20 +1768,26 @@ export default function Statistics() {
     }
   );
 
-  // Notify about loading state changes
+  // Notify about loading state changes only during manual refresh
   useEffect(() => {
-    if (isLoading) {
-      window.dispatchEvent(new CustomEvent('statistics:loading:start'));
-    } else {
-      window.dispatchEvent(new CustomEvent('statistics:loading:end'));
+    if (isManualRefresh) {
+      if (isLoading) {
+        console.log('Statistics data loading started (manual refresh)');
+        window.dispatchEvent(new CustomEvent('statistics:loading:start'));
+      } else {
+        console.log('Statistics data loading ended (manual refresh)');
+        window.dispatchEvent(new CustomEvent('statistics:loading:end'));
+        setIsManualRefresh(false);
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, isManualRefresh]);
 
   // Handle date range changes
   useEffect(() => {
     const handleDateRangeChange = (event) => {
       const range = event.detail;
       setCurrentDateRange(range);
+      setIsManualRefresh(true);
       
       // Refresh data with new date range
       if (range.type === 'custom' && range.startDate && range.endDate) {
@@ -1805,6 +1812,19 @@ export default function Statistics() {
     };
   }, [updateDateRange, refresh]);
 
+  // Listen for manual refresh requests
+  useEffect(() => {
+    const handleRefreshRequest = () => {
+      console.log('Manual refresh requested');
+      setIsManualRefresh(true);
+    };
+
+    window.addEventListener('refresh:requested', handleRefreshRequest);
+    return () => {
+      window.removeEventListener('refresh:requested', handleRefreshRequest);
+    };
+  }, []);
+
   // Add debugging logs for component lifecycle and render
   useEffect(() => {
     console.log('[Statistics] Component mounted');
@@ -1821,14 +1841,10 @@ export default function Statistics() {
       outletId: statistics?.outlet_id,
       currentContextOutletId: outletId,
       fetchedForOutlet: fetchedForOutletRef.current,
-      isLoading
+      isLoading,
+      isManualRefresh
     });
-    
-    // Set loading to false when statistics data is available
-    if (statistics && isLoading) {
-      setIsLoading(false);
-    }
-  }, [statistics, outletId, isLoading]);
+  }, [statistics, outletId, isLoading, isManualRefresh]);
 
   // Breadcrumb items
   const breadcrumbItems = [
