@@ -2412,7 +2412,18 @@ export default function Statistics() {
   const { warningElement } = useOutletWarning();
   const fetchedForOutletRef = useRef(null);
   const navigate = useNavigate();
-  const [currentDateRange, setCurrentDateRange] = useState({ type: 'today' });
+  const [currentDateRange, setCurrentDateRange] = useState(() => {
+    // Load persisted date range from localStorage on component mount
+    const persisted = localStorage.getItem('statistics_date_range');
+    if (persisted) {
+      try {
+        return JSON.parse(persisted);
+      } catch (e) {
+        console.warn('Failed to parse persisted date range:', e);
+      }
+    }
+    return { type: 'today' };
+  });
   const [isManualRefresh, setIsManualRefresh] = useState(false);
   
   // Use the statistics hook
@@ -2463,6 +2474,29 @@ export default function Statistics() {
       }
     }
   }, [isLoading, isManualRefresh]);
+
+  // Apply persisted date range on component mount
+  useEffect(() => {
+    // If we have a persisted date range that's not 'today', apply it
+    if (currentDateRange.type !== 'today' && outletId) {
+      console.log('Applying persisted date range on mount:', currentDateRange);
+      
+      if (currentDateRange.type === 'custom' && currentDateRange.startDate && currentDateRange.endDate) {
+        // For custom date range
+        updateDateRange(
+          formatDateForAPI(new Date(currentDateRange.startDate)),
+          formatDateForAPI(new Date(currentDateRange.endDate))
+        );
+      } else if (currentDateRange.type !== 'all') {
+        // For predefined date ranges (today, yesterday, etc.)
+        const { startDate, endDate } = getDateRangeFromType(currentDateRange.type);
+        updateDateRange(startDate, endDate);
+      } else {
+        // For 'all' time range, refresh without date parameters
+        refresh();
+      }
+    }
+  }, [outletId]); // Only run when outletId is available
 
   // Handle date range changes
   useEffect(() => {

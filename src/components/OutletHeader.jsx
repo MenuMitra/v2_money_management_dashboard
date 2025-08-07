@@ -12,7 +12,18 @@ const OutletHeader = () => {
   const { logout, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
-  const [dateRange, setDateRange] = useState({ type: "today" });
+  const [dateRange, setDateRange] = useState(() => {
+    // Load persisted date range from localStorage on component mount
+    const persisted = localStorage.getItem('statistics_date_range');
+    if (persisted) {
+      try {
+        return JSON.parse(persisted);
+      } catch (e) {
+        console.warn('Failed to parse persisted date range:', e);
+      }
+    }
+    return { type: "today" };
+  });
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(false);
   const profileRef = useRef(null);
@@ -92,7 +103,11 @@ const OutletHeader = () => {
   const handleSelectOutlet = (outlet) => {
     updateCurrentOutlet(outlet);
     // Reset date range to 'today' when outlet changes
-    setDateRange({ type: "today" });
+    const newDateRange = { type: "today" };
+    setDateRange(newDateRange);
+    
+    // Persist the reset date range
+    localStorage.setItem('statistics_date_range', JSON.stringify(newDateRange));
 
     // Dispatch an event to notify other components that the outlet has changed
     const event = new CustomEvent("outlet:changed", { detail: outlet });
@@ -101,6 +116,10 @@ const OutletHeader = () => {
 
   const handleDateRangeChange = (range) => {
     setDateRange(range);
+    
+    // Persist the date range to localStorage
+    localStorage.setItem('statistics_date_range', JSON.stringify(range));
+    
     // Dispatch a custom event that components can listen for
     const event = new CustomEvent("daterange:changed", { detail: range });
     window.dispatchEvent(event);
@@ -140,6 +159,8 @@ const OutletHeader = () => {
   };
 
   const handleLogout = () => {
+    // Clear persisted date range on logout
+    localStorage.removeItem('statistics_date_range');
     logout();
   };
 

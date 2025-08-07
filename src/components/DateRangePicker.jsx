@@ -1,10 +1,50 @@
 import { useState, useEffect, useRef } from 'react';
 
 const DateRangePicker = ({ onChange, initialValue = 'today', disabled = false }) => {
-  const [dateRange, setDateRange] = useState(initialValue);
+  const [dateRange, setDateRange] = useState(() => {
+    // Load persisted date range from localStorage on component mount
+    const persisted = localStorage.getItem('statistics_date_range');
+    if (persisted) {
+      try {
+        const parsed = JSON.parse(persisted);
+        return parsed.type || initialValue;
+      } catch (e) {
+        console.warn('Failed to parse persisted date range:', e);
+      }
+    }
+    return initialValue;
+  });
   const [showCustomRange, setShowCustomRange] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(() => {
+    // Load persisted custom dates if they exist
+    const persisted = localStorage.getItem('statistics_date_range');
+    if (persisted) {
+      try {
+        const parsed = JSON.parse(persisted);
+        if (parsed.type === 'custom' && parsed.startDate && parsed.endDate) {
+          return parsed.startDate;
+        }
+      } catch (e) {
+        console.warn('Failed to parse persisted date range:', e);
+      }
+    }
+    return '';
+  });
+  const [endDate, setEndDate] = useState(() => {
+    // Load persisted custom dates if they exist
+    const persisted = localStorage.getItem('statistics_date_range');
+    if (persisted) {
+      try {
+        const parsed = JSON.parse(persisted);
+        if (parsed.type === 'custom' && parsed.startDate && parsed.endDate) {
+          return parsed.endDate;
+        }
+      } catch (e) {
+        console.warn('Failed to parse persisted date range:', e);
+      }
+    }
+    return '';
+  });
   const [showDropdown, setShowDropdown] = useState(false);
   const datePickerRef = useRef(null);
 
