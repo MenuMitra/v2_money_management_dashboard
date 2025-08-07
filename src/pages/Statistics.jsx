@@ -1623,6 +1623,688 @@ const TopComboOrdersCard = ({ comboData }) => {
   );
 };
 
+// Peak Time Analysis Chart Component
+const PeakTimeAnalysisChart = ({ peakTimeData }) => {
+  // Use empty data if none provided
+  const data = peakTimeData || {
+    breakfast: { order_count: 0, revenue: 0 },
+    lunch: { order_count: 0, revenue: 0 },
+    brunch: { order_count: 0, revenue: 0 },
+    dinner: { order_count: 0, revenue: 0 }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
+  // Prepare data for the chart
+  const mealPeriods = [
+    { name: 'Breakfast', key: 'breakfast', color: '#FF6B6B' },
+    { name: 'Lunch', key: 'lunch', color: '#4ECDC4' },
+    { name: 'Brunch', key: 'brunch', color: '#45B7D1' },
+    { name: 'Dinner', key: 'dinner', color: '#96CEB4' }
+  ];
+
+  // Filter out periods with zero orders
+  const visiblePeriods = mealPeriods.filter(period => data[period.key].order_count > 0);
+  
+  // If all periods have zero orders, show all periods (default behavior)
+  const periodsToDisplay = visiblePeriods.length > 0 ? visiblePeriods : mealPeriods;
+
+  const options = {
+    chart: {
+      type: 'bar',
+      height: 350,
+      fontFamily: 'Inter, sans-serif',
+      toolbar: {
+        show: false
+      }
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '60%',
+        endingShape: 'rounded',
+        distributed: true
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val) {
+        return val;
+      },
+      style: {
+        fontSize: '12px',
+        colors: ['#fff'],
+        fontWeight: 500
+      }
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent']
+    },
+    xaxis: {
+      categories: periodsToDisplay.map(period => period.name),
+      labels: {
+        style: {
+          fontSize: '12px',
+          fontFamily: 'Inter, sans-serif'
+        }
+      }
+    },
+    yaxis: {
+      title: {
+        text: 'Orders'
+      }
+    },
+    fill: {
+      opacity: 1
+    },
+    tooltip: {
+      y: {
+        formatter: function (val) {
+          return val + " orders";
+        }
+      }
+    },
+    colors: periodsToDisplay.map(period => period.color),
+    legend: {
+      show: false
+    },
+    grid: {
+      padding: {
+        left: 20,
+        right: 20
+      }
+    }
+  };
+
+  const series = [{
+    name: 'Orders',
+    data: periodsToDisplay.map(period => data[period.key].order_count)
+  }];
+
+  // Calculate total orders and revenue
+  const totalOrders = periodsToDisplay.reduce((sum, period) => sum + data[period.key].order_count, 0);
+  const totalRevenue = periodsToDisplay.reduce((sum, period) => sum + data[period.key].revenue, 0);
+
+  // Find peak period
+  const peakPeriod = periodsToDisplay.reduce((peak, period) => 
+    data[period.key].order_count > data[peak.key].order_count ? period : peak, periodsToDisplay[0]);
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <h3 className="text-lg font-medium text-gray-800">Peak Time Analysis</h3>
+        <p className="text-sm text-gray-500 mb-3">Order distribution by meal periods</p>
+        
+        {/* Summary badges */}
+        <div className="flex flex-wrap gap-2 mt-2">
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            Total: {totalOrders} orders
+          </div>
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Revenue: {formatCurrency(totalRevenue)}
+          </div>
+          {peakPeriod && data[peakPeriod.key].order_count > 0 && (
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
+              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Peak: {peakPeriod.name}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="p-5">
+        <ReactApexChart 
+          options={options} 
+          series={series} 
+          type="bar" 
+          height={350} 
+        />
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Category Performance Card Component
+const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Use empty data if none provided
+  const data = categoryData || {
+    summary: {
+      total_categories: 0,
+      total_category_earnings: 0,
+      categories: []
+    },
+    categories: []
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
+  // Extract categories from the new structure
+  const categories = data.categories && Array.isArray(data.categories) ? data.categories : [];
+  const summary = data.summary || { total_categories: 0, total_category_earnings: 0 };
+
+  // Sort categories by total earnings
+  const sortedCategories = [...categories].sort((a, b) => b.total_earnings - a.total_earnings);
+  
+  // Filter out categories with zero earnings
+  const visibleCategories = sortedCategories.filter(category => category.total_earnings > 0);
+  
+  // If all categories have zero earnings, show all categories (default behavior)
+  const categoriesToDisplay = visibleCategories.length > 0 ? visibleCategories : sortedCategories;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(categoriesToDisplay.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCategories = categoriesToDisplay.slice(startIndex, endIndex);
+
+  // Reset to first page when data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoriesToDisplay.length]);
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-medium text-gray-800">Category Performance</h3>
+            <p className="text-sm text-gray-500">
+              {categoriesToDisplay.length} categories
+            </p>
+          </div>
+          {summary.total_category_earnings > 0 && (
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Total Earnings</p>
+              <p className="text-lg font-semibold text-green-600">
+                {formatCurrency(summary.total_category_earnings)}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="p-5">
+        {currentCategories.length > 0 ? (
+          <>
+            {currentCategories.map((category, index) => (
+              <div key={index} className="mb-4 last:mb-0">
+                <div className="flex justify-between items-center mb-2">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700">{category.category_name}</h4>
+                    <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                        {category.total_orders} orders
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+                        {formatCurrency(category.total_earnings)}
+                      </span>
+                    </div>
+                    {category.top_menus && category.top_menus.length > 0 && (
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 mt-2">
+                        {category.top_menus.slice(0, 3).map((menu, idx) => (
+                          <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                            {menu.menu_name} ({menu.sales_count})
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-purple-600 h-2.5 rounded-full" 
+                    style={{ 
+                      width: `${(category.total_earnings / (categoriesToDisplay[0]?.total_earnings || 1)) * 100}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                <span className="text-sm text-gray-500">
+                  Showing {startIndex + 1}-{Math.min(endIndex, categoriesToDisplay.length)} of {categoriesToDisplay.length}
+                </span>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className={`p-2 rounded-md ${
+                      currentPage === 1 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 rounded-md ${
+                      currentPage === totalPages 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 002 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No category data available</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Category performance data will appear here when available.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Price Recommendation Card Component
+const PriceRecommendationCard = ({ salesData }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Debug logging for PriceRecommendationCard
+  console.log('[PriceRecommendationCard] Received salesData:', {
+    hasSalesData: !!salesData,
+    salesDataKeys: salesData ? Object.keys(salesData) : [],
+    topSellingItems: salesData?.top_selling?.items?.length || 0,
+    lowSellingItems: salesData?.low_selling?.items?.length || 0,
+    noSellingItems: salesData?.no_selling?.items?.length || 0
+  });
+
+  // Use empty data if none provided
+  const data = salesData || {
+    statistics: {
+      total_menus: 0,
+      selling_menus_count: 0,
+      no_selling_count: 0,
+      top_selling_count: 0,
+      low_selling_count: 0
+    },
+    top_selling: { items: [], pagination: {} },
+    low_selling: { items: [], pagination: {} },
+    no_selling: { items: [], pagination: {} }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
+  // Extract items with price recommendations
+  const topSellingItems = data.top_selling?.items || [];
+  const lowSellingItems = data.low_selling?.items || [];
+  const noSellingItems = data.no_selling?.items || [];
+
+  // Combine all items with recommendations
+  const allItemsWithRecommendations = [
+    ...topSellingItems.map(item => ({ ...item, type: 'top' })),
+    ...lowSellingItems.map(item => ({ ...item, type: 'low' })),
+    ...noSellingItems.map(item => ({ ...item, type: 'no' }))
+  ];
+
+  // For no_selling items, recommendations are 0, which is expected
+  // For top_selling and low_selling items, we should have recommendations
+  const itemsToDisplay = allItemsWithRecommendations;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(itemsToDisplay.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = itemsToDisplay.slice(startIndex, endIndex);
+
+
+
+  // Reset to first page when data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsToDisplay.length]);
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-gray-800">Price Recommendations</h3>
+          {data.statistics && (
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Menu Analysis</p>
+              <p className="text-xs text-gray-400">
+                {data.statistics.selling_menus_count} selling, {data.statistics.no_selling_count} non-selling
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Menu Item
+              </th>
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Current Price
+              </th>
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Recommended Price
+              </th>
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Sales Count
+              </th>
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {currentItems.length > 0 ? (
+              currentItems.map((item, index) => {
+                const currentPrice = item.avg_price || 0;
+                const recommendedPrice = item.type === 'top' 
+                  ? item.top_selling_recommended_price 
+                  : item.low_selling_recommended_price;
+                const priceDifference = recommendedPrice - currentPrice;
+                const priceChangePercent = currentPrice > 0 ? ((priceDifference / currentPrice) * 100) : 0;
+
+                return (
+                  <tr key={item.item_id || index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.name || 'Unknown Item'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                      {formatCurrency(currentPrice)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="font-medium text-gray-900">
+                          {formatCurrency(recommendedPrice)}
+                        </span>
+                        {priceDifference !== 0 && (
+                          <span className={`text-xs ${
+                            priceDifference > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {priceDifference > 0 ? '+' : ''}{formatCurrency(priceDifference)} 
+                            ({priceChangePercent > 0 ? '+' : ''}{priceChangePercent.toFixed(1)}%)
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                      {item.sales_count || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        item.type === 'top' ? 'bg-green-100 text-green-800' :
+                        item.type === 'low' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {item.type === 'top' ? 'Top Selling' :
+                         item.type === 'low' ? 'Low Selling' : 'No Selling'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
+                  <div className="flex flex-col items-center justify-center">
+                    <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-500 font-medium">No price recommendations available</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Price recommendations will appear here when available
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+            <span className="text-sm text-gray-500">
+              Showing {startIndex + 1}-{Math.min(endIndex, itemsToDisplay.length)} of {itemsToDisplay.length}
+            </span>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-md ${
+                  currentPage === 1 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-md ${
+                  currentPage === totalPages 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Coupon Statistics Card Component
+const CouponStatisticsCard = ({ couponData }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Use empty data if none provided
+  const data = couponData && Array.isArray(couponData) && couponData.length > 0
+    ? couponData
+    : [
+        {
+          coupon_id: 1,
+          coupon_name: "SAMPLE001",
+          usage_count: 0
+        }
+      ];
+
+  // Filter out coupons with zero usage
+  const visibleCoupons = data.filter(coupon => coupon.usage_count > 0);
+  
+  // If all coupons have zero usage, show all coupons (default behavior)
+  const couponsToDisplay = visibleCoupons.length > 0 ? visibleCoupons : data;
+
+  // Sort by usage count (descending)
+  const sortedCoupons = [...couponsToDisplay].sort((a, b) => b.usage_count - a.usage_count);
+
+  // Calculate total usage
+  const totalUsage = sortedCoupons.reduce((sum, coupon) => sum + coupon.usage_count, 0);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedCoupons.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCoupons = sortedCoupons.slice(startIndex, endIndex);
+
+  // Reset to first page when data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortedCoupons.length]);
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-gray-800">Coupon Statistics</h3>
+          {totalUsage > 0 && (
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Total Usage</p>
+              <p className="text-lg font-semibold text-purple-600">
+                {totalUsage} redemptions
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                #
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Coupon Code
+              </th>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Usage Count
+              </th>
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Performance
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {currentCoupons.map((coupon, index) => {
+              const usagePercentage = totalUsage > 0 ? (coupon.usage_count / totalUsage) * 100 : 0;
+              
+              return (
+                <tr key={coupon.coupon_id || index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {startIndex + index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">
+                      {coupon.coupon_name}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                    {coupon.usage_count}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center">
+                      <div className="w-full bg-gray-200 rounded-full h-2 mr-2 max-w-xs">
+                        <div 
+                          className="bg-purple-600 h-2 rounded-full" 
+                          style={{ width: `${usagePercentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-gray-500 w-12 text-right">
+                        {usagePercentage.toFixed(1)}%
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+          <span className="text-sm text-gray-500">
+            Showing {startIndex + 1}-{Math.min(endIndex, sortedCoupons.length)} of {sortedCoupons.length}
+          </span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-md ${
+                currentPage === 1 
+                  ? 'text-gray-400 cursor-not-allowed' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className={`p-2 rounded-md ${
+                currentPage === totalPages 
+                  ? 'text-gray-400 cursor-not-allowed' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Summary footer */}
+      {totalUsage > 0 && (
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="flex justify-between items-center text-sm text-gray-700">
+            <span>Most Popular: {sortedCoupons[0]?.coupon_name}</span>
+            <span>{sortedCoupons.length} active coupons</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Advanced Payment Stats Card Component
 const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
   // Use empty data if none provided
@@ -1918,12 +2600,25 @@ export default function Statistics() {
   const hasAdvancePayment = isLoading || (statistics && statistics.advance_payment_card && 
     (statistics.advance_payment_card.partial_payment.count > 0 || 
      statistics.advance_payment_card.settled_payment.count > 0));
+  const hasPeakTimeAnalysis = isLoading || (statistics && statistics.peak_time_analysis && 
+    Object.values(statistics.peak_time_analysis).some(period => period.order_count > 0));
+  const hasEnhancedCategoryPerformance = isLoading || (statistics && statistics.category_wise_performance && 
+    statistics.category_wise_performance.categories && 
+    Array.isArray(statistics.category_wise_performance.categories) && 
+    statistics.category_wise_performance.categories.length > 0);
+  const hasPriceRecommendations = isLoading || (statistics && statistics.sales_performance && 
+    (statistics.sales_performance.top_selling?.items?.length > 0 || 
+     statistics.sales_performance.low_selling?.items?.length > 0 || 
+     statistics.sales_performance.no_selling?.items?.length > 0));
+
+
 
   // Handle case where no data is available yet
   const hasAnyData = isLoading || (statistics && Object.keys(statistics).length > 0 && 
     (hasAnalytics || hasOrderTypeData || hasFoodTypeData || hasOrderStatistics || 
      hasWeeklyOrderStats || hasCollectionSource || hasAppUsage || hasCategoryPerformance || 
-     hasMenuCombos || hasUdhariCard || hasAdvancePayment));
+     hasMenuCombos || hasUdhariCard || hasAdvancePayment || hasPeakTimeAnalysis || 
+     hasEnhancedCategoryPerformance || hasPriceRecommendations || hasCouponStats));
 
   // If no outlet is selected, show warning
   if (!outletId) {
@@ -2039,7 +2734,14 @@ export default function Statistics() {
       kds_app: 0,
       cds_app: 0
     },
-    category_wise_performance: [],
+    category_wise_performance: {
+      summary: {
+        total_categories: 0,
+        total_category_earnings: 0,
+        categories: []
+      },
+      categories: []
+    },
     menu_combos: [],
     udhari_card: {
       udhari_pending: { amount: 0, count: 0 },
@@ -2048,7 +2750,26 @@ export default function Statistics() {
     advance_payment_card: {
       partial_payment: { amount: 0, count: 0 },
       settled_payment: { amount: 0, count: 0 }
-    }
+    },
+    peak_time_analysis: {
+      breakfast: { order_count: 0, revenue: 0 },
+      lunch: { order_count: 0, revenue: 0 },
+      brunch: { order_count: 0, revenue: 0 },
+      dinner: { order_count: 0, revenue: 0 }
+    },
+    sales_performance: {
+      statistics: {
+        total_menus: 0,
+        selling_menus_count: 0,
+        no_selling_count: 0,
+        top_selling_count: 0,
+        low_selling_count: 0
+      },
+      top_selling: { items: [], pagination: {} },
+      low_selling: { items: [], pagination: {} },
+      no_selling: { items: [], pagination: {} }
+    },
+    coupon_statistics: []
   };
   
   // Use actual data if available, otherwise use empty data during loading
@@ -2196,13 +2917,25 @@ export default function Statistics() {
         )}
         
         {/* Products Analysis and Weekly Order Stats - Only render grid if at least one component has data */}
-        {(hasCategoryPerformance || hasWeeklyOrderStats) && (
+        {(hasPriceRecommendations || hasWeeklyOrderStats) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {hasCategoryPerformance && (
-              <ProductsAnalysisCard categoryData={displayData.category_wise_performance} />
+            {hasPriceRecommendations && (
+              <ProductsAnalysisCard categoryData={displayData.sales_performance} />
             )}
             {hasWeeklyOrderStats && (
               <WeeklyOrderStatsChart weeklyData={displayData.weekly_order_stats} />
+            )}
+        </div>
+        )}
+        
+        {/* Peak Time Analysis and Enhanced Category Performance - Only render grid if at least one component has data */}
+        {(hasPeakTimeAnalysis || hasEnhancedCategoryPerformance) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {hasPeakTimeAnalysis && (
+              <PeakTimeAnalysisChart peakTimeData={displayData.peak_time_analysis} />
+            )}
+            {hasEnhancedCategoryPerformance && (
+              <EnhancedCategoryPerformanceCard categoryData={displayData.category_wise_performance} />
             )}
         </div>
         )}
@@ -2225,6 +2958,20 @@ export default function Statistics() {
             )}
         </div>
         )}
+        
+        {/* Price Recommendations and Coupon Statistics - Only render grid if at least one component has data */}
+        {(hasPriceRecommendations || hasCouponStats) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {hasPriceRecommendations && (
+              <PriceRecommendationCard salesData={displayData.sales_performance} />
+            )}
+            {hasCouponStats && (
+              <CouponStatisticsCard couponData={displayData.coupon_statistics} />
+            )}
+        </div>
+        )}
+        
+
         
         {/* Payment Statistics - Only render if it has data */}
         {(hasUdhariCard || hasAdvancePayment) && (
