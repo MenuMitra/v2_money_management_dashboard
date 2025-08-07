@@ -414,4 +414,113 @@ export const getCouponReport = async (params) => {
     console.error('Error fetching coupon report:', error);
     throw error;
   }
+};
+
+// Function to fetch tip reports
+export const getTipReport = async (params) => {
+  try {
+    const response = await api.post(API_PATHS.tipReport, {
+      ...params,
+      outlet_id: localStorage.getItem('outlet_id'),
+      user_id: localStorage.getItem('user_id')
+    });
+    
+    // Check if response has the expected structure
+    if (response.data && response.data.detail && response.data.detail.tip_orders) {
+      // Process tip orders to ensure they have unique IDs
+      return response.data.detail.tip_orders.map((item, index) => ({
+        ...item,
+        id: item.order_id || `tip-${index}`,
+        // Ensure all required fields have default values
+        order_number: item.order_number || 'Unknown',
+        order_type: item.order_type || 'Unknown',
+        order_status: item.order_status || 'Unknown',
+        payment_method: item.payment_method || 'N/A',
+        created_on: item.created_on || 'Unknown',
+        tip_amount: item.tip_amount || 0,
+        final_grand_total: item.final_grand_total || 0,
+        customer_name: item.customer_name || 'N/A',
+        customer_mobile: item.customer_mobile || 'N/A'
+      }));
+    }
+    
+    console.error('Unexpected API response format:', response.data);
+    return [];
+  } catch (error) {
+    console.error('Error fetching tip report:', error);
+    throw error;
+  }
+};
+
+// Function to fetch service charge reports
+export const getChargesReport = async (params) => {
+  try {
+    const response = await api.post(API_PATHS.chargesReport, {
+      ...params,
+      outlet_id: localStorage.getItem('outlet_id'),
+      user_id: localStorage.getItem('user_id')
+    });
+    
+    // Check if response has the expected structure
+    if (response.data && response.data.detail && response.data.detail.charges_orders) {
+      // Process charges orders to ensure they have unique IDs
+      return response.data.detail.charges_orders.map((item, index) => ({
+        ...item,
+        id: item.order_id || `charges-${index}`,
+        // Ensure all required fields have default values
+        order_number: item.order_number || 'Unknown',
+        order_type: item.order_type || 'Unknown',
+        order_status: item.order_status || 'Unknown',
+        payment_method: item.payment_method || 'N/A',
+        created_on: item.created_on || 'Unknown',
+        charges_amount: item.charges_amount || 0,
+        final_grand_total: item.final_grand_total || 0,
+        customer_name: item.customer_name || 'N/A',
+        customer_mobile: item.customer_mobile || 'N/A'
+      }));
+    }
+    
+    console.error('Unexpected API response format:', response.data);
+    return [];
+  } catch (error) {
+    console.error('Error fetching charges report:', error);
+    throw error;
+  }
+};
+
+// Function to fetch special discount reports
+export const getSpecialDiscountReport = async (params) => {
+  try {
+    const response = await api.post(API_PATHS.specialDiscountReport, {
+      ...params,
+      outlet_id: localStorage.getItem('outlet_id'),
+      user_id: localStorage.getItem('user_id')
+    });
+    
+    // Check if response has the expected structure
+    if (response.data && response.data.detail && response.data.detail.discount_orders) {
+      // Process discount orders to ensure they have unique IDs
+      return response.data.detail.discount_orders.map((item, index) => ({
+        ...item,
+        id: item.order_id || `discount-${index}`,
+        // Ensure all required fields have default values
+        order_number: item.order_number || 'Unknown',
+        order_type: item.order_type || 'Unknown',
+        order_status: item.order_status || 'Unknown',
+        payment_method: item.payment_method || 'N/A',
+        created_on: item.created_on || 'Unknown',
+        special_discount_amount: item.special_discount_amount || 0,
+        total_bill_amount: item.total_bill_amount || 0,
+        final_grand_total: item.final_grand_total || 0,
+        customer_name: item.customer_name || 'N/A',
+        customer_mobile: item.customer_mobile || 'N/A'
+      }));
+    }
+    
+    console.error('Unexpected API response format:', response.data);
+    return [];
+  } catch (error) {
+    console.error('Error fetching special discount report:', error);
+    throw error;
+  }
 }; 

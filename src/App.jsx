@@ -17,6 +17,9 @@ import PaymentSettleReports from './pages/reports/PaymentSettleReports';
 import OrderStatusReports from './pages/reports/OrderStatusReports';
 import SplitTableReports from './pages/reports/SplitTableReports';
 import JoinTableReports from './pages/reports/JoinTableReports';
+import TipReports from './pages/reports/TipReports';
+import ServiceChargeReports from './pages/reports/ServiceChargeReports';
+import SpecialDiscountReports from './pages/reports/SpecialDiscountReports';
 import ProtectedRoute from './components/ProtectedRoute';
 import './styles/globals.css';
 import { StatisticsProvider } from './context/StatisticsContext';
@@ -139,6 +142,27 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <JoinTableReports />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/reports/tips" element={
+          <ProtectedRoute>
+            <Layout>
+              <TipReports />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/reports/service-charges" element={
+          <ProtectedRoute>
+            <Layout>
+              <ServiceChargeReports />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/reports/special-discounts" element={
+          <ProtectedRoute>
+            <Layout>
+              <SpecialDiscountReports />
             </Layout>
           </ProtectedRoute>
         } />
