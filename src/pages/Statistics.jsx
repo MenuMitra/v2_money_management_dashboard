@@ -2017,23 +2017,23 @@ const PriceRecommendationCard = ({ salesData }) => {
           )}
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div>
+        <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                 Menu Item
               </th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Current Price
               </th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                 Recommended Price
               </th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Sales Count
               </th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                 Type
               </th>
             </tr>
@@ -2050,13 +2050,13 @@ const PriceRecommendationCard = ({ salesData }) => {
 
                 return (
                   <tr key={item.item_id || index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 py-4 text-sm font-medium text-gray-900 break-words">
                       {item.name || 'Unknown Item'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    <td className="px-2 py-4 text-sm text-gray-500 text-center">
                       {formatCurrency(currentPrice)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="px-2 py-4 text-sm text-center">
                       <div className="flex flex-col items-center">
                         <span className="font-medium text-gray-900">
                           {formatCurrency(recommendedPrice)}
@@ -2071,17 +2071,17 @@ const PriceRecommendationCard = ({ salesData }) => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    <td className="px-2 py-4 text-sm text-gray-500 text-center">
                       {item.sales_count || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <td className="px-2 py-4 text-center">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         item.type === 'top' ? 'bg-green-100 text-green-800' :
                         item.type === 'low' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {item.type === 'top' ? 'Top Selling' :
-                         item.type === 'low' ? 'Low Selling' : 'No Selling'}
+                        {item.type === 'top' ? 'Top' :
+                         item.type === 'low' ? 'Low' : 'No Sales'}
                       </span>
                     </td>
                   </tr>
