@@ -139,6 +139,7 @@ const API_PATHS = {
   inventoryReport: `${STATISTICS_PREFIX}/inventory_report`,
   reportFilterSupplier: `${STATISTICS_PREFIX}/report_filter_supplier`,
   reportFilterSection: `${STATISTICS_PREFIX}/report_filter_section`,
+  udhariReport: `${STATISTICS_PREFIX}/udhari_report`,
 };
 
 export { 

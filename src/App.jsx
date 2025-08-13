@@ -20,6 +20,7 @@ import JoinTableReports from './pages/reports/JoinTableReports';
 import TipReports from './pages/reports/TipReports';
 import ServiceChargeReports from './pages/reports/ServiceChargeReports';
 import SpecialDiscountReports from './pages/reports/SpecialDiscountReports';
+import UdhariReports from './pages/reports/UdhariReports';
 import ProtectedRoute from './components/ProtectedRoute';
 import './styles/globals.css';
 import { StatisticsProvider } from './context/StatisticsContext';
@@ -163,6 +164,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <SpecialDiscountReports />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/reports/udhari" element={
+          <ProtectedRoute>
+            <Layout>
+              <UdhariReports />
             </Layout>
           </ProtectedRoute>
         } />

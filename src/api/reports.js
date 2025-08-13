@@ -523,4 +523,44 @@ export const getSpecialDiscountReport = async (params) => {
     console.error('Error fetching special discount report:', error);
     throw error;
   }
+};
+
+// Function to fetch udhari reports
+export const getUdhariReport = async (params) => {
+  try {
+    const response = await api.post(API_PATHS.udhariReport, {
+      ...params,
+      outlet_id: localStorage.getItem('outlet_id'),
+      user_id: localStorage.getItem('user_id')
+    });
+    
+    // Check if response has the expected structure
+    if (response.data && response.data.detail && response.data.detail.udhari_ledgers) {
+      // Process udhari ledgers to ensure they have unique IDs
+      return response.data.detail.udhari_ledgers.map((item, index) => ({
+        ...item,
+        id: item.ledger_id || `udhari-${index}`,
+        // Ensure all required fields have default values
+        customer_name: item.customer_name || 'Unknown',
+        customer_mobile: item.customer_mobile || 'N/A',
+        customer_address: item.customer_address || 'N/A',
+        order_number: item.order_number || 'Unknown',
+        order_type: item.order_type || 'Unknown',
+        order_status: item.order_status || 'Unknown',
+        bill_amount: item.bill_amount || 0,
+        udhari_datetime: item.udhari_datetime || 'Unknown',
+        settle_amount: item.settle_amount || 0,
+        settle_datetime: item.settle_datetime || 'N/A',
+        pending_amount: item.pending_amount || 0,
+        ledger_status: item.ledger_status || 'Unknown',
+        estimated_settlement_period: item.estimated_settlement_period || 'N/A'
+      }));
+    }
+    
+    console.error('Unexpected API response format:', response.data);
+    return [];
+  } catch (error) {
+    console.error('Error fetching udhari report:', error);
+    throw error;
+  }
 }; 
