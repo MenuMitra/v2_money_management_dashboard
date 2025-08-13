@@ -1521,9 +1521,9 @@ const CategoryPerformanceCard = ({ categoryData }) => {
             <div className="flex justify-between items-center mb-2">
               <div>
                 <h4 className="text-sm font-medium text-gray-700">{category.category_name}</h4>
-                <div className="flex items-center space-x-2 text-xs text-gray-500">
-                  {category.top_menus.slice(0, 3).map((menu, idx) => (
-                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  {category.top_menus.slice(0, 5).map((menu, idx) => (
+                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 whitespace-nowrap">
                       {menu.menu_name} ({menu.sales_count})
                     </span>
                   ))}
@@ -1863,9 +1863,9 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
                       </span>
                     </div>
                     {category.top_menus && category.top_menus.length > 0 && (
-                      <div className="flex items-center space-x-2 text-xs text-gray-500 mt-2">
-                        {category.top_menus.slice(0, 3).map((menu, idx) => (
-                          <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-2">
+                        {category.top_menus.slice(0, 5).map((menu, idx) => (
+                          <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 whitespace-nowrap">
                             {menu.menu_name} ({menu.sales_count})
                           </span>
                         ))}
@@ -2158,21 +2158,22 @@ const CouponStatisticsCard = ({ couponData }) => {
         {
           coupon_id: 1,
           coupon_name: "SAMPLE001",
-          usage_count: 0
+          used_count: 0,
+          max_usage_limit: 50
         }
       ];
 
   // Filter out coupons with zero usage
-  const visibleCoupons = data.filter(coupon => coupon.usage_count > 0);
+  const visibleCoupons = data.filter(coupon => coupon.used_count > 0);
   
   // If all coupons have zero usage, show all coupons (default behavior)
   const couponsToDisplay = visibleCoupons.length > 0 ? visibleCoupons : data;
 
   // Sort by usage count (descending)
-  const sortedCoupons = [...couponsToDisplay].sort((a, b) => b.usage_count - a.usage_count);
+  const sortedCoupons = [...couponsToDisplay].sort((a, b) => b.used_count - a.used_count);
 
   // Calculate total usage
-  const totalUsage = sortedCoupons.reduce((sum, coupon) => sum + coupon.usage_count, 0);
+  const totalUsage = sortedCoupons.reduce((sum, coupon) => sum + coupon.used_count, 0);
 
   // Calculate pagination
   const totalPages = Math.ceil(sortedCoupons.length / itemsPerPage);
@@ -2210,17 +2211,17 @@ const CouponStatisticsCard = ({ couponData }) => {
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Coupon Code
               </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Usage Count
+              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Used Count
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Performance
+                Usage Limit
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {currentCoupons.map((coupon, index) => {
-              const usagePercentage = totalUsage > 0 ? (coupon.usage_count / totalUsage) * 100 : 0;
+              const limitUsagePercentage = coupon.max_usage_limit > 0 ? (coupon.used_count / coupon.max_usage_limit) * 100 : 0;
               
               return (
                 <tr key={coupon.coupon_id || index}>
@@ -2232,19 +2233,22 @@ const CouponStatisticsCard = ({ couponData }) => {
                       {coupon.coupon_name}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                    {coupon.usage_count}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    {coupon.used_count}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="flex items-center justify-center">
-                      <div className="w-full bg-gray-200 rounded-full h-2 mr-2 max-w-xs">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    <div className="flex flex-col items-center">
+                      <span className="font-medium text-gray-900">
+                        {coupon.used_count}/{coupon.max_usage_limit}
+                      </span>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1 max-w-xs">
                         <div 
                           className="bg-purple-600 h-2 rounded-full" 
-                          style={{ width: `${usagePercentage}%` }}
+                          style={{ width: `${Math.min(limitUsagePercentage, 100)}%` }}
                         ></div>
                       </div>
-                      <span className="text-xs text-gray-500 w-12 text-right">
-                        {usagePercentage.toFixed(1)}%
+                      <span className="text-xs text-gray-500 mt-1">
+                        {limitUsagePercentage.toFixed(1)}%
                       </span>
                     </div>
                   </td>
@@ -2305,17 +2309,12 @@ const CouponStatisticsCard = ({ couponData }) => {
   );
 };
 
-// Advanced Payment Stats Card Component
-const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
+// Udhari Payment Stats Card Component
+const UdhariPaymentStatsCard = ({ udhariData }) => {
   // Use empty data if none provided
   const udhariStats = udhariData || {
     udhari_pending: { amount: 0, count: 0 },
     udhari_paid: { amount: 0, count: 0 }
-  };
-  
-  const advanceStats = advancePaymentData || {
-    partial_payment: { amount: 0, count: 0 },
-    settled_payment: { amount: 0, count: 0 }
   };
 
   const formatCurrency = (amount) => {
@@ -2332,74 +2331,97 @@ const AdvancedPaymentStatsCard = ({ udhariData, advancePaymentData }) => {
                         udhariStats.udhari_paid.amount > 0 || 
                         udhariStats.udhari_paid.count > 0;
 
+  if (!hasUdhariData) return null;
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5 border-b border-gray-200">
+        <h3 className="text-lg font-medium text-gray-800">Udhari Payment Statistics</h3>
+      </div>
+      <div className="p-5">
+        <div className="grid grid-cols-2 gap-4">
+          {(udhariStats.udhari_pending.amount > 0 || udhariStats.udhari_pending.count > 0) && (
+            <div className="bg-amber-50 p-4 rounded-lg">
+              <p className="text-sm text-amber-700 mb-1">Pending</p>
+              <p className="text-xl font-semibold text-amber-900">
+                {formatCurrency(udhariStats.udhari_pending.amount)}
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                {udhariStats.udhari_pending.count} transactions
+              </p>
+            </div>
+          )}
+          {(udhariStats.udhari_paid.amount > 0 || udhariStats.udhari_paid.count > 0) && (
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-green-700 mb-1">Paid</p>
+              <p className="text-xl font-semibold text-green-900">
+                {formatCurrency(udhariStats.udhari_paid.amount)}
+              </p>
+              <p className="text-xs text-green-700 mt-1">
+                {udhariStats.udhari_paid.count} transactions
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Advance Payment Stats Card Component
+const AdvancePaymentStatsCard = ({ advancePaymentData }) => {
+  // Use empty data if none provided
+  const advanceStats = advancePaymentData || {
+    partial_payment: { amount: 0, count: 0 },
+    settled_payment: { amount: 0, count: 0 }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   // Check if Advance Payment section has any non-zero values
   const hasAdvanceData = advanceStats.partial_payment.amount > 0 || 
                          advanceStats.partial_payment.count > 0 || 
                          advanceStats.settled_payment.amount > 0 || 
                          advanceStats.settled_payment.count > 0;
-  
-  // If both sections have no data, show both sections (default behavior)
-  // If at least one section has data, only show the sections with data
-  const showUdhariSection = hasUdhariData || (!hasUdhariData && !hasAdvanceData);
-  const showAdvanceSection = hasAdvanceData || (!hasUdhariData && !hasAdvanceData);
+
+  if (!hasAdvanceData) return null;
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Advanced Payment Statistics</h3>
+        <h3 className="text-lg font-medium text-gray-800">Advance Payment Statistics</h3>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-        {showUdhariSection && (
-          <div className="p-5">
-            <h4 className="font-medium text-gray-700 mb-4">Udhari Payment</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-amber-50 p-4 rounded-lg">
-                <p className="text-sm text-amber-700 mb-1">Pending</p>
-                <p className="text-xl font-semibold text-amber-900">
-                  {formatCurrency(udhariStats.udhari_pending.amount)}
-                </p>
-                <p className="text-xs text-amber-700 mt-1">
-                  {udhariStats.udhari_pending.count} transactions
-                </p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm text-green-700 mb-1">Paid</p>
-                <p className="text-xl font-semibold text-green-900">
-                  {formatCurrency(udhariStats.udhari_paid.amount)}
-                </p>
-                <p className="text-xs text-green-700 mt-1">
-                  {udhariStats.udhari_paid.count} transactions
-                </p>
-              </div>
+      <div className="p-5">
+        <div className="grid grid-cols-2 gap-4">
+          {(advanceStats.partial_payment.amount > 0 || advanceStats.partial_payment.count > 0) && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-700 mb-1">Partial Payment</p>
+              <p className="text-xl font-semibold text-blue-900">
+                {formatCurrency(advanceStats.partial_payment.amount)}
+              </p>
+              <p className="text-xs text-blue-700 mt-1">
+                {advanceStats.partial_payment.count} transactions
+              </p>
             </div>
-          </div>
-        )}
-        
-        {showAdvanceSection && (
-          <div className="p-5">
-            <h4 className="font-medium text-gray-700 mb-4">Settled Payment</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-blue-700 mb-1">Partial Payment</p>
-                <p className="text-xl font-semibold text-blue-900">
-                  {formatCurrency(advanceStats.partial_payment.amount)}
-                </p>
-                <p className="text-xs text-blue-700 mt-1">
-                  {advanceStats.partial_payment.count} transactions
-                </p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="text-sm text-purple-700 mb-1">Settled Payment</p>
-                <p className="text-xl font-semibold text-purple-900">
-                  {formatCurrency(advanceStats.settled_payment.amount)}
-                </p>
-                <p className="text-xs text-purple-700 mt-1">
-                  {advanceStats.settled_payment.count} transactions
-                </p>
-              </div>
+          )}
+          {(advanceStats.settled_payment.amount > 0 || advanceStats.settled_payment.count > 0) && (
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-sm text-purple-700 mb-1">Settled Payment</p>
+              <p className="text-xl font-semibold text-purple-900">
+                {formatCurrency(advanceStats.settled_payment.amount)}
+              </p>
+              <p className="text-xs text-purple-700 mt-1">
+                {advanceStats.settled_payment.count} transactions
+              </p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -3009,11 +3031,13 @@ export default function Statistics() {
         
         {/* Payment Statistics - Only render if it has data */}
         {(hasUdhariCard || hasAdvancePayment) && (
-        <div className="grid grid-cols-1 gap-6">
-          <AdvancedPaymentStatsCard 
-              udhariData={displayData?.udhari_card} 
-              advancePaymentData={displayData?.advance_payment_card} 
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {hasUdhariCard && (
+            <UdhariPaymentStatsCard udhariData={displayData?.udhari_card} />
+          )}
+          {hasAdvancePayment && (
+            <AdvancePaymentStatsCard advancePaymentData={displayData?.advance_payment_card} />
+          )}
         </div>
         )}
 
