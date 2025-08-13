@@ -77,6 +77,7 @@ export default function Layout({ children }) {
     { name: 'Split Tables', path: '/reports/split-tables', icon: 'split-table' },
     { name: 'Join Tables', path: '/reports/join-tables', icon: 'join-table' },
     { name: 'Coupons', path: '/reports/coupons', icon: 'tag' },
+    { name: 'Payment Reports', path: '/reports/payment-reports', icon: 'currency' },
     { name: 'Payments', path: '/reports/payments', icon: 'currency' },
     { name: 'Order Status', path: '/reports/order-status', icon: 'clock' },
     { name: 'Tips', path: '/reports/tips', icon: 'tip' },

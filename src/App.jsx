@@ -13,6 +13,7 @@ import InventoryReports from './pages/reports/InventoryReports';
 import StaffReports from './pages/reports/StaffReports';
 import TableReports from './pages/reports/TableReports';
 import CouponReports from './pages/reports/CouponReports';
+import PaymentReports from './pages/reports/PaymentReports';
 import PaymentSettleReports from './pages/reports/PaymentSettleReports';
 import OrderStatusReports from './pages/reports/OrderStatusReports';
 import SplitTableReports from './pages/reports/SplitTableReports';
@@ -115,6 +116,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <CouponReports />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/reports/payment-reports" element={
+          <ProtectedRoute>
+            <Layout>
+              <PaymentReports />
             </Layout>
           </ProtectedRoute>
         } />

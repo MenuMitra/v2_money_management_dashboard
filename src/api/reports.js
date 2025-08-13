@@ -106,10 +106,22 @@ export const getPaymentReport = async (params) => {
       user_id: localStorage.getItem('user_id')
     });
     
-    if (response.data && response.data.detail && response.data.detail.payments) {
-      return response.data.detail.payments.map(payment => ({
-        ...payment,
-        id: payment.payment_id || `payment-${Math.random().toString(36).substr(2, 9)}`
+    // Check if response has the expected structure with orders array
+    if (response.data && response.data.detail && response.data.detail.orders) {
+      return response.data.detail.orders.map(order => ({
+        ...order,
+        id: order.order_id || `order-${Math.random().toString(36).substr(2, 9)}`,
+        // Map order fields to payment fields for consistency
+        payment_id: order.order_id,
+        order_number: order.order_number,
+        customer_name: order.customer_name || '',
+        customer_mobile: order.customer_mobile || '',
+        payment_date: order.created_on,
+        payment_method: order.payment_method,
+        payment_status: order.order_status,
+        amount: order.final_grand_total,
+        transaction_id: order.order_id, // Using order_id as transaction_id
+        processed_by: order.customer_name || 'N/A'
       }));
     }
     
