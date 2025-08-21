@@ -71,12 +71,19 @@ const OutletHeader = () => {
       }, 10000); // 10 seconds cooldown
     };
 
+    const handleOpenOutletSelector = () => {
+      console.log('Opening outlet selector from modal');
+      setIsModalOpen(true);
+    };
+
     window.addEventListener('statistics:loading:start', handleLoadingStart);
     window.addEventListener('statistics:loading:end', handleLoadingEnd);
+    window.addEventListener('open:outlet:selector', handleOpenOutletSelector);
 
     return () => {
       window.removeEventListener('statistics:loading:start', handleLoadingStart);
       window.removeEventListener('statistics:loading:end', handleLoadingEnd);
+      window.removeEventListener('open:outlet:selector', handleOpenOutletSelector);
     };
   }, []);
 

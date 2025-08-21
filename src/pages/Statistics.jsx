@@ -2584,6 +2584,24 @@ export default function Statistics() {
     });
   }, [statistics, outletId, isLoading, isManualRefresh]);
 
+  // Handle offline mode errors
+  useEffect(() => {
+    if (error) {
+      // Check if the error is related to offline mode
+      const errorMessage = typeof error === 'string' ? error : 
+                          error?.response?.data?.detail || 
+                          error?.message || '';
+      
+      if (errorMessage.includes('offline mode') || 
+          errorMessage.includes('This operation is not allowed in offline mode')) {
+        // Dispatch custom event for offline mode modal
+        window.dispatchEvent(new CustomEvent('offline:error', {
+          detail: { error }
+        }));
+      }
+    }
+  }, [error]);
+
   // Breadcrumb items
   const breadcrumbItems = [
     { text: 'Home', url: '/' },
@@ -2900,7 +2918,10 @@ export default function Statistics() {
             </div>
             <div className="ml-3">
               <p className="text-sm text-red-700">
-                {error}. 
+                {typeof error === 'string' ? error : 
+                 error?.response?.data?.detail || 
+                 error?.message || 
+                 'An error occurred while fetching statistics'}. 
                 <button 
                   className="ml-2 font-medium underline" 
                   onClick={() => fetchStatistics({ outlet_id: outletId }, true)}

@@ -103,7 +103,7 @@ axiosInstance.interceptors.response.use(
 
     // Handle common error scenarios
     if (error.response) {
-      const { status } = error.response;
+      const { status, data } = error.response;
       
       // Handle 401 Unauthorized - typically expired or invalid token
       if (status === 401) {
@@ -119,6 +119,15 @@ axiosInstance.interceptors.response.use(
           // Use timeout to prevent immediate redirect during ongoing request handling
           setTimeout(() => window.location.href = '/login', 500);
         }
+      }
+      
+      // Handle offline mode errors
+      if (data?.detail && (data.detail.includes('offline mode') || 
+                          data.detail.includes('This operation is not allowed in offline mode'))) {
+        // Dispatch custom event for offline mode modal
+        window.dispatchEvent(new CustomEvent('offline:error', {
+          detail: { error }
+        }));
       }
     }
     
