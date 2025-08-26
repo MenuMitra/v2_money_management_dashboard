@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // MenuMitra company info and social links
-const menuMitraCompanyInfo = {
-  name: "Shekru Labs India Pvt. Ltd.",
-  website: "https://shekruweb.com/",
-  version: "1.0.0"
-};
+const menuMitraCompanyInfo = {};
 
 const menuMitraAppInfo = {
   name: "MenusMitra",
@@ -22,20 +18,14 @@ const menuMitraSocialLinks = [
   {
     name: "Facebook",
     url: "https://www.facebook.com/share/x5wymXr6w7W49vaQ/?mibextid=qi2Omg",
-    icon: "fab fa-facebook-f",
+    icon: "ri-facebook-fill",
     color: "text-blue-600 hover:bg-blue-50 hover:border-blue-500"
   },
   {
     name: "Instagram",
     url: "https://www.instagram.com/menumitra/",
-    icon: "fab fa-instagram",
+    icon: "ri-instagram-fill",
     color: "text-pink-600 hover:bg-pink-50 hover:border-pink-500"
-  },
-  {
-    name: "Telegram",
-    url: "https://t.me/MenuMitra",
-    icon: "fab fa-telegram-plane",
-    color: "text-blue-500 hover:bg-blue-50 hover:border-blue-400"
   },
   {
     name: "YouTube",
@@ -44,9 +34,9 @@ const menuMitraSocialLinks = [
     color: "text-red-600 hover:bg-red-50 hover:border-red-500"
   },
   {
-    name: "LinkedIn",
-    url: "https://www.linkedin.com/company/102429337/admin/dashboard/",
-    icon: "fab fa-linkedin-in",
+    name: "Google",
+    url: "https://www.google.com/company/102429337/admin/dashboard/",
+    icon: "ri-google-fill",
     color: "text-blue-700 hover:bg-blue-50 hover:border-blue-600"
   }
 ];
@@ -253,211 +243,202 @@ export default function Login() {
         <span>Testing Environment</span>
       </div>
       
-      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8" style={{ paddingTop: 'calc(28px + 3rem)' }}>
-      <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-xl shadow-lg">
+      <div className="min-h-screen flex items-center justify-center bg-white py-16 px-6 lg:px-12" style={{ paddingTop: 'calc(28px + 4rem)' }}>
+        <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
           {/* Login Testing Badge */}
-        
           
-        {/* Logo and Header */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="mb-3">
-            <img 
-              src="/assets/MenuMitra_logo.png" 
-              alt="MenuMitra Logo" 
-              className="h-16 w-auto"
-            />
-          </div>
-          <h2 className="text-center text-2xl font-extrabold text-gray-900">
-            {showOtpForm ? 'Verify OTP' : 'Welcome to Outlet Dashboard'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {showOtpForm 
-              ? `We've sent a verification code to ${mobileNumber}` 
-              : 'Please enter your mobile number to login'}
-          </p>
-        </div>
-        
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-        
-        {!showOtpForm ? (
-          // Mobile Number Form
-          <form className="mt-6 space-y-5" onSubmit={handleMobileSubmit}>
-            <div>
-              <label htmlFor="mobile-number" className="block text-sm font-medium text-gray-700 mb-1">
-                Mobile Number
-              </label>
-              <input
-                id="mobile-number"
-                type="tel"
-                name="mobile"
-                autoComplete="tel"
-                ref={mobileInputRef}
-                required
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-lg"
-                placeholder="Enter 10-digit mobile number"
-                value={mobileNumber}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^\d+$/.test(value)) {
-                    setMobileNumber(value.slice(0, 10));
-                  }
-                }}
-                disabled={loading}
+          {/* Logo and Header */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="mb-4">
+              <img 
+                src="/assets/MenuMitra_logo.png" 
+                alt="MenuMitra Logo" 
+                className="h-20 w-auto"
               />
             </div>
-            
-            <div>
-              <button
-                type="submit"
-                disabled={loading || mobileNumber.length !== 10}
-                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-md text-white ${
-                  loading || mobileNumber.length !== 10
-                    ? 'bg-primary-400 cursor-not-allowed'
-                    : 'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
-                }`}
-              >
-                {loading ? (
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : 'Send OTP'}
-              </button>
+            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+              {showOtpForm ? 'Verify OTP' : 'Outlet Dashboard'}
+            </h2>
+            <p className="mt-3 text-center text-base text-gray-600">
+              {showOtpForm 
+                ? `We've sent a verification code to ${mobileNumber}` 
+                : 'Please enter your mobile number to login'}
+            </p>
+          </div>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
             </div>
-          </form>
-        ) : (
-          // OTP Verification Form
-          <form className="mt-6 space-y-5" onSubmit={handleVerifyOtp}>
-            <div>
-              <div className="flex items-center justify-center mb-4">
+          )}
+          
+          {!showOtpForm ? (
+            // Mobile Number Form
+            <form className="mt-8 space-y-6" onSubmit={handleMobileSubmit}>
+              <div>
+                <label htmlFor="mobile-number" className="block text-base font-medium text-gray-700 mb-2">
+                  Mobile Number
+                </label>
+                <input
+                  id="mobile-number"
+                  type="tel"
+                  name="mobile"
+                  autoComplete="tel"
+                  ref={mobileInputRef}
+                  required
+                  className="appearance-none block w-full px-4 py-4 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-xl"
+                  placeholder="Enter 10-digit mobile number"
+                  value={mobileNumber}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '' || /^\d+$/.test(value)) {
+                      setMobileNumber(value.slice(0, 10));
+                    }
+                  }}
+                  disabled={loading}
+                />
+              </div>
+              
+              <div>
                 <button
-                  type="button"
-                  onClick={handleBack}
-                  className="flex items-center text-primary-600 hover:text-primary-500 text-sm font-medium focus:outline-none"
+                  type="submit"
+                  disabled={loading || mobileNumber.length !== 10}
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${
+                    loading || mobileNumber.length !== 10
+                      ? 'bg-primary-400 cursor-not-allowed'
+                      : 'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
+                  }`}
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  Change number
+                  {loading ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : 'Send OTP'}
                 </button>
               </div>
-            
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                Enter 4-digit verification code
-              </label>
-              <div className="flex justify-center space-x-3">
-                {[0, 1, 2, 3].map((index) => (
-                  <input
-                    key={index}
-                    ref={otpRefs[index]}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength="1"
-                    value={otp[index]}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="w-14 h-14 text-center text-2xl font-semibold border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    disabled={loading}
-                  />
-                ))}
+            </form>
+          ) : (
+            // OTP Verification Form
+            <form className="mt-8 space-y-6" onSubmit={handleVerifyOtp}>
+              <div>
+                <div className="flex items-center justify-center mb-5">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex items-center text-primary-600 hover:text-primary-500 text-base font-medium focus:outline-none"
+                  >
+                    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Change number
+                  </button>
+                </div>
+              
+                <label htmlFor="otp" className="block text-base font-medium text-gray-700 mb-4 text-center">
+                  Enter 4-digit verification code
+                </label>
+                <div className="flex justify-center space-x-4">
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      ref={otpRefs[index]}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength="1"
+                      value={otp[index]}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-16 h-16 text-center text-3xl font-semibold border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      disabled={loading}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center justify-center">
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={resendDisabled || loading}
-                className={`text-sm font-medium focus:outline-none focus:underline ${
-                  resendDisabled || loading
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-primary-600 hover:text-primary-500'
-                }`}
-              >
-                {resendDisabled ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
-              </button>
-            </div>
-            
-            <div>
-              <button
-                type="submit"
-                disabled={loading || otp.some(digit => !digit)}
-                className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-medium rounded-md text-white ${
-                  loading || otp.some(digit => !digit)
-                    ? 'bg-primary-400 cursor-not-allowed'
-                    : 'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
-                }`}
-              >
-                {loading ? (
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : 'Verify OTP'}
-              </button>
-            </div>
-          </form>
-        )}
-        
-        {/* Footer with company info and social links */}
-        <div className="mt-8">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                <svg className="w-4 h-4 inline-block mr-1 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                </svg>
-                Powered by
-              </span>
-            </div>
-          </div>
+              
+              <div className="flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendDisabled || loading}
+                  className={`text-base font-medium focus:outline-none focus:underline ${
+                    resendDisabled || loading
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-primary-600 hover:text-primary-500'
+                  }`}
+                >
+                  {resendDisabled ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
+                </button>
+              </div>
+              
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading || otp.some(digit => !digit)}
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${
+                    loading || otp.some(digit => !digit)
+                      ? 'bg-primary-400 cursor-not-allowed'
+                      : 'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
+                  }`}
+                >
+                  {loading ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : 'Verify OTP'}
+                </button>
+              </div>
+            </form>
+          )}
           
-          <div className="mt-3 text-center">
-            <a 
-              href={menuMitraCompanyInfo.website}
-              target="_blank" 
-              rel="noreferrer"
-              className="text-primary-600 font-medium hover:text-primary-500"
-            >
-              {menuMitraCompanyInfo.name}
-            </a>
-          </div>
-          
-          <div className="mt-4 flex justify-center space-x-4">
-            {menuMitraSocialLinks.map((social) => (
-              <a
-                key={social.name}
-                href={social.url}
-                target="_blank"
+          {/* Footer with company info and social links */}
+          <div className="mt-10">
+            <div className="mt-4 text-center">
+              <a 
+                href={menuMitraCompanyInfo.website}
+                target="_blank" 
                 rel="noreferrer"
-                  className={`w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 ${social.color} transition-colors`}
+                className="text-primary-600 font-medium hover:text-primary-500 text-lg"
               >
-                <span className="sr-only">{social.name}</span>
-                <i className={`${social.icon} text-lg`}></i>
+                {menuMitraCompanyInfo.name}
               </a>
-            ))}
-          </div>
-          
+            </div>
+            
+            <div className="mt-6 flex justify-center space-x-6">
+              {menuMitraSocialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`w-12 h-12 flex items-center justify-center rounded-full border border-gray-300 ${social.color} transition-colors text-xl`}
+                >
+                  <span className="sr-only">{social.name}</span>
+                  <i className={`${social.icon}`}></i>
+                </a>
+              ))}
+            </div>
+
+            <div className="flex justify-center items-center gap-3 mt-4 text-base text-gray-500 dark:text-gray-400">
+              <span className="font-medium">Version 2.0</span>
+              <span>|</span>
+              <span>13 Aug 2025</span>
+            </div>
+            
             {/* Contact info commented out as requested */}
             {/*
-          <div className="mt-4 text-center text-xs text-gray-500">
-            <div className="mb-2">
-              <a href={`tel:${menuMitraContactInfo.phone.replace(/\s+/g, '')}`} className="text-primary-600 hover:text-primary-500 font-medium">
-                <i className="fas fa-phone-alt mr-1"></i> {menuMitraContactInfo.phone}
-              </a>
-            </div>
-            <div>
-              <a href={`mailto:${menuMitraContactInfo.email}`} className="text-primary-600 hover:text-primary-500 font-medium">
-                <i className="fas fa-envelope mr-1"></i> {menuMitraContactInfo.email}
-              </a>
-            </div>
+            <div className="mt-4 text-center text-xs text-gray-500">
+              <div className="mb-2">
+                <a href={`tel:${menuMitraContactInfo.phone.replace(/\s+/g, '')}`} className="text-primary-600 hover:text-primary-500 font-medium">
+                  <i className="fas fa-phone-alt mr-1"></i> {menuMitraContactInfo.phone}
+                </a>
+              </div>
+              <div>
+                <a href={`mailto:${menuMitraContactInfo.email}`} className="text-primary-600 hover:text-primary-500 font-medium">
+                  <i className="fas fa-envelope mr-1"></i> {menuMitraContactInfo.email}
+                </a>
+              </div>
             </div>
             */}
           </div>
@@ -465,4 +446,4 @@ export default function Login() {
       </div>
     </>
   );
-} 
+}
