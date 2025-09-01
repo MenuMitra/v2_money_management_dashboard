@@ -21,12 +21,6 @@ export default function CompareOutlets() {
   const { hasOutlet, warningElement } = useOutletWarning();
   const queryClient = useQueryClient();
 
-  // Remove these manual cache-related refs as we'll use TanStack Query's built-in caching
-  // const CACHE_EXPIRATION = 30 * 60 * 1000; // Remove this
-  // const outletDetailsCache = useRef(new Map()); // Remove this
-  // const outletDetailsFetchTimestamp = useRef(new Map()); // Remove this
-  // const pendingRequestsRef = useRef(new Map()); // Remove this
-
   const MAX_COMPARE_OUTLETS = 3; // Maximum outlets to compare
 
   // Currently selected outlets for comparison (object format with full data)
@@ -133,6 +127,18 @@ export default function CompareOutlets() {
       type: "currency",
     },
   ]);
+
+  // Clear error message after 6 seconds (changed from 7 seconds)
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 6000); // 6 seconds
+
+      // Cleanup the timer when the component unmounts or error changes
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   // Format currency in Indian format
   const formatIndianCurrency = (amount) => {
@@ -274,9 +280,15 @@ export default function CompareOutlets() {
     setRefreshOutletIndex(null);
   };
 
-  // Update the handleOutletSelect function to use the new caching
+  // Update the handleOutletSelect function to check for inactive outlet
   const handleOutletSelect = async (outlet) => {
     try {
+      // Check if the outlet is inactive first
+      if (outlet.is_active === false) {
+        setError("Cannot select an inactive outlet for comparison");
+        return;
+      }
+
       if (
         selectedOutlets.length >= MAX_COMPARE_OUTLETS &&
         refreshOutletIndex === null
@@ -438,15 +450,6 @@ export default function CompareOutlets() {
         console.log(
           `[CompareOutlets] Component remounted, using cached data for outlet ${currentOutlet.outlet_id}`
         );
-        // Use the cached data without making an API call
-        // const cachedData = outletDetailsCache.current.get(cacheKey); // This line is removed
-        // setCurrentOutletDetails({ // This line is removed
-        //   id: currentOutlet.outlet_id,
-        //   outlet_id: currentOutlet.outlet_id,
-        //   name: currentOutlet.name || "Current Outlet",
-        //   address: currentOutlet.address || "",
-        //   ...cachedData
-        // });
       }
     }
   }, [currentOutlet, refreshCurrentOutlet, queryClient]);
@@ -602,8 +605,7 @@ export default function CompareOutlets() {
                   className="w-6 h-6 text-gray-500"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 00/svg"
                 >
                   <path
                     strokeLinecap="round"
@@ -619,9 +621,6 @@ export default function CompareOutlets() {
             </div>
 
             <div className="flex items-center">
-              {/* Only show refresh button if we have outlets to refresh */}
-              {/* {(selectedOutlets.length > 0 || currentOutlet) && <RefreshButton />} */}
-
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full ml-2 ${
                   selectedOutlets.length === MAX_COMPARE_OUTLETS
@@ -679,7 +678,7 @@ export default function CompareOutlets() {
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeWidth="2"
+                                strokeWidth={2}
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                               />
                             </svg>
@@ -693,7 +692,7 @@ export default function CompareOutlets() {
                               className="w-5 h-5"
                               fill="none"
                               stroke="currentColor"
-                              viewBox="0 0 24 24"
+                              viewBox="0 00/svg"
                               xmlns="http://www.w3.org/2000/svg"
                             >
                               <path

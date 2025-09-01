@@ -11,6 +11,7 @@ export default function InventoryReports() {
     filter_type: 'all'
   });
   const [inOutFilter, setInOutFilter] = useState('all');
+  const [selectedSupplier, setSelectedSupplier] = useState('');
 
   // Define columns for the report table - updated to match exact API response structure
   const columns = [
@@ -76,8 +77,8 @@ export default function InventoryReports() {
     }
     
     // Preserve supplier filter if it exists
-    if (filterParams.supplier_id) {
-      newParams.supplier_id = filterParams.supplier_id;
+    if (selectedSupplier) {
+      newParams.supplier_id = selectedSupplier;
     }
     
     setFilterParams(newParams);
@@ -86,6 +87,8 @@ export default function InventoryReports() {
   // Handle supplier filter change
   const handleSupplierChange = (e) => {
     const value = e.target.value;
+    setSelectedSupplier(value);
+    
     const newParams = { ...filterParams };
     
     if (value) {
@@ -135,12 +138,15 @@ export default function InventoryReports() {
         // Extract inventory items
         const inventoryItems = response.data.detail.inventory_items || [];
         
-        // Process inventory items to ensure they have unique IDs for the table
-        const processedItems = inventoryItems.map((item) => ({
-          ...item
-        }));
+        // If a supplier is selected, filter the results to only show that supplier
+        if (params.supplier_id) {
+          return inventoryItems.filter(item => {
+            const supplierId = item.supplier?.supplier_id || item.supplier?.id;
+            return supplierId == params.supplier_id;
+          });
+        }
         
-        return processedItems;
+        return inventoryItems;
       }
       
       return [];
@@ -167,7 +173,7 @@ export default function InventoryReports() {
       
       <div>
         <select
-          value={filterParams.supplier_id || ''}
+          value={selectedSupplier}
           onChange={handleSupplierChange}
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           disabled={loadingSuppliers}
@@ -206,4 +212,4 @@ export default function InventoryReports() {
       />
     </div>
   );
-} 
+}

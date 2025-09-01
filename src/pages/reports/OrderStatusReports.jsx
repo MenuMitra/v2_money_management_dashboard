@@ -187,6 +187,7 @@ export default function OrderStatusReports() {
       </div>
       
       <ReportTable
+        key={JSON.stringify(filterParams)} // Force re-render when filterParams changes
         title="Order Status Reports"
         columns={columns}
         apiCallback={getOrderStatusReport}
@@ -196,4 +197,4 @@ export default function OrderStatusReports() {
       />
     </div>
   );
-} 
+}

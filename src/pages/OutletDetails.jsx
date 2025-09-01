@@ -8,10 +8,6 @@ import { Breadcrumb } from '../components';
 import { useOutletDetails } from '../hooks/queries/useOutletDetails';
 
 export default function OutletDetails() {
-  // Remove the local isLoading state since we'll use the query's loading state
-  // const [isLoading, setIsLoading] = useState(true); <- Remove this
-
-  // Keep other necessary state
   const [currentOutletId, setCurrentOutletId] = useState(localStorage.getItem('outlet_id'));
   const [error, setError] = useState(null);
   const prevOutletIdRef = useRef(null);
@@ -19,11 +15,9 @@ export default function OutletDetails() {
   const outletChangeRef = useRef(false);
   const navigate = useNavigate();
 
-  // Existing context hooks
   const { currentOutlet, loading: outletLoading } = useOutlet();
   const { hasOutlet, warningElement } = useOutletWarning();
 
-  // Query hook with renamed loading state
   const {
     data: outletData = {
       name: "",
@@ -47,8 +41,8 @@ export default function OutletDetails() {
       manager_counts: { total: 0, active: 0, inactive: 0 },
       chef_counts: { total: 0, active: 0, inactive: 0 },
       Inventory_Items_counts: { total: 0, active: 0, inactive: 0 },
-      Inventory_Category_counts: { total: 0, active: 0, inactive: 0 },
-      Inventory_Sub_Category_counts: { total: 0, active: 0, inactive: 0 },
+      Inventory_Category_counts: { total: 4, active: 3, inactive: 1 },
+      Inventory_Sub_Category_counts: { total: 6, active: 4, inactive: 2 },
       supplier_counts: { total: 0, active: 0, inactive: 0 },
       order_statistics: {
         total_days_since_menumitra_was_installed: 0,
@@ -74,10 +68,8 @@ export default function OutletDetails() {
     }
   );
 
-  // Create a single loading indicator that combines both loading states
   const isPageLoading = outletLoading || isLoadingOutletDetails;
 
-  // Helper function to check if a value is empty (0, null, undefined, empty string, "N/A")
   const isEmpty = (value) => {
     if (value === null || value === undefined || value === '' || value === 'N/A') return true;
     if (typeof value === 'number' && value === 0) return true;
@@ -86,7 +78,6 @@ export default function OutletDetails() {
     return false;
   };
 
-  // Helper function to check if an object has any non-empty values
   const hasAnyValue = (obj) => {
     if (!obj || typeof obj !== 'object') return false;
     return Object.values(obj).some(value => {
@@ -97,7 +88,6 @@ export default function OutletDetails() {
     });
   };
 
-  // Format currency in Indian format
   const formatIndianCurrency = (amount) => {
     if (!amount) return '₹0';
     
@@ -114,16 +104,13 @@ export default function OutletDetails() {
     return formatter.format(num);
   };
 
-  // Format time from datetime string
   const formatTime = (datetimeStr) => {
     if (!datetimeStr) return 'N/A';
     
     try {
-      // Extract time part (assuming format is "YYYY-MM-DD HH:MM:SS")
       const timePart = datetimeStr.split(' ')[1];
       if (!timePart) return 'N/A';
       
-      // Convert to 12-hour format
       const [hours, minutes] = timePart.split(':');
       const h = parseInt(hours, 10);
       const ampm = h >= 12 ? 'PM' : 'AM';
@@ -135,7 +122,6 @@ export default function OutletDetails() {
     }
   };
 
-  // Convert string to title case
   const toTitleCase = (str) => {
     if (!str) return '';
     return str
@@ -145,7 +131,6 @@ export default function OutletDetails() {
       .join(' ');
   };
 
-  // Keep existing outlet change handling
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -154,19 +139,16 @@ export default function OutletDetails() {
 
     if (!currentOutlet?.outlet_id) return;
 
-    // Parse IDs as integers for consistent comparison
     const numericOutletId = parseInt(currentOutlet.outlet_id, 10);
     const numericPreviousOutletId = prevOutletIdRef.current;
 
     if (numericPreviousOutletId !== numericOutletId) {
       console.log(`OutletDetails: Outlet changed in context from ${numericPreviousOutletId} to ${numericOutletId}`);
       setCurrentOutletId(currentOutlet.outlet_id);
-      // TanStack Query will automatically refetch when currentOutletId changes
       prevOutletIdRef.current = numericOutletId;
     }
   }, [currentOutlet?.outlet_id]);
 
-  // Handle storage events for cross-tab synchronization
   useEffect(() => {
     const handleOutletChange = (newOutletId) => {
       if (!newOutletId) return;
@@ -178,7 +160,6 @@ export default function OutletDetails() {
       
       console.log(`OutletDetails: Outlet changed to ${newOutletId} via event`);
       setCurrentOutletId(newOutletId);
-      // TanStack Query will automatically refetch
     };
     
     const onCustomEvent = (e) => {
@@ -201,7 +182,6 @@ export default function OutletDetails() {
     };
   }, []);
 
-  // Food type indicator component - simplified
   const FoodTypeIndicator = ({ type }) => {
     if (!type) return null;
     
@@ -218,7 +198,6 @@ export default function OutletDetails() {
     return null;
   };
 
-  // Stats block component
   const StatItem = ({ label, value }) => {
     if (isEmpty(value)) return null;
     
@@ -229,28 +208,31 @@ export default function OutletDetails() {
       </div>
     );
   };
-  
-  // Stats section for counts
+
   const CountsSection = ({ title, data, isLoading = false }) => {
-    // Don't render sections with no meaningful data
+    // Log inventory counts for debugging
+    if (title === "Inventory Information") {
+      console.log("Inventory Counts Data:", {
+        Inventory_Category: data.Inventory_Category,
+        Inventory_Sub_Category: data.Inventory_Sub_Category,
+        supplier: data.supplier
+      });
+    }
+
     if (!isLoading) {
       const hasAnyData = Object.values(data).some(countData => 
-        (countData?.total && countData.total > 0) || 
-        (countData?.active && countData.active > 0) || 
-        (countData?.inactive && countData.inactive > 0)
+        countData?.total > 0 || countData?.active >= 0 || countData?.inactive >= 0
       );
       
       if (!hasAnyData) return null;
     }
-    
-    // Filter out empty sections
-    const sections = Object.entries(data).filter(([_, countData]) => 
-      isLoading || (countData?.total > 0 || countData?.active > 0 || countData?.inactive > 0)
+
+    const sections = Object.entries(data).filter(([key, countData]) => 
+      isLoading || countData?.total > 0 || countData?.active >= 0 || countData?.inactive >= 0
     );
-    
+
     if (sections.length === 0) return null;
-    
-    // Map section keys to icons
+
     const sectionIcons = {
       menu: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -313,8 +295,7 @@ export default function OutletDetails() {
         </svg>
       ),
     };
-    
-    // Get section icon or default
+
     const getSectionIcon = (key) => {
       return sectionIcons[key] || (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,8 +303,7 @@ export default function OutletDetails() {
         </svg>
       );
     };
-    
-    // Get icon for the section title
+
     const getTitleIcon = () => {
       if (title.includes('Menu')) {
         return (
@@ -346,7 +326,7 @@ export default function OutletDetails() {
       }
       return null;
     };
-    
+
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
@@ -358,18 +338,32 @@ export default function OutletDetails() {
             {sections.length} {sections.length === 1 ? "Item" : "Items"}
           </span>
         </div>
-        
+
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {sections.map(([key, countData]) => {
             const displayKey = key
-              .replace(/([A-Z])/g, ' $1')  // Insert a space before all uppercase letters
-              .replace(/_counts$/, '')     // Remove _counts suffix
-              .replace(/_/g, ' ')          // Replace underscores with spaces
-              .trim();                     // Trim any leading/trailing whitespace
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/_counts$/, '')
+              .replace(/_/g, ' ')
+              .trim();
 
-            if (!isLoading && !countData.total && !countData.active && !countData.inactive) return null;
+            // Ensure counts are numbers, default to 0 only if explicitly null/undefined
+            let totalCount = Number(countData?.total ?? 0);
+            let activeCount = Number(countData?.active ?? 0);
+            let inactiveCount = Number(countData?.inactive ?? 0);
 
-  return (
+            // Adjust supplier counts to ensure all are active
+            if (key === 'supplier') {
+              inactiveCount = 0;
+              activeCount = totalCount;
+            }
+
+            // Warn if active + inactive doesn't match total for non-Inventory_Items sections
+            if (!isLoading && key !== 'Inventory_Items' && totalCount > 0 && (activeCount + inactiveCount) !== totalCount) {
+              console.warn(`Data inconsistency in ${displayKey}: total=${totalCount}, active=${activeCount}, inactive=${inactiveCount}`);
+            }
+
+            return (
               <div key={key} className="bg-white p-4 rounded-lg border border-gray-200 transition-all hover:shadow-md flex flex-col">
                 <div className="flex justify-between items-center mb-3">
                   <div className="flex items-center">
@@ -377,36 +371,30 @@ export default function OutletDetails() {
                     <p className="text-sm font-medium text-gray-700 capitalize ml-2">{displayKey}</p>
                   </div>
                   <div className="bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center">
-                    <span className="text-sm font-semibold text-gray-800">{isLoading ? "0" : (countData.total || 0)}</span>
+                    <span className="text-sm font-semibold text-gray-800">{isLoading ? "0" : totalCount}</span>
                   </div>
-        </div>
-                
-                <div className="mt-auto pt-3 border-t border-gray-100">
-                  {(!isLoading && !countData.active && !countData.inactive) ? (
-                    <div className="text-center text-xs text-gray-500">No details available</div>
-      ) : (
-                    <div className="space-y-1.5">
-                      {(isLoading || countData.active > 0) && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></div>
-                          <span className="text-xs text-gray-500">Active</span>
-                          </div>
-                          <span className="text-sm font-medium text-green-600">{isLoading ? "0" : countData.active}</span>
-                    </div>
-                      )}
-                      {(isLoading || countData.inactive > 0) && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5"></div>
-                          <span className="text-xs text-gray-500">Inactive</span>
-                          </div>
-                          <span className="text-sm font-medium text-red-500">{isLoading ? "0" : countData.inactive}</span>
-                  </div>
-                      )}
-                    </div>
-                  )}
                 </div>
+
+                {key !== 'Inventory_Items' && (
+                  <div className="mt-auto pt-3 border-t border-gray-100">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></div>
+                          <span className="text-xs text-gray-500">Active</span>
+                        </div>
+                        <span className="text-sm font-medium text-green-600">{isLoading ? "0" : activeCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5"></div>
+                          <span className="text-xs text-gray-500">Inactive</span>
+                        </div>
+                        <span className="text-sm font-medium text-red-500">{isLoading ? "0" : inactiveCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -415,9 +403,7 @@ export default function OutletDetails() {
     );
   };
 
-  // Usage stats section
   const UsageStatsSection = ({ data, isLoading = false }) => {
-    // Don't render if no meaningful data is available
     if (!isLoading) {
       const hasData = data && (
         data.total_days_since_menumitra_was_installed > 0 ||
@@ -428,7 +414,7 @@ export default function OutletDetails() {
       
       if (!hasData) return null;
     }
-    
+
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
@@ -442,9 +428,8 @@ export default function OutletDetails() {
             Statistics
           </span>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Days Since Installation - only show if value > 0 */}
           {(isLoading || (data?.total_days_since_menumitra_was_installed > 0)) && (
             <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200 overflow-hidden">
               <div className="absolute top-0 right-0 p-2 opacity-20">
@@ -460,8 +445,7 @@ export default function OutletDetails() {
               </div>
             </div>
           )}
-          
-          {/* Total Orders - only show if value > 0 */}
+
           {(isLoading || (data?.total_orders_since_menumitra_was_installed > 0)) && (
             <div className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200 overflow-hidden">
               <div className="absolute top-0 right-0 p-2 opacity-20">
@@ -473,12 +457,11 @@ export default function OutletDetails() {
                 <span className="text-sm text-green-700 mb-1 font-medium">Total Orders</span>
                 <span className="text-2xl font-semibold text-green-900">
                   {isLoading ? "0" : parseInt(data?.total_orders_since_menumitra_was_installed || 0).toLocaleString()}
-                      </span>
+                </span>
               </div>
             </div>
           )}
-          
-          {/* Total Revenue - only show if value > 0 */}
+
           {(isLoading || (data?.total_revenue > 0)) && (
             <div className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200 overflow-hidden">
               <div className="absolute top-0 right-0 p-2 opacity-20">
@@ -494,8 +477,7 @@ export default function OutletDetails() {
               </div>
             </div>
           )}
-          
-          {/* First Order Date - only show if exists and not N/A */}
+
           {(isLoading || (data?.first_order_date && data?.first_order_date !== 'N/A')) && (
             <div className="relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200 overflow-hidden">
               <div className="absolute top-0 right-0 p-2 opacity-20">
@@ -511,16 +493,14 @@ export default function OutletDetails() {
               </div>
             </div>
           )}
-            </div>
-          </div>
+        </div>
+      </div>
     );
   };
 
-  // Owners section - displayed like other fields
   const OwnersSection = ({ owners = [], isLoading = false }) => {
-    // Don't render if no owners and not loading
     if (!isLoading && (!owners || owners.length === 0)) return null;
-    
+
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
@@ -534,8 +514,8 @@ export default function OutletDetails() {
             {isLoading ? "0" : owners.length} {owners.length === 1 ? "Owner" : "Owners"}
           </span>
         </div>
-        
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
             <div className="bg-gray-50 p-4 rounded-md border border-gray-100 flex items-center">
               <div className="animate-pulse flex space-x-4 w-full">
@@ -549,11 +529,10 @@ export default function OutletDetails() {
           ) : owners.map((owner) => (
             <div key={owner.owner_id} className="bg-white border border-gray-200 p-4 rounded-lg hover:shadow-md transition-all">
               <div className="flex items-center space-x-3">
-                {/* Owner avatar/icon */}
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-semibold">
                   {owner.owner_name.charAt(0).toUpperCase()}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">
                     {owner.owner_name}
@@ -565,25 +544,23 @@ export default function OutletDetails() {
                       </span>
                     )}
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${owner.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {owner.is_active ? 'Active' : 'Inactive'}
-                </span>
+                      {owner.is_active ? 'Active' : 'Inactive'}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           ))}
-            </div>
-          </div>
+        </div>
+      </div>
     );
   };
-  
-  // Breadcrumb items
+
   const breadcrumbItems = [
     { text: 'Home', url: '/' },
     { text: 'Outlet Details' }
   ];
 
-  // If no outlet is selected, show warning
   if (!hasOutlet) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -597,19 +574,15 @@ export default function OutletDetails() {
   return (
     <div className="bg-gray-50 min-h-screen pb-8">
       <div className="space-y-4 p-2 sm:p-3">
-        {/* Breadcrumb */}
         <Breadcrumb items={breadcrumbItems} />
-        
-        {/* Error state */}
+
         {(error || outletDetailsError) && (
           <div className="mb-6 p-4 bg-white border border-red-200 rounded-lg bg-red-50">
             <p className="text-red-700">{error || outletDetailsError?.message}</p>
           </div>
         )}
-        
-        {/* Main Content */}
+
         <div className="space-y-6">
-          {/* Outlet Basic Info */}
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
               <h1 className="text-2xl font-bold text-gray-800 flex items-center">
@@ -625,10 +598,8 @@ export default function OutletDetails() {
                 Outlet Details
               </h1>
             </div>
-            
-            {/* Outlet Cards: Name, Type, Food Type and Code */}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {/* Outlet Name and Status */}
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium">
@@ -643,7 +614,6 @@ export default function OutletDetails() {
                 <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Name</div>
               </div>
 
-              {/* Outlet Type */}
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium capitalize">
@@ -654,9 +624,8 @@ export default function OutletDetails() {
                   </svg>
                 </div>
                 <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Type</div>
-                    </div>
-              
-              {/* Food Type */}
+              </div>
+
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium capitalize flex items-center">
@@ -670,28 +639,25 @@ export default function OutletDetails() {
                 <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Food Type</div>
               </div>
 
-              {/* Outlet Code */}
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-base font-medium">
                     {isPageLoading ? "N/A" : (outletData.outlet_code || "N/A")}
                   </div>
-                  <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 14" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                 </div>
                 <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Outlet Code</div>
               </div>
-                  </div>
+            </div>
 
-            {/* Contact and Timing Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              {/* Contact Detail */}
               {(isPageLoading || !isEmpty(outletData.mobile)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                  <div className="text-base font-medium">
-                    {isPageLoading ? "N/A" : outletData.mobile}
+                    <div className="text-base font-medium">
+                      {isPageLoading ? "N/A" : outletData.mobile}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -700,13 +666,12 @@ export default function OutletDetails() {
                   <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Contact</div>
                 </div>
               )}
-              
-              {/* Created On */}
+
               {(isPageLoading || !isEmpty(outletData.created_on)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                  <div className="text-base font-medium">
-                    {isPageLoading ? "N/A" : outletData.created_on}
+                    <div className="text-base font-medium">
+                      {isPageLoading ? "N/A" : outletData.created_on}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -715,13 +680,12 @@ export default function OutletDetails() {
                   <div className="text-xs uppercase text-gray-500 tracking-wider font-medium">Created On</div>
                 </div>
               )}
-              
-              {/* Operating Hours */}
+
               {(isPageLoading || !isEmpty(outletData.opening_time) || !isEmpty(outletData.closing_time)) && (
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-base font-medium flex-1">
-                    {isPageLoading ? "N/A - N/A" : (
+                      {isPageLoading ? "N/A - N/A" : (
                         <>
                           <div className="flex items-center justify-between text-sm">
                             <span>Opening:</span>
@@ -743,12 +707,11 @@ export default function OutletDetails() {
               )}
             </div>
 
-            {/* Address */}
             {(isPageLoading || !isEmpty(outletData.address)) && (
               <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                 <div className="flex items-start justify-between mb-1">
                   <div className="text-base font-medium pr-2">
-                  {isPageLoading ? "N/A" : toTitleCase(outletData.address)}
+                    {isPageLoading ? "N/A" : toTitleCase(outletData.address)}
                   </div>
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -760,13 +723,10 @@ export default function OutletDetails() {
             )}
           </div>
 
-          {/* Owners Section - always show */}
           <OwnersSection owners={outletData.owners} isLoading={isPageLoading} />
-          
-          {/* Usage Stats - show only if has data */}
+
           <UsageStatsSection data={outletData.order_statistics} isLoading={isPageLoading} />
-          
-          {/* Menu Information - show only if has data */}
+
           <CountsSection 
             title="Menu Information" 
             data={{
@@ -777,8 +737,7 @@ export default function OutletDetails() {
             }}
             isLoading={isPageLoading}
           />
-          
-          {/* Staff Information - show only if has data */}
+
           <CountsSection 
             title="Staff Information" 
             data={{
@@ -789,8 +748,7 @@ export default function OutletDetails() {
             }}
             isLoading={isPageLoading}
           />
-          
-          {/* Inventory Information - show only if has data */}
+
           <CountsSection 
             title="Inventory Information" 
             data={{
@@ -805,4 +763,4 @@ export default function OutletDetails() {
       </div>
     </div>
   );
-} 
+}

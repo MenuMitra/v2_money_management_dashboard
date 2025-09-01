@@ -96,15 +96,16 @@ export default function PaymentReports() {
       exportFormat: (row) => formatPaymentStatus(row.order_status)
     },
     {
-      Header: 'Amount',
-      accessor: 'final_grand_total',
-      Cell: (row) => (
-        <div className="text-sm text-gray-500">
-          ₹{Number(row.final_grand_total || 0).toFixed(2)}
-        </div>
-      ),
-      exportFormat: (row) => `₹${Number(row.final_grand_total || 0).toFixed(2)}`
-    }
+  Header: 'Amount',
+  accessor: 'final_grand_total',
+  Cell: (row) => (
+    <div className="text-sm font-bold text-gray-900">
+      ₹{Number(row.final_grand_total || 0).toFixed(2)}
+    </div>
+  ),
+  exportFormat: (row) => `₹${Number(row.final_grand_total || 0).toFixed(2)}`
+}
+
   ];
 
   // Handle date filter changes
