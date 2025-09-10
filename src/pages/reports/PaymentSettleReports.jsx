@@ -11,7 +11,8 @@ export default function PaymentSettleReports() {
   });
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  
+  const [resetKey, setResetKey] = useState(0); // Add resetKey state
+
   // Handle date input changes
   const handleDateChange = (e) => {
     const { name, value } = e.target;
@@ -45,13 +46,14 @@ export default function PaymentSettleReports() {
     setFilterParams(newParams);
   };
   
-  // Clear date filters
+  // Clear date filters and reset report data
   const handleClearDates = () => {
     setStartDate('');
     setEndDate('');
     setFilterParams({
       filter_type: 'all'
     });
+    setResetKey(prev => prev + 1); // Increment resetKey to force ReportTable reset
   };
 
   // Define columns for the payment settle report
@@ -162,6 +164,7 @@ export default function PaymentSettleReports() {
       </div>
       
       <ReportTable
+        key={resetKey} // Add key prop to force re-render on reset
         title="Payment Settlement Reports"
         columns={columns}
         apiCallback={getPaymentSettleReport}
@@ -171,4 +174,4 @@ export default function PaymentSettleReports() {
       />
     </div>
   );
-} 
+}

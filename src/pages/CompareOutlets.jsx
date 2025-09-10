@@ -107,6 +107,11 @@ export default function CompareOutlets() {
       type: "number",
     },
     {
+      id: "order_type_statistics.delivery", // New metric for Delivery Orders
+      name: "Delivery Orders",
+      type: "number",
+    },
+    {
       id: "udhari_statistics.udhari_pending",
       name: "Udhari Pending",
       type: "currency",
@@ -283,6 +288,8 @@ export default function CompareOutlets() {
   // Update the handleOutletSelect function to check for inactive outlet
   const handleOutletSelect = async (outlet) => {
     try {
+      const outlet = outlets.find((o) => o.outlet_id === outletId);
+       console.log("Selected outlet data:", outlet);
       // Check if the outlet is inactive first
       if (outlet.is_active === false) {
         setError("Cannot select an inactive outlet for comparison");
@@ -682,12 +689,12 @@ export default function CompareOutlets() {
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                               />
                             </svg>
-                          </button>
+                          </button> 
                           <button
                             onClick={() => handleRemoveOutlet(idx)}
                             className="text-red-600 hover:text-red-800 p-1 rounded border border-gray-300 mx-2"
                             title="Remove outlet"
-                          >
+                          > 
                             <svg
                               className="w-5 h-5"
                               fill="none"

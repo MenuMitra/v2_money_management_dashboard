@@ -6,6 +6,8 @@ import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
 import { Breadcrumb } from '../components';
 import { useNavigate } from 'react-router-dom';
 import { getDateRangeFromType, formatDateForAPI } from '../utils/dateUtils';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
@@ -112,7 +114,7 @@ const FoodTypeChart = ({ foodTypeData }) => {
         }
       }
     },
-    colors: ['#10B981', '#EF4444', '#8B5CF6', '#F59E0B'],
+    colors: ['#10B981', '#EF4444', '#F59E0B', '#F59E0B'],
     legend: {
       show: false
     },
@@ -234,12 +236,14 @@ const CollectionSourcesCard = ({ collectionData }) => {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-          {hasTotal && (
-            <p className="text-sm text-gray-500">
-              <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
-            </p>
-          )}
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
+            {hasTotal && (
+              <p className="text-sm text-gray-500">
+                <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
+              </p>
+            )}
+          </div>
         </div>  
       </div>
       <div className="p-5 space-y-4">
@@ -1887,7 +1891,7 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </button>
                   <button
@@ -2444,7 +2448,6 @@ export default function Statistics() {
   } = useStatistics(
     { 
       outlet_id: outletId,
-      // Add date range params for all filter types
       ...(currentDateRange.type !== 'all' && (() => {
         // For custom date range, use the provided dates
         if (currentDateRange.type === 'custom' && currentDateRange.startDate && currentDateRange.endDate) {
@@ -2471,16 +2474,29 @@ export default function Statistics() {
 
   // Notify about loading state changes only during manual refresh
   useEffect(() => {
+    let hasNotified = false; // Track if notification has been shown for this refresh
+
     if (isManualRefresh) {
-      if (isLoading) {
+      if (isLoading && !hasNotified) {
         console.log('Statistics data loading started (manual refresh)');
         window.dispatchEvent(new CustomEvent('statistics:loading:start'));
-      } else {
+        hasNotified = true; // Mark as notified
+      } else if (!isLoading && hasNotified) {
         console.log('Statistics data loading ended (manual refresh)');
         window.dispatchEvent(new CustomEvent('statistics:loading:end'));
-        setIsManualRefresh(false);
+        setIsManualRefresh(false); // Reset manual refresh
+        hasNotified = false; // Reset notification flag
+        // Optionally dispatch an event to explicitly clear the notification
+        window.dispatchEvent(new CustomEvent('statistics:notification:clear'));
       }
     }
+
+    // Cleanup on unmount or dependency change
+    return () => {
+      if (hasNotified) {
+        window.dispatchEvent(new CustomEvent('statistics:notification:clear'));
+      }
+    };
   }, [isLoading, isManualRefresh]);
 
   // Apply persisted date range on component mount
@@ -2575,7 +2591,7 @@ export default function Statistics() {
     if (error) {
       // Check if the error is related to offline mode
       const errorMessage = typeof error === 'string' ? error : 
-                          error?.response?.data?.detail || 
+                          error?.response?.data?.data?.detail || 
                           error?.message || '';
       
       if (errorMessage.includes('offline mode') || 
@@ -2589,7 +2605,9 @@ export default function Statistics() {
   }, [error]);
 
   // Breadcrumb items
+  
   const breadcrumbItems = [
+    
     { text: 'Home', url: '/' },
     { text: 'Statistics' }
   ];
@@ -2905,7 +2923,7 @@ export default function Statistics() {
             <div className="ml-3">
               <p className="text-sm text-red-700">
                 {typeof error === 'string' ? error : 
-                 error?.response?.data?.detail || 
+                 error?.response?.data?.data?.detail || 
                  error?.message || 
                  'An error occurred while fetching statistics'}. 
                 <button 

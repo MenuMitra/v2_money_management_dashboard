@@ -9,6 +9,8 @@ import { NotificationProvider } from './context/NotificationContext';
 import { QueryProvider } from './lib/react-query/provider';
 import './index.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
