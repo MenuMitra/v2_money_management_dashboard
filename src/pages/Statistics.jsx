@@ -615,174 +615,39 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
 
 // Products Analysis Card Component
 const ProductsAnalysisCard = ({ categoryData }) => {
-  const outletId = useOutletId();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [salesData, setSalesData] = useState({
-    topSelling: { items: [], pagination: {} },
-    lowSelling: { items: [], pagination: {} },
-    noSelling: { items: [], pagination: {} }
-  });
-  
   const [activeTab, setActiveTab] = useState('top');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
+  // Use the sales_performance data from the main statistics response
+  const salesData = categoryData || {
+    top_selling: { items: [], pagination: {} },
+    low_selling: { items: [], pagination: {} },
+    no_selling: { items: [], pagination: {} }
+  };
+  
+  // Set initial active tab based on available data
   useEffect(() => {
-    const fetchSalesPerformanceData = async () => {
-      if (!outletId) return;
-      
-      try {
-        setLoading(true);
-        console.log("Fetching sales performance data for outlet:", outletId);
-        
-        const params = {
-          outlet_id: outletId,
-          user_id: localStorage.getItem('user_id')
-        };
-        
-        const { api } = await import('../lib/react-query/queryClient');
-        const { API_PATHS } = await import('../api');
-        
-        const response = await api.post(API_PATHS.getAllStatsWithoutFilter, params);
-        
-        if (response.data?.detail?.sales_performance) {
-          const salesPerformance = response.data.detail.sales_performance;
-          console.log("Direct API call success, sales performance data:", salesPerformance);
-          
-          setSalesData({
-            topSelling: salesPerformance.top_selling || { items: [], pagination: {} },
-            lowSelling: salesPerformance.low_selling || { items: [], pagination: {} },
-            noSelling: salesPerformance.no_selling || { items: [], pagination: {} }
-          });
-          
-          if (salesPerformance.top_selling?.items?.length > 0) {
-            setActiveTab('top');
-          } else if (salesPerformance.low_selling?.items?.length > 0) {
-            setActiveTab('low');
-          } else if (salesPerformance.no_selling?.items?.length > 0) {
-            setActiveTab('no');
-          }
-        } else {
-          console.log("API response doesn't contain sales_performance data, falling back to legacy component");
-          throw new Error("No sales performance data in API response");
-        }
-      } catch (err) {
-        console.error("Error fetching sales performance data:", err);
-        setError(err.message || "Failed to fetch sales performance data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchSalesPerformanceData();
-  }, [outletId]);
+    if (salesData.top_selling?.items?.length > 0) {
+      setActiveTab('top');
+    } else if (salesData.low_selling?.items?.length > 0) {
+      setActiveTab('low');
+    } else if (salesData.no_selling?.items?.length > 0) {
+      setActiveTab('no');
+    }
+  }, [salesData]);
   
   useEffect(() => {
     setCurrentPage(1);
     setSearchQuery('');
   }, [activeTab]);
   
-  if (loading) {
-    const sampleMenuItems = [
-      { name: "Sample Item 1", sales_count: "--" },
-      { name: "Sample Item 2", sales_count: "--" },
-      { name: "Sample Item 3", sales_count: "--" },
-    ];
-    
-    return (
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
-          <div className="mt-4 flex justify-center">
-            <div className="grid grid-cols-3 gap-4 w-full">
-              <button className="px-10 py-3 text-sm font-medium rounded-md bg-purple-600 text-white w-full">
-                Top Selling
-              </button>
-              <button className="px-10 py-3 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 w-full">
-                Low Selling
-              </button>
-              <button className="px-10 py-3 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 w-full">
-                No Selling
-              </button>
-            </div>
-          </div>
-          
-          <div className="mt-4">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Search menu items..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 pl-10"
-                disabled
-              />
-            </div>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  #
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Menu Name
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sales Count
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sampleMenuItems.map((item, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {index + 1}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                    {item.sales_count}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing sample data while loading...
-          </div>
-          <div className="text-sm text-gray-500">
-            5 entries
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const topSellingItems = salesData.top_selling?.items || [];
+  const lowSellingItems = salesData.low_selling?.items || [];
+  const noSellingItems = salesData.no_selling?.items || [];
   
-  if (error || 
-      !salesData.topSelling || 
-      !salesData.lowSelling || 
-      !salesData.noSelling) {
-    console.log("Error or missing data, falling back to legacy component");
-    return <ProductsAnalysisCardLegacy categoryData={categoryData} />;
-  }
-  
-  const topSellingItems = salesData.topSelling.items || [];
-  const lowSellingItems = salesData.lowSelling.items || [];
-  const noSellingItems = salesData.noSelling.items || [];
-  
-  console.log("Extracted data from direct API call:", {
+  console.log("Extracted data from statistics response:", {
     topSellingItems,
     lowSellingItems,
     noSellingItems,
@@ -791,9 +656,9 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     noSellingLength: noSellingItems.length
   });
   
-  const topSellingPagination = salesData.topSelling.pagination;
-  const lowSellingPagination = salesData.lowSelling.pagination;
-  const noSellingPagination = salesData.noSelling.pagination;
+  const topSellingPagination = salesData.top_selling?.pagination;
+  const lowSellingPagination = salesData.low_selling?.pagination;
+  const noSellingPagination = salesData.no_selling?.pagination;
   
   const hasTopSellingData = topSellingItems && topSellingItems.length > 0;
   const hasLowSellingData = lowSellingItems && lowSellingItems.length > 0;
