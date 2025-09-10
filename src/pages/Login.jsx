@@ -16,16 +16,16 @@ const menuMitraAppInfo = {
 
 const menuMitraSocialLinks = [
   {
-    name: "Facebook",
-    url: "https://www.facebook.com/share/x5wymXr6w7W49vaQ/?mibextid=qi2Omg",
-    icon: "ri-facebook-fill",
-    color: "text-blue-600 hover:bg-blue-50 hover:border-blue-500"
+    name: "Google",
+    url: "https://www.google.com/company/102429337/admin/dashboard/",
+    icon: "ri-google-fill",
+    color: "text-green-700 hover:bg-blue-50 hover:border-blue-600"
   },
   {
-    name: "Instagram",
-    url: "https://www.instagram.com/menumitra/",
-    icon: "ri-instagram-fill",
-    color: "text-pink-600 hover:bg-pink-50 hover:border-pink-500"
+    name: "Facebook",
+    url: " https://www.facebook.com/share/x5wymXr6w7W49vaQ/?mibextid=qi2Omg",
+    icon: "ri-facebook-fill",
+    color: "text-blue-600 hover:bg-blue-50 hover:border-blue-500"
   },
   {
     name: "YouTube",
@@ -34,10 +34,10 @@ const menuMitraSocialLinks = [
     color: "text-red-600 hover:bg-red-50 hover:border-red-500"
   },
   {
-    name: "Google",
-    url: "https://www.google.com/company/102429337/admin/dashboard/",
-    icon: "ri-google-fill",
-    color: "text-blue-700 hover:bg-blue-50 hover:border-blue-600"
+    name: "Instagram",
+    url: "https://www.instagram.com/menumitra/",
+    icon: "ri-instagram-fill",
+    color: "text-pink-600 hover:bg-pink-50 hover:border-pink-500"
   }
 ];
 
@@ -244,7 +244,7 @@ export default function Login() {
       </div>
       
       <div className="min-h-screen flex items-center justify-center bg-white py-16 px-6 lg:px-12" style={{ paddingTop: 'calc(28px + 4rem)' }}>
-        <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
+        <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
           {/* Login Testing Badge */}
           
           {/* Logo and Header */}
@@ -412,7 +412,7 @@ export default function Login() {
                   href={social.url}
                   target="_blank"
                   rel="noreferrer"
-                  className={`w-12 h-12 flex items-center justify-center rounded-full border border-gray-300 ${social.color} transition-colors text-xl`}
+                  className={`w-12 h-12 flex items-center justify-center rounded-full border border-white-300 ${social.color} transition-colors text-xl shadow-lg hover:shadow-2xl`}
                 >
                   <span className="sr-only">{social.name}</span>
                   <i className={`${social.icon}`}></i>
@@ -426,6 +426,36 @@ export default function Login() {
               <span>13 Aug 2025</span>
             </div>
             
+{/* Footer Links (Home, Book a Demo, Contact, Support) */}
+<div className="mt-8 flex justify-center space-x-6">
+  <a
+    href="https://menumitra.com/"
+    className="text-gray-300 hover:text-primary-600 font-medium text-base"
+  >
+    Home
+  </a>
+  <a
+    href="https://menumitra.com/book_demo"
+    className="text-gray-300 hover:text-primary-600 font-medium text-base"
+  >
+    Book a Demo
+  </a>
+  <a
+    href="https://menumitra.com/about_us"
+    className="text-gray-300 hover:text-primary-600 font-medium text-base"
+  >
+    Contact
+  </a>
+  <a
+    href="https://menumitra.com/support"
+    className="text-gray-300 hover:text-primary-600 font-medium text-base"
+  >
+    Support
+  </a>
+</div>
+
+
+
             {/* Contact info commented out as requested */}
             {/*
             <div className="mt-4 text-center text-xs text-gray-500">

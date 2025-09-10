@@ -218,20 +218,20 @@ export default function MenuReports() {
     }
   };
 
-  // Handle category filter change
+  // Handle category filter change - FIXED THIS FUNCTION
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     
     if (name === 'category_id') {
-      const newParams = { ...filterParams };
+      // Create a new filterParams object with the updated category
+      const newParams = {
+        ...filterParams,
+        category_id: value === 'all' ? undefined : parseInt(value, 10)
+      };
       
-      if (value === 'all') {
-        // Remove category_id if "all" is selected
+      // Remove the category_id property if it's undefined
+      if (newParams.category_id === undefined) {
         delete newParams.category_id;
-      } else {
-        // Add the category_id if a specific category is selected
-        // Convert to integer as the API expects numeric values
-        newParams.category_id = parseInt(value, 10);
       }
       
       setFilterParams(newParams);
@@ -333,4 +333,4 @@ export default function MenuReports() {
       </div>
     </div>
   );
-} 
+}

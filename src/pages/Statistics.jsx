@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { FaDownload } from 'react-icons/fa';
+import { FaDownload, FaTimes } from 'react-icons/fa';
 import { useStatistics } from '../api/statistics';
 import ReactApexChart from 'react-apexcharts';
 import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
@@ -624,13 +624,11 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     noSelling: { items: [], pagination: {} }
   });
   
-  // Set up state for active tab, search, and pagination
   const [activeTab, setActiveTab] = useState('top');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Directly fetch sales performance data from the API
   useEffect(() => {
     const fetchSalesPerformanceData = async () => {
       if (!outletId) return;
@@ -639,31 +637,26 @@ const ProductsAnalysisCard = ({ categoryData }) => {
         setLoading(true);
         console.log("Fetching sales performance data for outlet:", outletId);
         
-        // Create API params
         const params = {
           outlet_id: outletId,
           user_id: localStorage.getItem('user_id')
         };
         
-        // Import API directly to avoid context issues
         const { api } = await import('../lib/react-query/queryClient');
         const { API_PATHS } = await import('../api');
         
-        // Make the API call
         const response = await api.post(API_PATHS.getAllStatsWithoutFilter, params);
         
         if (response.data?.detail?.sales_performance) {
           const salesPerformance = response.data.detail.sales_performance;
           console.log("Direct API call success, sales performance data:", salesPerformance);
           
-          // Extract the data we need
           setSalesData({
             topSelling: salesPerformance.top_selling || { items: [], pagination: {} },
             lowSelling: salesPerformance.low_selling || { items: [], pagination: {} },
             noSelling: salesPerformance.no_selling || { items: [], pagination: {} }
           });
           
-          // Set initial active tab based on available data
           if (salesPerformance.top_selling?.items?.length > 0) {
             setActiveTab('top');
           } else if (salesPerformance.low_selling?.items?.length > 0) {
@@ -673,7 +666,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
           }
         } else {
           console.log("API response doesn't contain sales_performance data, falling back to legacy component");
-          // If we don't have the data in the expected format, we'll use the legacy component
           throw new Error("No sales performance data in API response");
         }
       } catch (err) {
@@ -687,13 +679,11 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     fetchSalesPerformanceData();
   }, [outletId]);
   
-  // Reset page and search when changing tabs
   useEffect(() => {
     setCurrentPage(1);
     setSearchQuery('');
   }, [activeTab]);
   
-  // If loading, show sample menu items instead of skeleton loading
   if (loading) {
     const sampleMenuItems = [
       { name: "Sample Item 1", sales_count: "--" },
@@ -719,20 +709,19 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             </div>
           </div>
           
-          {/* Search bar */}
           <div className="mt-4">
             <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search menu items..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                disabled
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
               </div>
+              <input
+                type="text"
+                placeholder="Search menu items..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 pl-10"
+                disabled
+              />
             </div>
           </div>
         </div>
@@ -769,7 +758,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
           </table>
         </div>
         
-        {/* Pagination info */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
           <div className="text-sm text-gray-500">
             Showing sample data while loading...
@@ -782,7 +770,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     );
   }
   
-  // If error or no data, fall back to legacy component
   if (error || 
       !salesData.topSelling || 
       !salesData.lowSelling || 
@@ -791,12 +778,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     return <ProductsAnalysisCardLegacy categoryData={categoryData} />;
   }
   
-  // Extract items from each category
   const topSellingItems = salesData.topSelling.items || [];
   const lowSellingItems = salesData.lowSelling.items || [];
   const noSellingItems = salesData.noSelling.items || [];
   
-  // Log the extracted data for debugging
   console.log("Extracted data from direct API call:", {
     topSellingItems,
     lowSellingItems,
@@ -806,12 +791,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     noSellingLength: noSellingItems.length
   });
   
-  // Extract pagination data
   const topSellingPagination = salesData.topSelling.pagination;
   const lowSellingPagination = salesData.lowSelling.pagination;
   const noSellingPagination = salesData.noSelling.pagination;
   
-  // Check which tabs have data
   const hasTopSellingData = topSellingItems && topSellingItems.length > 0;
   const hasLowSellingData = lowSellingItems && lowSellingItems.length > 0;
   const hasNoSellingData = noSellingItems && noSellingItems.length > 0;
@@ -825,7 +808,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     noCount: noSellingItems.length
   });
   
-  // Get current items based on active tab
   const getCurrentItems = () => {
     switch (activeTab) {
       case 'top':
@@ -839,7 +821,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     }
   };
   
-  // Get pagination data for the current tab
   const getCurrentPagination = () => {
     switch (activeTab) {
       case 'top':
@@ -873,7 +854,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     }
   };
   
-  // Filter items based on search query
   const getFilteredItems = () => {
     const items = getCurrentItems();
     
@@ -888,7 +868,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     });
   };
   
-  // Get items to display based on pagination
   const filteredItems = getFilteredItems();
   const paginationData = getCurrentPagination();
   const totalPages = Math.max(1, paginationData.total_pages);
@@ -896,13 +875,16 @@ const ProductsAnalysisCard = ({ categoryData }) => {
   const endIndex = startIndex + itemsPerPage;
   const displayedItems = filteredItems.slice(startIndex, endIndex);
   
-  // Debug logs
+  // Determine if pagination should be shown
+  const showPagination = filteredItems.length > itemsPerPage;
+  
   console.log("ProductsAnalysisCard data:", {
     activeTab,
     currentItems: getCurrentItems(),
     filteredItems,
     displayedItems,
-    paginationData
+    paginationData,
+    showPagination
   });
   
   return (
@@ -949,21 +931,30 @@ const ProductsAnalysisCard = ({ categoryData }) => {
           </div>
         </div>
         
-        {/* Search bar */}
         <div className="mt-4">
           <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search menu items..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+              className={`w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 pl-10 ${searchQuery ? 'pr-10' : 'pr-4'}`}
             />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1018,10 +1009,9 @@ const ProductsAnalysisCard = ({ categoryData }) => {
         </table>
       </div>
       
-      {/* Pagination Controls */}
-      {filteredItems.length > 0 && (
+      {/* Pagination Controls - Only show if there are more items than itemsPerPage */}
+      {showPagination && filteredItems.length > 0 && (
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          {/* Show entries selector on the left */}
           <div className="flex items-center">
             <span className="text-sm text-gray-700 mr-2">Show:</span>
             <select
@@ -1039,12 +1029,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             </select>
           </div>
           
-          {/* Showing records text in center */}
           <div className="text-center text-sm text-gray-700">
-            Showing {startIndex + 1} to {Math.min(startIndex + displayedItems.length, filteredItems.length)} of {filteredItems.length} records
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredItems.length)} of {filteredItems.length} records
           </div>
           
-          {/* Pagination buttons on the right */}
           <div className="flex items-center">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
@@ -1057,7 +1045,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             </button>
             
             {totalPages <= 5 ? (
-              // Show all page numbers if 5 or fewer
               [...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
@@ -1072,7 +1059,6 @@ const ProductsAnalysisCard = ({ categoryData }) => {
                 </button>
               ))
             ) : (
-              // Show limited page numbers with ellipsis for larger page counts
               <>
                 <button
                   onClick={() => setCurrentPage(1)}
@@ -3118,7 +3104,7 @@ const SummaryCard = ({ title, value, icon }) => {
           <div className="flex-shrink-0">
             {getIconComponent()}
           </div>
-          <div className="ml-5 w-0 flex-1">
+          <div className="ml-5 w-0 flex-1 flex-1">
             <dl>
               <dd>
                 <div className="text-lg font-medium text-gray-900">{value}</div>
