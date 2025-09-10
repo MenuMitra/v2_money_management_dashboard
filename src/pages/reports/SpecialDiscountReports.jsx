@@ -1,192 +1,177 @@
-import { useState } from 'react';
-import { ReportTable } from '../../components/common';
-import { Breadcrumb } from '../../components';
-import { getSpecialDiscountReport } from '../../api/reports';
-import { formatInputDateForAPI, getDateRangeFromType } from '../../utils/dateUtils';
+import { useState, useEffect } from "react";
+import { ReportTable } from "../../components/common";
+import { Breadcrumb } from "../../components";
+import { getSpecialDiscountReport } from "../../api/reports";
+import { formatInputDateForAPI, getDateRangeFromType } from "../../utils/dateUtils";
+import { useOutlet } from "../../context/OutletContext"; // Assuming this context exists
 
 export default function SpecialDiscountReports() {
-  // Initialize with minimal required parameters
+  const { currentOutlet } = useOutlet(); // Assuming this provides the current outlet
   const [filterParams, setFilterParams] = useState({
-    filter_type: 'all'
+    filter_type: "all",
+    outlet_id: currentOutlet?.outlet_id || null, // Add outlet_id if required by API
   });
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [dateFilterType, setDateFilterType] = useState('all');
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [dateFilterType, setDateFilterType] = useState("all");
 
   // Function to format snake_case to Title Case
   const formatOrderStatus = (status) => {
-    if (!status) return '-';
-    
+    if (!status) return "-";
     return status
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   // Define columns for the special discount report
   const columns = [
     {
-      header: 'Order Number',
-      accessor: 'order_number',
+      header: "Order Number",
+      accessor: "order_number",
       Cell: (row) => (
-        <div className="font-medium text-gray-900">#{row.order_number || 'N/A'}</div>
-      )
+        <div className="font-medium text-gray-900">#{row.order_number || "N/A"}</div>
+      ),
     },
     {
-      header: 'Customer',
-      accessor: 'customer_name',
+      header: "Customer",
+      accessor: "customer_name",
       Cell: (row) => (
         <div>
-          <div className="font-medium text-gray-900">{row.customer_name || 'N/A'}</div>
-          {row.customer_mobile && <div className="text-xs text-gray-500">{row.customer_mobile}</div>}
+          <div className="font-medium text-gray-900">{row.customer_name || "N/A"}</div>
+          {row.customer_mobile && (
+            <div className="text-xs text-gray-500">{row.customer_mobile}</div>
+          )}
         </div>
-      )
+      ),
     },
     {
-      header: 'Order Type',
-      accessor: 'order_type',
+      header: "Order Type",
+      accessor: "order_type",
       Cell: (row) => (
-        <div className="capitalize">{row.order_type || 'N/A'}</div>
-      )
+        <div className="capitalize">{row.order_type || "N/A"}</div>
+      ),
     },
     {
-      header: 'Status',
-      accessor: 'order_status',
+      header: "Status",
+      accessor: "order_status",
       Cell: (row) => (
         <div className="text-sm capitalize text-gray-700">
           {formatOrderStatus(row.order_status)}
         </div>
-      )
+      ),
     },
     {
-      header: 'Payment Method',
-      accessor: 'payment_method',
+      header: "Payment Method",
+      accessor: "payment_method",
       Cell: (row) => (
-        <div className="capitalize">{row.payment_method || 'N/A'}</div>
-      )
+        <div className="capitalize">{row.payment_method || "N/A"}</div>
+      ),
     },
     {
-      header: 'Created On',
-      accessor: 'created_on',
+      header: "Created On",
+      accessor: "created_on",
       Cell: (row) => (
-        <div className="text-sm text-gray-500">{row.created_on || 'N/A'}</div>
-      )
+        <div className="text-sm text-gray-500">{row.created_on || "N/A"}</div>
+      ),
     },
     {
-      header: 'Bill Amount',
-      accessor: 'total_bill_amount',
+      header: "Bill Amount",
+      accessor: "total_bill_amount",
       Cell: (row) => (
-        <div className="text-sm text-gray-500">₹{row.total_bill_amount?.toFixed(2) || '0.00'}</div>
-      )
+        <div className="text-sm text-gray-500">
+          ₹{row.total_bill_amount?.toFixed(2) || "0.00"}
+        </div>
+      ),
     },
     {
-      header: 'Special Discount',
-      accessor: 'special_discount_amount',
+      header: "Special Discount",
+      accessor: "special_discount_amount",
       Cell: (row) => (
-        <div className="font-medium text-red-600">₹{row.special_discount_amount?.toFixed(2) || '0.00'}</div>
-      )
+        <div className="font-medium text-red-600">
+          ₹{row.special_discount_amount?.toFixed(2) || "0.00"}
+        </div>
+      ),
     },
     {
-      header: 'Final Amount',
-      accessor: 'final_grand_total',
+      header: "Final Amount",
+      accessor: "final_grand_total",
       Cell: (row) => (
-        <div className="font-medium text-gray-900">₹{row.final_grand_total?.toFixed(2) || '0.00'}</div>
-      )
-    }
+        <div className="font-medium text-gray-900">
+          ₹{row.final_grand_total?.toFixed(2) || "0.00"}
+        </div>
+      ),
+    },
   ];
 
   // Handle date filter change
   const handleDateFilterChange = (e) => {
     const { value } = e.target;
     setDateFilterType(value);
-    
-    // Create a new params object
-    const newParams = { ...filterParams };
-    
-    if (value === 'all') {
-      newParams.filter_type = 'all';
+
+    const newParams = { ...filterParams, filter_type: value, outlet_id: currentOutlet?.outlet_id || filterParams.outlet_id };
+
+    if (value === "all") {
       delete newParams.start_date;
       delete newParams.end_date;
-    } else if (value === 'custom') {
+    } else if (value === "custom") {
       if (startDate && endDate) {
-        newParams.filter_type = 'date_range';
+        newParams.filter_type = "date_range";
         newParams.start_date = formatInputDateForAPI(startDate);
         newParams.end_date = formatInputDateForAPI(endDate);
+      } else {
+        // Do not update params if dates are incomplete
+        return;
       }
     } else {
-      // For predefined date ranges, use the utility function
       const { startDate: calculatedStart, endDate: calculatedEnd } = getDateRangeFromType(value);
-      
       if (calculatedStart && calculatedEnd) {
-        // Store the HTML input format dates (YYYY-MM-DD) in state
-        const formatDateForInput = (date) => {
-          if (typeof date === 'string' && date.includes(' ')) {
-            // Convert from DD MMM YYYY to input format
-            const [day, month, year] = date.split(' ');
-            const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month);
-            if (monthIndex !== -1) {
-              const dateObj = new Date(parseInt(year), monthIndex, parseInt(day));
-              return dateObj.toISOString().split('T')[0];
-            }
-          }
-          return '';
-        };
-        
-        setStartDate(formatDateForInput(calculatedStart));
-        setEndDate(formatDateForInput(calculatedEnd));
-        
-        // Use the API format dates (DD MMM YYYY) in the params
-        newParams.filter_type = 'date_range';
-        newParams.start_date = calculatedStart;
+        setStartDate(calculatedStart); // Store in input format (DD MMM YYYY)
+        setEndDate(calculatedEnd);
+        newParams.filter_type = "date_range";
+        newParams.start_date = calculatedStart; // API expects DD MMM YYYY
         newParams.end_date = calculatedEnd;
       }
     }
-    
+
     setFilterParams(newParams);
+    console.log("Filter Params sent to API:", newParams); // Debug log
   };
-  
+
   // Handle date input changes
   const handleDateChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'startDate') {
+
+    if (name === "startDate") {
       setStartDate(value);
-    } else if (name === 'endDate') {
+    } else if (name === "endDate") {
       setEndDate(value);
     }
-    
-    // If both dates are set and custom filter is selected, update params
-    if (dateFilterType === 'custom' && 
-        ((name === 'startDate' && value && endDate) || 
-         (name === 'endDate' && value && startDate))) {
-      
-      const newStartDate = name === 'startDate' ? value : startDate;
-      const newEndDate = name === 'endDate' ? value : endDate;
-      
-      const newParams = { ...filterParams };
-      newParams.filter_type = 'date_range';
-      newParams.start_date = formatInputDateForAPI(newStartDate);
-      newParams.end_date = formatInputDateForAPI(newEndDate);
+
+    if (dateFilterType === "custom" && startDate && endDate) {
+      const newParams = { ...filterParams, filter_type: "date_range" };
+      newParams.start_date = formatInputDateForAPI(startDate);
+      newParams.end_date = formatInputDateForAPI(endDate);
       setFilterParams(newParams);
+      console.log("Custom Date Params:", newParams); // Debug log
     }
   };
 
   // Handle order type filter change
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'order_type') {
+
+    if (name === "order_type") {
       const newParams = { ...filterParams };
-      
-      if (value === 'all') {
-        // Remove order_type if "all" is selected
+
+      if (value === "all") {
         delete newParams.order_type;
       } else {
-        // Add the order_type if a specific type is selected
         newParams.order_type = value;
       }
-      
+
       setFilterParams(newParams);
+      console.log("Order Type Params:", newParams); // Debug log
     }
   };
 
@@ -208,8 +193,8 @@ export default function SpecialDiscountReports() {
           <option value="lastMonth">Last Month</option>
           <option value="custom">Custom Range</option>
         </select>
-        
-        {dateFilterType === 'custom' && (
+
+        {dateFilterType === "custom" && (
           <div className="flex gap-2 items-center">
             <input
               type="date"
@@ -232,11 +217,11 @@ export default function SpecialDiscountReports() {
           </div>
         )}
       </div>
-      
+
       <div>
         <select
           name="order_type"
-          value={filterParams.order_type || 'all'}
+          value={filterParams.order_type || "all"}
           onChange={handleFilterChange}
           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
@@ -253,25 +238,40 @@ export default function SpecialDiscountReports() {
 
   // Breadcrumb items
   const breadcrumbItems = [
-    { text: 'Home', url: '/' },
-    { text: 'Reports', url: '/reports' },
-    { text: 'Special Discount Reports' }
+    { text: "Home", url: "/" },
+    { text: "Reports", url: "/reports" },
+    { text: "Special Discount Reports" },
   ];
+
+  // Test API call manually to debug
+  useEffect(() => {
+    const testParams = {
+      filter_type: "date_range",
+      outlet_id: currentOutlet?.outlet_id || "1", // Replace "1" with a valid outlet_id
+      start_date: "01 Sep 2025",
+      end_date: "01 Sep 2025", // Today's date as per system time
+    };
+    getSpecialDiscountReport(testParams).then((response) => {
+      console.log("Test API Response:", response); // Log the response
+    }).catch((error) => {
+      console.error("Test API Error:", error); // Log any errors
+    });
+  }, [currentOutlet]);
 
   return (
     <div className="py-6">
       <div className="mb-3">
         <Breadcrumb items={breadcrumbItems} />
       </div>
-      
+
       <ReportTable
         title="Special Discount Reports"
         columns={columns}
         apiCallback={getSpecialDiscountReport}
         filterParams={filterParams}
         filterComponent={renderFilters()}
-        initialSortConfig={{ key: 'created_on', direction: 'desc' }}
+        initialSortConfig={{ key: "created_on", direction: "desc" }}
       />
     </div>
   );
-} 
+}

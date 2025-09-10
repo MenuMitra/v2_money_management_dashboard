@@ -6,42 +6,76 @@ import { api, API_PATHS } from '../../api';
 import { formatInputDateForAPI, getDateRangeFromType } from '../../utils/dateUtils';
 
 export default function MenuReports() {
-  // Initialize with minimal required parameters
-  const [filterParams, setFilterParams] = useState({
-    filter_type: 'all'
-  });
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [filterParams, setFilterParams] = useState({ filter_type: 'all' });
+  const [startDate, setStartDate] = useState('');   // always keep as YYYY-MM-DD
+  const [endDate, setEndDate] = useState('');       // always keep as YYYY-MM-DD
   const [dateFilterType, setDateFilterType] = useState('all');
-  
-  // State for categories
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch categories on component mount
+  // ---------- Helpers: normalize date values ----------
+  const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const toYMD = (d) => {
+    if (!d) return '';
+
+    // If it's a Date object
+    if (d instanceof Date && !isNaN(d.getTime())) {
+      return d.toISOString().slice(0, 10);
+    }
+
+    if (typeof d === 'string') {
+      const s = d.trim();
+
+      // Already YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+      // ISO full string -> take date part
+      if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+
+      // "DD Mon YYYY"
+      const m1 = s.match(/^(\d{1,2})\s([A-Za-z]{3})\s(\d{4})$/);
+      if (m1) {
+        const day = parseInt(m1[1], 10);
+        const monIdx = MONTHS_SHORT.indexOf(m1[2]);
+        const year = parseInt(m1[3], 10);
+        if (monIdx >= 0) {
+          const dt = new Date(year, monIdx, day);
+          if (!isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+        }
+      }
+
+      // Let JS parse other formats like "Mon Sep 02 2025 ..."
+      const parsed = new Date(s);
+      if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+    }
+
+    return '';
+  };
+
+  const toAPI = (d) => {
+    const ymd = toYMD(d);
+    return ymd ? formatInputDateForAPI(ymd) : undefined;
+  };
+
+  // ---------- Fetch categories ----------
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Function to fetch categories from the API
   const fetchCategories = async () => {
     try {
       setLoadingCategories(true);
       setError(null);
-      
-      // Use POST method instead of GET
       const outletId = localStorage.getItem('outlet_id');
       const userId = localStorage.getItem('user_id');
-      
       const requestBody = {
         outlet_id: outletId ? parseInt(outletId, 10) : null,
         user_id: userId ? parseInt(userId, 10) : null,
         app_source: 'admin'
       };
-      
       const response = await api.post(API_PATHS.reportFilterCategory, requestBody);
-      
       if (response.data && response.data.detail && Array.isArray(response.data.detail)) {
         setCategories(response.data.detail);
       } else {
@@ -56,7 +90,7 @@ export default function MenuReports() {
     }
   };
 
-  // Define columns for the report table with proper widths
+  // ---------- Table columns ----------
   const columns = [
     {
       Header: 'Menu Name',
@@ -111,7 +145,6 @@ export default function MenuReports() {
         if (!row.portions || row.portions.length === 0) {
           return <div className="text-sm text-gray-500 whitespace-nowrap">No portions</div>;
         }
-        
         return (
           <div className="text-sm text-gray-500 whitespace-nowrap">
             {row.portions.map((portion, index) => (
@@ -131,114 +164,104 @@ export default function MenuReports() {
     }
   ];
 
-  // Handle date filter change
+  // ---------- Date filter handlers ----------
   const handleDateFilterChange = (e) => {
     const { value } = e.target;
     setDateFilterType(value);
-    
-    // Create a new params object
-    const newParams = { ...filterParams };
-    
+
+    let next = { filter_type: 'all' };
+
     if (value === 'all') {
-      newParams.filter_type = 'all';
-      delete newParams.start_date;
-      delete newParams.end_date;
+      setStartDate('');
+      setEndDate('');
+      // filter_type remains 'all', and we remove dates
     } else if (value === 'custom') {
+      // Keep whatever the user has entered so far; only send when both exist
+      next = { filter_type: 'date_range' };
       if (startDate && endDate) {
-        newParams.filter_type = 'date_range';
-        newParams.start_date = formatInputDateForAPI(startDate);
-        newParams.end_date = formatInputDateForAPI(endDate);
+        next.start_date = toAPI(startDate);
+        next.end_date = toAPI(endDate);
       }
     } else {
-      // For predefined date ranges, use the utility function
-      const { startDate: calculatedStart, endDate: calculatedEnd } = getDateRangeFromType(value);
-      
-      if (calculatedStart && calculatedEnd) {
-        // Store the HTML input format dates (YYYY-MM-DD) in state
-        const formatDateForInput = (date) => {
-          if (typeof date === 'string' && date.includes(' ')) {
-            // Convert from DD MMM YYYY to input format
-            const [day, month, year] = date.split(' ');
-            const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month);
-            if (monthIndex !== -1) {
-              const dateObj = new Date(parseInt(year), monthIndex, parseInt(day));
-              return dateObj.toISOString().split('T')[0];
-            }
-          }
-          return '';
-        };
-        
-        setStartDate(formatDateForInput(calculatedStart));
-        setEndDate(formatDateForInput(calculatedEnd));
-        
-        // Use the API format dates (DD MMM YYYY) in the params
-        newParams.filter_type = 'date_range';
-        newParams.start_date = calculatedStart;
-        newParams.end_date = calculatedEnd;
-      }
+      // Preset ranges
+      const range = getDateRangeFromType(value) || {};
+      const s = toYMD(range.startDate);
+      const e2 = toYMD(range.endDate);
+
+      setStartDate(s);
+      setEndDate(e2);
+
+      next = {
+        filter_type: 'date_range',
+        start_date: toAPI(s),
+        end_date: toAPI(e2)
+      };
     }
-    
-    // Preserve any category filter if it exists
-    if (filterParams.category_id && filterParams.category_id !== 'all') {
-      newParams.category_id = parseInt(filterParams.category_id, 10);
+
+    // Preserve selected category if any
+    if (filterParams.category_id) {
+      next.category_id = filterParams.category_id;
     }
-    
-    setFilterParams(newParams);
+
+    setFilterParams(next);
   };
-  
-  // Handle date input changes
+
   const handleDateChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'startDate') {
-      setStartDate(value);
-    } else if (name === 'endDate') {
-      setEndDate(value);
+
+    // Normalize input value to YYYY-MM-DD for the input fields state as well
+    const normalized = toYMD(value);
+
+    if (name === 'startDate') setStartDate(normalized);
+    if (name === 'endDate') setEndDate(normalized);
+
+    if (dateFilterType !== 'custom') return;
+
+    const newStart = name === 'startDate' ? normalized : startDate;
+    const newEnd   = name === 'endDate'   ? normalized : endDate;
+
+    // Prepare next params
+    const next = { filter_type: 'date_range' };
+
+    // Only set if present
+    if (newStart) next.start_date = toAPI(newStart);
+    if (newEnd)   next.end_date   = toAPI(newEnd);
+
+    // If both present, ensure start <= end
+    if (newStart && newEnd && newStart > newEnd) {
+      // Invalid range: don't update backend params, just keep state for UI min constraint
+      setFilterParams(prev => {
+        const keep = { ...prev };
+        delete keep.start_date;
+        delete keep.end_date;
+        keep.filter_type = 'date_range';
+        if (prev.category_id) keep.category_id = prev.category_id;
+        return keep;
+      });
+      return;
     }
-    
-    // If both dates are set and custom filter is selected, update params
-    if (dateFilterType === 'custom' && 
-        ((name === 'startDate' && value && endDate) || 
-         (name === 'endDate' && value && startDate))) {
-      
-      const newStartDate = name === 'startDate' ? value : startDate;
-      const newEndDate = name === 'endDate' ? value : endDate;
-      
-      const newParams = { ...filterParams };
-      newParams.filter_type = 'date_range';
-      newParams.start_date = formatInputDateForAPI(newStartDate);
-      newParams.end_date = formatInputDateForAPI(newEndDate);
-      
-      // Preserve any category filter if it exists
-      if (filterParams.category_id && filterParams.category_id !== 'all') {
-        newParams.category_id = parseInt(filterParams.category_id, 10);
-      }
-      
-      setFilterParams(newParams);
-    }
+
+    if (filterParams.category_id) next.category_id = filterParams.category_id;
+
+    setFilterParams(next);
   };
 
-  // Handle category filter change - FIXED THIS FUNCTION
+  // ---------- Category filter ----------
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'category_id') {
-      // Create a new filterParams object with the updated category
-      const newParams = {
-        ...filterParams,
-        category_id: value === 'all' ? undefined : parseInt(value, 10)
-      };
-      
-      // Remove the category_id property if it's undefined
-      if (newParams.category_id === undefined) {
-        delete newParams.category_id;
+      const next = { ...filterParams };
+      if (value === 'all') {
+        delete next.category_id;
+      } else {
+        next.category_id = parseInt(value, 10);
       }
-      
-      setFilterParams(newParams);
+      setFilterParams(next);
     }
   };
 
-  // Render filter components
+  // ---------- UI: Filters ----------
   const renderFilters = () => (
     <div className="flex flex-wrap gap-4 items-center">
       <div className="flex flex-wrap gap-2 items-center">
@@ -256,7 +279,7 @@ export default function MenuReports() {
           <option value="lastMonth">Last Month</option>
           <option value="custom">Custom Range</option>
         </select>
-        
+
         {dateFilterType === 'custom' && (
           <div className="flex gap-2 items-center">
             <input
@@ -272,7 +295,7 @@ export default function MenuReports() {
               type="date"
               name="endDate"
               value={endDate}
-              min={startDate}
+              min={startDate || undefined}
               onChange={handleDateChange}
               className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               placeholder="End Date"
@@ -280,7 +303,7 @@ export default function MenuReports() {
           </div>
         )}
       </div>
-      
+
       <div>
         <select
           name="category_id"
@@ -300,7 +323,7 @@ export default function MenuReports() {
     </div>
   );
 
-  // Breadcrumb items
+  // ---------- Breadcrumb ----------
   const breadcrumbItems = [
     { text: 'Home', url: '/' },
     { text: 'Reports', url: '/reports' },
@@ -312,13 +335,13 @@ export default function MenuReports() {
       <div className="mb-3">
         <Breadcrumb items={breadcrumbItems} />
       </div>
-      
+
       {error && (
         <div className="mb-4 bg-red-50 p-4 rounded-md border border-red-200">
           <p className="text-red-700">{error}</p>
         </div>
       )}
-      
+
       <div className="overflow-hidden">
         <div className="overflow-x-auto">
           <ReportTable
