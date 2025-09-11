@@ -90,7 +90,7 @@ export default function TableReports() {
         if (row.current_order) {
           return (
             <div>
-              <div className="font-medium">Order #{row.current_order.order_number}</div>
+              <div className="font-medium">{row.current_order.order_number}</div>
               <div className="text-xs text-gray-500">{row.current_order.order_status}</div>
             </div>
           );
