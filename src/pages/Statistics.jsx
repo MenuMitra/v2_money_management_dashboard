@@ -236,14 +236,12 @@ const CollectionSourcesCard = ({ collectionData }) => {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
-            {hasTotal && (
-              <p className="text-sm text-gray-500">
-                <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
-              </p>
+          <h3 className="text-lg font-medium text-gray-800">Total Collections Sources</h3>
+          {hasTotal && (
+            <p className="text-sm text-gray-500">
+              <span className="font-medium text-gray-900">Total: {formatCurrency(totalAmount)}</span>
+            </p>
             )}
-          </div>
         </div>  
       </div>
       <div className="p-5 space-y-4">
@@ -617,176 +615,127 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   );
 };
 
-// Products Analysis Card Component
 const ProductsAnalysisCard = ({ categoryData }) => {
-  const [activeTab, setActiveTab] = useState('top');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState("top");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  
-  // Use the sales_performance data from the main statistics response
+  const [itemsPerPage, setItemsPerPage] = useState(5); // ✅ default 5 items
+
+  // Sales performance data
   const salesData = categoryData || {
     top_selling: { items: [], pagination: {} },
     low_selling: { items: [], pagination: {} },
-    no_selling: { items: [], pagination: {} }
+    no_selling: { items: [], pagination: {} },
   };
-  
-  // Set initial active tab based on available data
+
+  // Set initial active tab
   useEffect(() => {
     if (salesData.top_selling?.items?.length > 0) {
-      setActiveTab('top');
+      setActiveTab("top");
     } else if (salesData.low_selling?.items?.length > 0) {
-      setActiveTab('low');
+      setActiveTab("low");
     } else if (salesData.no_selling?.items?.length > 0) {
-      setActiveTab('no');
+      setActiveTab("no");
     }
   }, [salesData]);
-  
+
+  // Reset pagination & search on tab change
   useEffect(() => {
     setCurrentPage(1);
-    setSearchQuery('');
+    setSearchQuery("");
   }, [activeTab]);
-  
+
   const topSellingItems = salesData.top_selling?.items || [];
   const lowSellingItems = salesData.low_selling?.items || [];
   const noSellingItems = salesData.no_selling?.items || [];
-  
-  console.log("Extracted data from statistics response:", {
-    topSellingItems,
-    lowSellingItems,
-    noSellingItems,
-    topSellingLength: topSellingItems.length,
-    lowSellingLength: lowSellingItems.length,
-    noSellingLength: noSellingItems.length
-  });
-  
-  const topSellingPagination = salesData.top_selling?.pagination;
-  const lowSellingPagination = salesData.low_selling?.pagination;
-  const noSellingPagination = salesData.no_selling?.pagination;
-  
-  const hasTopSellingData = topSellingItems && topSellingItems.length > 0;
-  const hasLowSellingData = lowSellingItems && lowSellingItems.length > 0;
-  const hasNoSellingData = noSellingItems && noSellingItems.length > 0;
-  
-  console.log("Tab visibility flags:", {
-    hasTopSellingData,
-    hasLowSellingData,
-    hasNoSellingData,
-    topCount: topSellingItems.length,
-    lowCount: lowSellingItems.length,
-    noCount: noSellingItems.length
-  });
-  
+
+  const hasTopSellingData = topSellingItems.length > 0;
+  const hasLowSellingData = lowSellingItems.length > 0;
+  const hasNoSellingData = noSellingItems.length > 0;
+
   const getCurrentItems = () => {
     switch (activeTab) {
-      case 'top':
+      case "top":
         return topSellingItems;
-      case 'low':
+      case "low":
         return lowSellingItems;
-      case 'no':
+      case "no":
         return noSellingItems;
       default:
         return [];
     }
   };
-  
-  const getCurrentPagination = () => {
-    switch (activeTab) {
-      case 'top':
-        return topSellingPagination || {
-          total_items: topSellingItems.length,
-          current_page: 1,
-          total_pages: Math.ceil(topSellingItems.length / itemsPerPage),
-          items_per_page: itemsPerPage
-        };
-      case 'low':
-        return lowSellingPagination || {
-          total_items: lowSellingItems.length,
-          current_page: 1,
-          total_pages: Math.ceil(lowSellingItems.length / itemsPerPage),
-          items_per_page: itemsPerPage
-        };
-      case 'no':
-        return noSellingPagination || {
-          total_items: noSellingItems.length,
-          current_page: 1,
-          total_pages: Math.ceil(noSellingItems.length / itemsPerPage),
-          items_per_page: itemsPerPage
-        };
-      default:
-        return {
-          total_items: 0,
-          current_page: 1,
-          total_pages: 1,
-          items_per_page: itemsPerPage
-        };
-    }
-  };
-  
+
   const getFilteredItems = () => {
     const items = getCurrentItems();
-    
-    if (!searchQuery) {
-      return items;
-    }
-    
+    if (!searchQuery) return items;
+
     const query = searchQuery.toLowerCase();
-    return items.filter(item => {
-      const name = item.name || '';
-      return name.toLowerCase().includes(query);
-    });
+    return items.filter((item) => (item.name || "").toLowerCase().includes(query));
   };
-  
+
   const filteredItems = getFilteredItems();
-  const paginationData = getCurrentPagination();
-  const totalPages = Math.max(1, paginationData.total_pages);
+  const totalItems = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  // Clamp current page if filter reduces items
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalItems, totalPages, currentPage]);
+
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedItems = filteredItems.slice(startIndex, endIndex);
-  
-  // Determine if pagination should be shown
-  const showPagination = filteredItems.length > itemsPerPage;
-  
-  console.log("ProductsAnalysisCard data:", {
-    activeTab,
-    currentItems: getCurrentItems(),
-    filteredItems,
-    displayedItems,
-    paginationData,
-    showPagination
-  });
-  
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Header & Tabs */}
       <div className="p-5 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
+
         <div className="mt-4 flex justify-center">
-          <div className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1 ? 'grid-cols-1' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2 ? 'grid-cols-2' : hasTopSellingData + hasLowSellingData + hasNoSellingData === 3 ? 'grid-cols-3' : 'grid-cols-1'} gap-4 w-full`}>
+          <div
+            className={`grid ${
+              hasTopSellingData + hasLowSellingData + hasNoSellingData === 1
+                ? "grid-cols-1"
+                : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2
+                ? "grid-cols-2"
+                : "grid-cols-3"
+            } gap-4 w-full`}
+          >
             {hasTopSellingData && (
-              <button 
-                onClick={() => setActiveTab('top')}
-                className={`px-10 py-3 text-sm font-medium rounded-md transition-colors w-full ${
-                  activeTab === 'top' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              <button
+                onClick={() => setActiveTab("top")}
+                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${
+                  activeTab === "top"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 Top Selling
               </button>
             )}
             {hasLowSellingData && (
-              <button 
-                onClick={() => setActiveTab('low')}
-                className={`px-10 py-3 text-sm font-medium rounded-md transition-colors w-full ${
-                  activeTab === 'low' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              <button
+                onClick={() => setActiveTab("low")}
+                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${
+                  activeTab === "low"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 Low Selling
               </button>
             )}
             {hasNoSellingData && (
-              <button 
-                onClick={() => setActiveTab('no')}
-                className={`px-10 py-3 text-sm font-medium rounded-md transition-colors w-full ${
-                  activeTab === 'no' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              <button
+                onClick={() => setActiveTab("no")}
+                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${
+                  activeTab === "no"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 No Selling
@@ -799,183 +748,117 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             )}
           </div>
         </div>
-        
-        <div className="mt-4">
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search menu items..."
-              className={`w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 pl-10 ${searchQuery ? 'pr-10' : 'pr-4'}`}
-            />
-            {searchQuery && (
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                >
-                  <FaTimes className="h-5 w-5" />
-                </button>
-              </div>
-            )}
-          </div>
+
+        {/* Search */}
+        <div className="mt-4 relative w-full">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Search menu items..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm pl-10"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+            >
+              <FaTimes className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                #
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Menu Name
-              </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Sales Count
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Menu Name</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sales Count</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {displayedItems.length > 0 ? (
               displayedItems.map((item, index) => (
                 <tr key={item.item_id || index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {startIndex + index + 1}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.name || 'Unknown Item'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                    {item.sales_count}
-                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{item.name || "Unknown Item"}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500 text-right">{item.sales_count}</td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td colSpan="3" className="px-6 py-8 text-center text-sm text-gray-500">
-                  <div className="flex flex-col items-center justify-center">
-                    <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-gray-500 font-medium">No menu items found</p>
-                    {searchQuery && (
-                      <p className="text-gray-400 text-sm mt-1">
-                        Try adjusting your search or filter to find what you're looking for
-                      </p>
-                    )}
-                  </div>
+                  No menu items found
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-      
-      {/* Pagination Controls - Only show if there are more items than itemsPerPage */}
-      {showPagination && filteredItems.length > 0 && (
+
+      {/* Pagination */}
+      {totalItems > itemsPerPage && (
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          {/* Items per page */}
           <div className="flex items-center">
-            <span className="text-sm text-gray-700 mr-2">Show:</span>
+            <span className="text-sm text-gray-700 m-1">Show:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm"
+              className="border border-gray-300 rounded-md text-sm p-2 m-2"
             >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
+              {[5, 10, 20, 50, 100].map((val) => (
+                <option  key={val} value={val}>
+                  {val}
+                </option>
+              ))}
             </select>
           </div>
-          
-          <div className="text-center text-sm text-gray-700">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredItems.length)} of {filteredItems.length} records
+
+          {/* Info */}
+          <div className="text-sm text-gray-700 ml-1 ">
+            Showing {startIndex + 1} - {Math.min(endIndex, totalItems)} of {totalItems} records
           </div>
-          
+
+          {/* Page navigation */}
           <div className="flex items-center">
             <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-2 py-1 border border-gray-300 text-sm font-medium rounded-md mr-1 ${
-                currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
+              className="px-2 py-1 border rounded-md mr-1 text-sm"
             >
               Prev
             </button>
-            
-            {totalPages <= 5 ? (
-              [...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md ${
-                    currentPage === i + 1
-                      ? 'z-10 bg-purple-600 border-purple-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))
-            ) : (
-              <>
-                <button
-                  onClick={() => setCurrentPage(1)}
-                  className={`relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md ${
-                    currentPage === 1
-                      ? 'z-10 bg-purple-600 border-purple-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  1
-                </button>
-                
-                {currentPage > 3 && (
-                  <span className="mx-1 text-gray-500">...</span>
-                )}
-                
-                {currentPage > 2 && currentPage < totalPages && (
-                  <button
-                    onClick={() => setCurrentPage(currentPage)}
-                    className="z-10 bg-purple-600 border-purple-600 text-white relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md"
-                  >
-                    {currentPage}
-                  </button>
-                )}
-                
-                {currentPage < totalPages - 2 && (
-                  <span className="mx-1 text-gray-500">...</span>
-                )}
-                
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  className={`relative inline-flex items-center px-2 py-1 border text-sm font-medium mx-1 rounded-md ${
-                    currentPage === totalPages
-                      ? 'z-10 bg-purple-600 border-purple-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {totalPages}
-                </button>
-              </>
-            )}
-            
+
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-2 py-1 border mx-1 text-sm rounded-md ${
+                  currentPage === i + 1
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "bg-white text-gray-500 border-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
             <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className={`relative inline-flex items-center px-2 py-1 border border-gray-300 text-sm font-medium rounded-md ml-1 ${
-                currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
+              className="px-2 py-1 border rounded-md ml-1 text-sm"
             >
               Next
             </button>
@@ -1756,7 +1639,7 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
                   <button

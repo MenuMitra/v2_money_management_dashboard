@@ -20,7 +20,6 @@ const OutletSelectButton = ({ buttonText = "Select Outlet", className = "" }) =>
 
   const handleSelectOutlet = (outlet) => {
     updateCurrentOutlet(outlet);
-    // You could trigger a data reload here
   };
 
   return (

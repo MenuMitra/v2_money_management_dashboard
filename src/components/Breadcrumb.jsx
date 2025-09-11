@@ -29,7 +29,7 @@ const Breadcrumb = ({ items }) => {
             {item.url ? (
               <Link
                 to={item.url}
-                className={`${index === 0 ? '' : 'ml-1'} text-sm font-medium text-gray-600 hover:text-blue-600 md:ml-2 flex items-center`}
+                className={`${index === 0 ? '' : 'm-0'} text-sm font-medium text-gray-600 hover:text-blue-600 flex items-center`}
               >
                 {item.text === "Home" && <FontAwesomeIcon icon={faHome} className="mr-1" />}
                 {item.text}
