@@ -11,7 +11,6 @@ import {
 } from "../hooks/queries/useOutletComparison";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { RefreshButton } from "../components/common/RefreshButton";
-import { FaExchangeAlt } from "react-icons/fa";
 
 export default function CompareOutlets() {
   const [isLoading, setIsLoading] = useState(false);

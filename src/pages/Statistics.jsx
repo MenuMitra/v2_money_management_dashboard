@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { FaDownload, FaTimes } from 'react-icons/fa';
+import { FaXmark  } from 'react-icons/fa6';
 import { useStatistics } from '../api/statistics';
 import ReactApexChart from 'react-apexcharts';
 import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
 import { Breadcrumb } from '../components';
 import { useNavigate } from 'react-router-dom';
 import { getDateRangeFromType, formatDateForAPI } from '../utils/dateUtils';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHome } from "@fortawesome/free-solid-svg-icons";
+
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
@@ -776,7 +775,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               onClick={() => setSearchQuery("")}
               className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
             >
-              <FaTimes className="h-5 w-5" />
+              <FaXmark  className="h-5 w-5" />
             </button>
           )}
         </div>

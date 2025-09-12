@@ -25,7 +25,6 @@ import UdhariReports from './pages/reports/UdhariReports';
 import ProtectedRoute from './components/ProtectedRoute';
 import './styles/globals.css';
 import { StatisticsProvider } from './context/StatisticsContext';
-import "remixicon/fonts/remixicon.css";
 
 
 function App() {

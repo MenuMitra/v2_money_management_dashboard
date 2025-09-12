@@ -1,5 +1,7 @@
 import React from 'react';
-import { FaStore, FaChartBar, FaExchangeAlt } from 'react-icons/fa';
+
+import { FaChartSimple, FaRightLeft, FaStore } from "react-icons/fa6";
+
 import { useOutlet } from '../context/OutletContext';
 import { useOutletWarning } from '../hooks/useOutletId.jsx';
 import { Link } from 'react-router-dom';
@@ -50,7 +52,7 @@ export default function Dashboard() {
           <NavigationCard 
             title="Statistics" 
             description="View comprehensive statistics and analytics" 
-            icon={<FaChartBar size={24} />} 
+            icon={<FaChartSimple size={24} />} 
             to="/statistics"
             bgColor="bg-purple-50"
             iconColor="text-purple-600"
@@ -61,7 +63,7 @@ export default function Dashboard() {
           <NavigationCard 
             title="Compare Outlets" 
             description="Compare outlet performance" 
-            icon={<FaExchangeAlt size={24} />} 
+            icon={<FaRightLeft size={24} />} 
             to="/compare-outlets"
             bgColor="bg-green-50"
             iconColor="text-green-600"
