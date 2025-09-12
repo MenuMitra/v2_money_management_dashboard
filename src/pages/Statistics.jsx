@@ -171,7 +171,10 @@ const CollectionSourcesCard = ({ collectionData }) => {
     complementary_orders: 0,
     udhari_orders: 0,
     advance_payment_orders: 0,
-    total_amount: 0
+    total_amount: 0,
+    udhari_pending_amount: 0,
+    udhari_paid_amount: 0,
+
   };
   
   const formatCurrency = (amount) => {
@@ -222,6 +225,18 @@ const CollectionSourcesCard = ({ collectionData }) => {
       name: 'Advance Payment',
       amount: data.advance_payment_amount || 0,
       orders: data.advance_payment_orders || 0,
+      color: 'bg-green-500'
+    },
+    {
+      name: 'Udhari Settle',
+      amount: data.udhari_paid_amount || 0,
+      orders: data.udhari_paid_orders || 0,
+      color: 'bg-green-500'
+    },
+    {
+      name: 'Udhari Pending',
+      amount: data.udhari_pending_amount || 0,
+      orders: data.udhari_pending_orders || 0,
       color: 'bg-green-500'
     }
   ];
