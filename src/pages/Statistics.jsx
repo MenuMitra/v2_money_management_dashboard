@@ -157,8 +157,6 @@ const FoodTypeChart = ({ foodTypeData }) => {
 
 // Collection Sources Card Component
 const CollectionSourcesCard = ({ collectionData }) => {
-  console.log("Data:", collectionData.udhari_pending_amount);
-  console.log("Data:", collectionData.udhari_paid_amount);
   // Use empty data if none provided
   const data = collectionData || {
     upi_amount: 0,
@@ -209,7 +207,7 @@ const CollectionSourcesCard = ({ collectionData }) => {
       name: 'Card',
       amount: data.card_amount || 0,
       orders: data.card_orders || 0,
-      color: 'bg-blue-500'
+      color: 'bg-yellow-500'
     },
     {
       name: 'Complementary',
@@ -218,27 +216,23 @@ const CollectionSourcesCard = ({ collectionData }) => {
       color: 'bg-pink-500'
     },
     {
-      name: 'Udhari',
+      name: 'Udhari Settle',
       amount: data.udhari_amount || 0,
       orders: data.udhari_orders || 0,
-      color: 'bg-yellow-500'
+      color: 'bg-green-500'
     },
     {
       name: 'Advance Payment',
       amount: data.advance_payment_amount || 0,
       orders: data.advance_payment_orders || 0,
-      color: 'bg-green-500'
+      color: 'bg-indigo-500'
     },
+    
     {
       name: 'Udhari Pending',
       amount: data.udhari_pending_amount || 0,
       orders: data.udhari_pending_orders || 0,
       color: 'bg-red-500'
-    },{
-      name:'Udhari Paid',
-      amount: data.udhari_paid_amount || 0,
-      orders: data.udhari_paid_orders || 0,
-      color: 'bg-green-500'
     }
   ];
 
