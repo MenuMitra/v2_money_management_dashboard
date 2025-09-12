@@ -9,7 +9,9 @@
   
   body {
     @apply bg-gray-50 text-gray-900;
+    font-family: "Lato, sans-serif !important";
   }
+
 }
 
 @layer components {
