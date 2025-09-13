@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { api, API_PATHS } from "../api/index";
 import { useOutlet } from "../context/OutletContext";
 import { useOutletWarning } from "../hooks/useOutletId.jsx";
 import OutletSelector from "../components/OutletSelector";
 import { Breadcrumb } from "../components";
-import {
-  useOutletComparison,
-  outletCompareKeys,
-} from "../hooks/queries/useOutletComparison";
+import {useOutletComparison, outletCompareKeys} from "../hooks/queries/useOutletComparison";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { RefreshButton } from "../components/common/RefreshButton";
 
 export default function CompareOutlets() {
   const [isLoading, setIsLoading] = useState(false);
@@ -285,81 +281,90 @@ export default function CompareOutlets() {
   };
 
   // Update the handleOutletSelect function to check for inactive outlet
-  const handleOutletSelect = async (outlet) => {
-    try {
-      const outlet = outlets.find((o) => o.outlet_id === outletId);
-       console.log("Selected outlet data:", outlet);
-      // Check if the outlet is inactive first
-      if (outlet.is_active === false) {
-        setError("Cannot select an inactive outlet for comparison");
-        return;
-      }
+const handleOutletSelect = async (selectedOutlet) => {
+  try {
+    setError(null);
 
-      if (
-        selectedOutlets.length >= MAX_COMPARE_OUTLETS &&
-        refreshOutletIndex === null
-      ) {
-        setError(`You can only compare up to ${MAX_COMPARE_OUTLETS} outlets`);
-        return;
-      }
-
-      // Check if outlet is the current outlet or already selected
-      if (
-        outlet.outlet_id.toString() === currentOutlet?.outlet_id?.toString()
-      ) {
-        setError("You cannot select the current outlet for comparison");
-        return;
-      }
-
-      if (
-        selectedOutlets.some(
-          (o) => o.outlet_id.toString() === outlet.outlet_id.toString()
-        )
-      ) {
-        setError("This outlet is already selected for comparison");
-        return;
-      }
-
-      setIsLoading(true);
-
-      // Fetch comparison data for this outlet
-      const outletId = outlet.outlet_id;
-      const comparisonData = await fetchOutletCompareDetails(outletId);
-
-      if (comparisonData) {
-        // Prepare the outlet object with all data
-        const outletWithData = {
-          id: outletId,
-          outlet_id: outletId,
-          name: outlet.name,
-          address: outlet.address || "",
-          ...comparisonData,
-        };
-
-        // If we're refreshing an existing outlet
-        if (refreshOutletIndex !== null) {
-          const updatedOutlets = [...selectedOutlets];
-          updatedOutlets[refreshOutletIndex] = outletWithData;
-          setSelectedOutlets(updatedOutlets);
-        } else {
-          // Add to selected outlets with comparison data
-          setSelectedOutlets((prev) => [...prev, outletWithData]);
-        }
-
-        setIsOutletSelectorOpen(false);
-        setRefreshOutletIndex(null);
-      } else {
-        throw new Error(
-          `Could not fetch comparison data for outlet ${outletId}`
-        );
-      }
-    } catch (err) {
-      console.error("Error adding outlet:", err);
-      setError(`Failed to add outlet for comparison: ${err.message}`);
-    } finally {
-      setIsLoading(false);
+    if (!selectedOutlet) {
+      throw new Error("No outlet selected");
     }
-  };
+
+    console.log("Selected outlet data:", selectedOutlet);
+
+    // Check if outlet is inactive
+    if (selectedOutlet.is_active === false) {
+      setError("Cannot select an inactive outlet for comparison");
+      return;
+    }
+
+    // Limit maximum outlets
+    if (
+      selectedOutlets.length >= MAX_COMPARE_OUTLETS &&
+      refreshOutletIndex === null
+    ) {
+      setError(`You can only compare up to ${MAX_COMPARE_OUTLETS} outlets`);
+      return;
+    }
+
+    // Prevent selecting current outlet
+    if (
+      selectedOutlet.outlet_id.toString() === currentOutlet?.outlet_id?.toString()
+    ) {
+      setError("You cannot select the current outlet for comparison");
+      return;
+    }
+
+    // Prevent duplicates
+    if (
+      selectedOutlets.some(
+        (o) => o.outlet_id.toString() === selectedOutlet.outlet_id.toString()
+      )
+    ) {
+      setError("This outlet is already selected for comparison");
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Fetch comparison data
+    const outletId = selectedOutlet.outlet_id;
+    const comparisonData = await fetchOutletCompareDetails(outletId);
+
+    if (!comparisonData) {
+      throw new Error(`Could not fetch comparison data for outlet ${outletId}`);
+    }
+
+    // Prepare the outlet object with all data
+    const outletWithData = {
+      id: outletId,
+      outlet_id: outletId,
+      name: selectedOutlet.name,
+      address: selectedOutlet.address || "",
+      ...comparisonData,
+    };
+
+    if (refreshOutletIndex !== null) {
+      // Replace existing outlet at index
+      setSelectedOutlets((prev) => {
+        const copy = [...prev];
+        copy[refreshOutletIndex] = outletWithData;
+        return copy;
+      });
+    } else {
+      // Add new outlet
+      setSelectedOutlets((prev) => [...prev, outletWithData]);
+    }
+
+    setIsOutletSelectorOpen(false);
+    setRefreshOutletIndex(null);
+  } catch (err) {
+    console.error("Error adding outlet:", err);
+    setError(`Failed to add outlet for comparison: ${err.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleRefreshOutlet = (index) => {
     const outletToRefresh = selectedOutlets[index];
