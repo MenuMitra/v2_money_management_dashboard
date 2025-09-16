@@ -4,7 +4,7 @@ import { utils, write } from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-const RECORDS_PER_PAGE_OPTIONS = [50, 100, 200, 500];
+const RECORDS_PER_PAGE_OPTIONS = [5,10,20,50,100];
 
 const ReportTable = ({
   title,
@@ -21,7 +21,7 @@ const ReportTable = ({
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [displayedData, setDisplayedData] = useState([]);
-  const [visibleRecords, setVisibleRecords] = useState(RECORDS_PER_PAGE_OPTIONS[0]);
+  const [visibleRecords, setVisibleRecords] = useState(RECORDS_PER_PAGE_OPTIONS[10]);
   const [recordsPerPage, setRecordsPerPage] = useState(RECORDS_PER_PAGE_OPTIONS[0]);
   const [sortConfig, setSortConfig] = useState(initialSortConfig);
   const [selectedColumns, setSelectedColumns] = useState({});
@@ -32,6 +32,15 @@ const ReportTable = ({
   const [isReportGenerated, setIsReportGenerated] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+const [currentPage, setCurrentPage] = useState(1);
+const totalItems = filteredData.length;
+const totalPages = Math.ceil(totalItems / itemsPerPage);
+const startIndex = (currentPage - 1) * itemsPerPage;
+const endIndex = startIndex + itemsPerPage;
+
+
+
 
   // Initialize column selection state
   useEffect(() => {
@@ -140,8 +149,11 @@ const ReportTable = ({
 
   // Update displayed data when filtered data or visible records count changes
   useEffect(() => {
-    setDisplayedData(filteredData.slice(0, visibleRecords));
-  }, [filteredData, visibleRecords]);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  setDisplayedData(filteredData.slice(startIndex, endIndex));
+}, [filteredData, currentPage, itemsPerPage]);
+
 
   // Apply sorting
   const handleSort = (accessor) => {
@@ -772,86 +784,122 @@ const ReportTable = ({
               </div>
               
               {/* Table Footer */}
-              <div className="px-6 py-3 border-t border-gray-200 bg-white">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      {/* Records Per Page Dropdown - Moved to left side */}
-                      <div className="flex items-center gap-2">
-                        <label htmlFor="recordsPerPage" className="text-sm text-gray-500 whitespace-nowrap mr-1">
-                          Records per page:
-                        </label>
-                        <div className="relative">
-                          <select
-                            id="recordsPerPage"
-                            value={recordsPerPage}
-                            onChange={handleRecordsPerPageChange}
-                            className="px-2 py-1 pr-8 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 appearance-none"
-                          >
-                            {RECORDS_PER_PAGE_OPTIONS.map(option => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                      
-                  <div className="text-sm text-gray-500">
-                    Showing <span className="font-medium">{Math.min(visibleRecords, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span> records
-                      </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {filteredData.length > visibleRecords && (
-                      <button
-                        onClick={handleLoadMore}
-                        className="px-4 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                      >
-                        Load More
-                      </button>
-                    )}
-                    
-                    {/* Export Buttons */}
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={exportToExcel}
-                        className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                        </svg>
-                        Excel
-                      </button>
-                      
-                      <CSVLink
-                        data={getExportData()}
-                        filename={`${title || 'report'}.csv`}
-                        className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                        </svg>
-                        CSV
-                      </CSVLink>
-                      
-                      <button
-                        onClick={exportToPDF}
-                        className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.707-8.707a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L9 9.586V3a1 1 0 10-2 0v6.586l-1.293-1.293z" clipRule="evenodd" />
-                        </svg>
-                        PDF
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+  
+  {/* Left Side: Records Per Page and Showing Info */}
+  <div className="flex items-center gap-4">
+    {/* Records Per Page Dropdown */}
+    <div className="flex items-center gap-2">
+      <label htmlFor="recordsPerPage" className="text-sm text-gray-500 whitespace-nowrap mr-1">
+        Records per page:
+      </label>
+      <select
+        id="recordsPerPage"
+        value={itemsPerPage}
+        onChange={(e) => {
+          setItemsPerPage(Number(e.target.value));
+          setCurrentPage(1); // reset to first page
+        }}
+        className="px-2 py-1 pr-8 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 appearance-none"
+      >
+        {[5,10,20,50,100].map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Showing Info */}
+    <div className="text-sm text-gray-500">
+      Showing <span className="font-medium">{startIndex + 1}</span> - <span className="font-medium">{Math.min(endIndex, totalItems)}</span> of <span className="font-medium">{totalItems}</span> records
+    </div>
+  </div>
+
+  {/* Right Side: Page Navigation and Export Buttons */}
+  <div className="flex items-center gap-4">
+    {/* Pagination Controls */}
+{filteredData.length > recordsPerPage && (
+  <div className="flex items-center gap-1">
+    {(() => {
+      const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+
+      // Determine start and end page numbers to show max 5 pages
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = startPage + 3;
+      if (endPage > totalPages) {
+        endPage = totalPages;
+        startPage = Math.max(1, endPage - 4);
+      }
+      const pages = [];
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      return (
+        <>
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-1 border rounded-md text-sm disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {pages.map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-2 py-1 border rounded-md text-sm ${
+                currentPage === page
+                  ? "bg-purple-600 text-white border-purple-600"
+                  : "bg-white text-gray-500 border-gray-300"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 border rounded-md text-sm disabled:opacity-50"
+          >
+            Next
+          </button>
+        </>
+      );
+    })()}
+  </div>
+)}
+
+
+    {/* Export Buttons */}
+    <></>
+    <div className="flex space-x-2">
+      <button
+        onClick={exportToExcel}
+        className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
+      >
+        Excel
+      </button>
+      <CSVLink
+        data={getExportData()}
+        filename={`${title || 'report'}.csv`}
+        className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
+      >
+        CSV
+      </CSVLink>
+      <button
+        onClick={exportToPDF}
+        className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
+      >
+        PDF
+      </button>
+    </div>
+  </div>
+</div>
+
             </>
           )}
         </>
