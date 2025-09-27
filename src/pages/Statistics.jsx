@@ -6,7 +6,7 @@ import { useOutletId, useOutletWarning } from '../hooks/useOutletId';
 import { Breadcrumb } from '../components';
 import { useNavigate } from 'react-router-dom';
 import { getDateRangeFromType, formatDateForAPI } from '../utils/dateUtils';
-
+import {SubscriptionRemainDay} from "./SubscriptionRemainDay"
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
@@ -545,7 +545,14 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
         }
       }
     },
-    colors: ['#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6', '#8B5CF6'],
+    colors: ["#FF5733", 
+        "#FF8D1A", 
+        "#F4D03F", 
+        "#28A745", 
+        "#007BFF",
+        "#4B0082", 
+        "#8E44AD"
+            ],
     legend: {
       show: false
     },
@@ -2633,6 +2640,9 @@ export default function Statistics() {
 
   return (
     <div className="space-y-4 p-2 sm:p-3">
+      <div>
+        <SubscriptionRemainDay />
+      </div>
       <Breadcrumb items={breadcrumbItems} />
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">

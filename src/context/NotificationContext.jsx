@@ -85,6 +85,9 @@ export const NotificationProvider = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
   // Fix: Get outletId directly without destructuring to avoid the error
   const outletId = useOutletId();
+  const connectingRef = React.useRef(false);
+  const reconnectTimerRef = React.useRef(null);
+  const lastOutletIdRef = React.useRef(outletId);
   
   // Helper function to generate a test notification for development
   const testNotification = useCallback((type = 'info') => {
@@ -134,7 +137,9 @@ export const NotificationProvider = ({ children }) => {
 
   // Connect to WebSocket
   const connectWebSocket = useCallback(() => {
-    if (!isAuthenticated || socket) return;
+    if (!isAuthenticated) return;
+    if (connectingRef.current) return;
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
 
     try {
       const accessToken = localStorage.getItem('access_token');
@@ -149,13 +154,24 @@ export const NotificationProvider = ({ children }) => {
         return;
       }
 
-      // Create WebSocket connection
-      const ws = new WebSocket(`wss://men4u.xyz/v2/common/ws/${outletId}`);
+      // Close any existing socket before reconnecting
+      try { socket?.close(1000, 'Reconnecting'); } catch (_) {}
+
+      // Append token (and user_id if available) as query params
+      const userId = localStorage.getItem('user_id');
+      const params = new URLSearchParams();
+      params.set('token', accessToken);
+      if (userId) params.set('user_id', userId);
+      const wsUrl = `wss://men4u.xyz/v2/common/ws/${outletId}?${params.toString()}`;
+
+      connectingRef.current = true;
+      const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
         console.log('WebSocket connection established');
         setIsConnected(true);
         setConnectionError(null);
+        connectingRef.current = false;
       };
 
       ws.onmessage = (event) => {
@@ -225,16 +241,19 @@ export const NotificationProvider = ({ children }) => {
         // console.error('WebSocket error:', error);
         setConnectionError('Failed to connect to notification service');
         setIsConnected(false);
+        connectingRef.current = false;
       };
 
       ws.onclose = (event) => {
         console.log('WebSocket connection closed:', event.code, event.reason);
         setIsConnected(false);
+        connectingRef.current = false;
         
         // Attempt to reconnect after a delay if closed unexpectedly
         if (event.code !== 1000) { // 1000 is normal closure
-          setTimeout(() => {
-            if (isAuthenticated) {
+          if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+          reconnectTimerRef.current = setTimeout(() => {
+            if (isAuthenticated && outletId) {
               connectWebSocket();
             }
           }, 5000);
@@ -245,6 +264,7 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
       setConnectionError(`Failed to setup WebSocket: ${error.message}`);
+      connectingRef.current = false;
     }
   }, [isAuthenticated, socket, outletId]);
 
@@ -256,6 +276,20 @@ export const NotificationProvider = ({ children }) => {
       setIsConnected(false);
     }
   }, [socket]);
+
+  // Reconnect when outlet changes
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (lastOutletIdRef.current !== outletId) {
+      lastOutletIdRef.current = outletId;
+      disconnectWebSocket();
+      // Debounce a bit to avoid rapid reconnects if outlet switches very fast
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = setTimeout(() => {
+        connectWebSocket();
+      }, 300);
+    }
+  }, [outletId, isAuthenticated, connectWebSocket, disconnectWebSocket]);
 
   // Show toast notification
   const showToast = (notification) => {
@@ -386,6 +420,7 @@ export const NotificationProvider = ({ children }) => {
 
     return () => {
       disconnectWebSocket();
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
     };
   }, [isAuthenticated, connectWebSocket, disconnectWebSocket]);
 

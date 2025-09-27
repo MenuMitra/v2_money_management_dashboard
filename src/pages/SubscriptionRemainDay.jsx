@@ -1,0 +1,170 @@
+import React, { useMemo } from 'react';
+import { useOutletSubscription } from '../hooks/queries/useOutletSubscription';
+
+const SubscriptionRemainDay = () => {
+  const outletId = localStorage.getItem('outlet_id');
+  const userId = localStorage.getItem('user_id');
+
+  const { data: outletData, isLoading, error } = useOutletSubscription(
+    {
+      outlet_id: outletId,
+      user_id: userId
+    },
+    {
+      enabled: Boolean(outletId && userId),
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  const subscriptionData = useMemo(() => {
+    if (!outletData?.subscription) {
+      return null;
+    }
+
+    const subscription = outletData.subscription;
+    const startDate = new Date(subscription.start_date);
+    const endDate = new Date(subscription.end_date);
+    const currentDate = new Date();
+    
+    // Calculate total days in subscription
+    const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    
+    // Calculate remaining days
+    const remainingDays = Math.ceil((endDate - currentDate) / (1000 * 60 * 60 * 24));
+    
+    // Calculate completed days
+    const completedDays = Math.max(0, totalDays - remainingDays);
+    
+    // Calculate percentage
+    const percentage = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
+    const remainingPercentage = totalDays > 0 ? (remainingDays / totalDays) * 100 : 0;
+    
+    // Determine color based on remaining days
+    let color = '#177841'; // Green (default)
+    if (remainingDays <= 5) {
+      color = '#EF4444'; // Red
+    } else if (remainingDays <= 15) {
+      color = '#F59E0B'; // Yellow
+    }
+
+    return {
+      subscription,
+      totalDays,
+      remainingDays: Math.max(0, remainingDays),
+      completedDays,
+      percentage: Math.min(100, Math.max(0, percentage)),
+      remainingPercentage: Math.min(100, Math.max(0, remainingPercentage)),
+      color,
+      isExpired: remainingDays <= 0
+    };
+  }, [outletData]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Subscription Timeline</h3>
+        </div>
+        <div className="p-5">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-2 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !subscriptionData) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-800">Subscription Timeline</h3>
+        </div>
+        <div className="p-5">
+          <div className="text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>No subscription data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { subscription, totalDays, remainingDays, completedDays, percentage, remainingPercentage, color, isExpired } = subscriptionData;
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = () => {
+    if (isExpired) return 'text-red-600';
+    if (remainingDays <= 5) return 'text-red-600';
+    if (remainingDays <= 15) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
+  const getStatusText = () => {
+    if (isExpired) return 'Expired';
+    if (remainingDays <= 5) return 'Expiring Soon';
+    if (remainingDays <= 15) return 'Expiring';
+    return 'Active';
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="p-5">
+        <h3 className="text-lg font-medium text-gray-800 mb-2">Timeline</h3>
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="progress" style={{ height: '20px', backgroundColor: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+            <div 
+              className="progress-bar" 
+              role="progressbar" 
+              style={{
+                width: `${remainingPercentage}%`,
+                backgroundColor: color,
+                background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+                borderRadius: '10px',
+                transition: 'width 0.8s ease-in-out',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '12px',
+                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                border: '0'
+              }}
+              aria-valuenow={remainingPercentage}
+              aria-valuemin="0"
+              aria-valuemax="100"
+              >
+                &nbsp;
+              </div>
+          </div>
+        </div>
+        {/* Timeline Labels */}
+        <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+          <div className="text-center">
+            <div className="font-medium text-gray-900">{completedDays} days completed</div>
+          </div>
+          <div className="text-center">
+            <div className={`font-medium ${remainingDays <= 5 ? 'text-red-600 font-bold text-lg' : 'text-black'}`}>
+              {remainingDays} days Remaining
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { SubscriptionRemainDay };
