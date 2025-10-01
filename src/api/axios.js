@@ -8,9 +8,13 @@ const MODE = import.meta.env.MODE || 'production'; // 'development' or 'producti
 const DEV_URL = import.meta.env.VITE_API_URL || '';  // Empty string to use relative URLs with proxy
 const PROD_URL = import.meta.env.VITE_API_URL || 'https://ghanish.in';
 
+// Force production mode when on production branch
+const isProductionBranch = window.location.hostname !== 'localhost' || 
+  (typeof window !== 'undefined' && window.location.search.includes('production=true'));
+
 // Base URLs for different environments
 const BASE_URL = {
-  dev: isDev ? '' : DEV_URL, // Empty for local development with proxy
+  dev: isDev && !isProductionBranch ? '' : DEV_URL, // Empty for local development with proxy
   prod: PROD_URL // Production API
 };
 
@@ -20,7 +24,7 @@ export const COMMON_PREFIX = `${API_PREFIX}/common`;
 export const STATISTICS_PREFIX = `${API_PREFIX}/outlet_statistics`;
 
 const axiosInstance = axios.create({
-  baseURL: MODE === 'development' ? BASE_URL.dev : BASE_URL.prod,
+  baseURL: (MODE === 'development' && !isProductionBranch) ? BASE_URL.dev : BASE_URL.prod,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -31,8 +35,9 @@ const axiosInstance = axios.create({
 if (isDev) {
   console.log(`[API Config] Running in ${MODE} mode`);
   console.log(`[API Config] API Prefix: ${API_PREFIX}`);
-  console.log(`[API Config] Using proxy: ${isDev}`);
-  console.log(`[API Config] Base URL: ${MODE === 'development' ? BASE_URL.dev : BASE_URL.prod}`);
+  console.log(`[API Config] Using proxy: ${isDev && !isProductionBranch}`);
+  console.log(`[API Config] Production branch detected: ${isProductionBranch}`);
+  console.log(`[API Config] Base URL: ${(MODE === 'development' && !isProductionBranch) ? BASE_URL.dev : BASE_URL.prod}`);
 }
 
 // Request interceptor for adding auth token and app_source
