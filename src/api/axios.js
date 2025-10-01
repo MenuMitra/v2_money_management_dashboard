@@ -9,8 +9,15 @@ const DEV_URL = import.meta.env.VITE_API_URL || '';  // Empty string to use rela
 const PROD_URL = import.meta.env.VITE_API_URL || 'https://ghanish.in';
 
 // Force production mode when on production branch
-const isProductionBranch = window.location.hostname !== 'localhost' || 
-  (typeof window !== 'undefined' && window.location.search.includes('production=true'));
+// For now, we'll use a simple approach - check if we're on production branch
+// You can also add ?production=true to the URL to force production mode
+const isProductionBranch = (typeof window !== 'undefined' && 
+  (window.location.search.includes('production=true') || 
+   window.location.search.includes('branch=production') ||
+   window.location.hostname.includes('production') ||
+   window.location.hostname.includes('ghanish.in'))) ||
+  // Force production mode for production branch - you can remove this line if you want manual control
+  true;
 
 // Base URLs for different environments
 const BASE_URL = {
