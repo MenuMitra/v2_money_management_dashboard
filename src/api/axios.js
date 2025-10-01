@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Environment configuration
 const isDev = import.meta.env.DEV; // Vite provides this boolean
-const MODE = import.meta.env.MODE || 'development'; // 'development' or 'production'
+const MODE = import.meta.env.MODE || 'production'; // 'development' or 'production'
 
 // API URLs - use env variables if available, otherwise fallback to defaults
 const DEV_URL = import.meta.env.VITE_API_URL || '';  // Empty string to use relative URLs with proxy
