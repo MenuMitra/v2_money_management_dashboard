@@ -2,16 +2,19 @@ import axios from 'axios';
 
 // Environment configuration
 const isDev = import.meta.env.DEV; // Vite provides this boolean
-const MODE = import.meta.env.MODE || 'development'; // 'development' or 'production'
+const MODE = import.meta.env.MODE; // 'development' or 'production'
 
-// API URLs - use env variables if available, otherwise fallback to defaults
-const DEV_URL = import.meta.env.VITE_API_URL || 'https://men4u.xyz';
-const PROD_URL = import.meta.env.VITE_API_URL || 'https://menusmitra.xyz';
+// API URLs - use env variables only, no defaults
+const DEV_URL = import.meta.env.VITE_DEV_API_URL;  // Development API URL
+const PROD_URL = import.meta.env.VITE_PROD_API_URL; // Production API URL
+
+// Check if we're in production mode based on environment variables
+const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONMENT === 'production';
 
 // Base URLs for different environments
 const BASE_URL = {
-  dev: isDev ? '/' : DEV_URL, // Local development with proxy or direct DEV_URL
-  prod: PROD_URL // Production API
+  dev: DEV_URL, // Development API URL
+  prod: PROD_URL // Production API URL
 };
 
 // Common API path prefixes
@@ -21,7 +24,7 @@ const STATISTICS_PREFIX = `${API_PREFIX}/outlet_statistics`;
 
 // Create a base axios instance for API requests
 const api = axios.create({
-  baseURL: MODE === 'development' ? BASE_URL.dev : BASE_URL.prod,
+  baseURL: isProductionMode ? BASE_URL.prod : BASE_URL.dev,
   timeout: 30000,
 });
 
