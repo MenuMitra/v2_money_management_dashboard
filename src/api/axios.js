@@ -2,26 +2,18 @@ import axios from 'axios';
 
 // Environment configuration
 const isDev = import.meta.env.DEV; // Vite provides this boolean
-const MODE = import.meta.env.MODE || 'production'; // 'development' or 'production'
+const MODE = import.meta.env.MODE; // 'development' or 'production'
 
-// API URLs - use env variables if available, otherwise fallback to defaults
-const DEV_URL = import.meta.env.VITE_API_URL || '';  // Empty string to use relative URLs with proxy
-const PROD_URL = import.meta.env.VITE_API_URL || 'https://ghanish.in';
+// API URLs - use env variables only, no defaults
+const DEV_URL = import.meta.env.VITE_DEV_API_URL;  // Development API URL
+const PROD_URL = import.meta.env.VITE_PROD_API_URL; // Production API URL
 
-// Force production mode when on production branch
-// For now, we'll use a simple approach - check if we're on production branch
-// You can also add ?production=true to the URL to force production mode
-const isProductionBranch = (typeof window !== 'undefined' && 
-  (window.location.search.includes('production=true') || 
-   window.location.search.includes('branch=production') ||
-   window.location.hostname.includes('production') ||
-   window.location.hostname.includes('ghanish.in'))) ||
-  // Force production mode for production branch - you can remove this line if you want manual control
-  true;
+// Check if we're in production mode based on environment variables
+const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONMENT === 'production';
 
 // Base URLs for different environments
 const BASE_URL = {
-  dev: isDev && !isProductionBranch ? '' : DEV_URL, // Empty for local development with proxy
+  dev: DEV_URL, // Development API URL
   prod: PROD_URL // Production API
 };
 
@@ -31,7 +23,7 @@ export const COMMON_PREFIX = `${API_PREFIX}/common`;
 export const STATISTICS_PREFIX = `${API_PREFIX}/outlet_statistics`;
 
 const axiosInstance = axios.create({
-  baseURL: (MODE === 'development' && !isProductionBranch) ? BASE_URL.dev : BASE_URL.prod,
+  baseURL: isProductionMode ? BASE_URL.prod : BASE_URL.dev,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -42,9 +34,8 @@ const axiosInstance = axios.create({
 if (isDev) {
   console.log(`[API Config] Running in ${MODE} mode`);
   console.log(`[API Config] API Prefix: ${API_PREFIX}`);
-  console.log(`[API Config] Using proxy: ${isDev && !isProductionBranch}`);
-  console.log(`[API Config] Production branch detected: ${isProductionBranch}`);
-  console.log(`[API Config] Base URL: ${(MODE === 'development' && !isProductionBranch) ? BASE_URL.dev : BASE_URL.prod}`);
+  console.log(`[API Config] Production mode: ${isProductionMode}`);
+  console.log(`[API Config] Base URL: ${isProductionMode ? BASE_URL.prod : BASE_URL.dev}`);
 }
 
 // Request interceptor for adding auth token and app_source
