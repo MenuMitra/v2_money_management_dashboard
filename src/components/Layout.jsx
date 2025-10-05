@@ -19,6 +19,12 @@ export default function Layout({ children }) {
   const userName = localStorage.getItem('user_name') || 'User';
   const role = localStorage.getItem('role') || 'User';
 
+
+  // Environment detection
+const isDev = import.meta.env.DEV;
+const MODE = import.meta.env.MODE;
+const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONMENT === 'production';
+
   // Listen for outlet changes to reset date filter
   useEffect(() => {
     if (currentOutlet) {
@@ -89,12 +95,14 @@ export default function Layout({ children }) {
   return (
     <div className="flex flex-col h-screen">
       {/* Testing Environment Bar - fixed at the top */}
+      {!isProductionMode && (
       <div className="bg-yellow-500 text-white text-center py-1 px-2 font-medium w-full sticky top-0 z-[9999] flex items-center justify-center h-7">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span>Testing Environment</span>
       </div>
+    )}
       
       {/* Main content wrapper - takes remaining height */}
       <div className="flex flex-1 overflow-hidden">
