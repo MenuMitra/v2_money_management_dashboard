@@ -160,7 +160,7 @@ export default function MenuReports() {
             {row.portions.map((portion, index) => (
               <span key={portion.portion_id || index}>
                 {portion.portion_name}: ₹{portion.price}
-                {portion.is_available ? ' (Available)' : ' (Unavailable)'}
+                {/* {portion.is_available ? ' (Available)' : ' (Unavailable)'} */}
                 {index < row.portions.length - 1 ? ' | ' : ''}
               </span>
             ))}

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import OutletSelector from "./OutletSelector";
 import DateRangePicker from "./DateRangePicker";
 import { useLocation } from "react-router-dom";
-import RefreshButton from './common/RefreshButton';
+import RefreshButton from "./common/RefreshButton";
 
 const OutletHeader = () => {
   const { currentOutlet, loading, updateCurrentOutlet, clearCurrentOutlet } =
@@ -14,12 +14,12 @@ const OutletHeader = () => {
   const [showLogout, setShowLogout] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     // Load persisted date range from localStorage on component mount
-    const persisted = localStorage.getItem('statistics_date_range');
+    const persisted = localStorage.getItem("statistics_date_range");
     if (persisted) {
       try {
         return JSON.parse(persisted);
       } catch (e) {
-        console.warn('Failed to parse persisted date range:', e);
+        console.warn("Failed to parse persisted date range:", e);
       }
     }
     return { type: "today" };
@@ -56,14 +56,14 @@ const OutletHeader = () => {
   // Listen for loading state changes from Statistics page
   useEffect(() => {
     const handleLoadingStart = () => {
-      console.log('Statistics data loading started');
+      console.log("Statistics data loading started");
       setIsDataLoading(true);
     };
 
     const handleLoadingEnd = () => {
-      console.log('Statistics data loading ended');
+      console.log("Statistics data loading ended");
       setIsDataLoading(false);
-      
+
       // Start the cooldown period
       setRefreshCooldown(true);
       setTimeout(() => {
@@ -72,18 +72,24 @@ const OutletHeader = () => {
     };
 
     const handleOpenOutletSelector = () => {
-      console.log('Opening outlet selector from modal');
+      console.log("Opening outlet selector from modal");
       setIsModalOpen(true);
     };
 
-    window.addEventListener('statistics:loading:start', handleLoadingStart);
-    window.addEventListener('statistics:loading:end', handleLoadingEnd);
-    window.addEventListener('open:outlet:selector', handleOpenOutletSelector);
+    window.addEventListener("statistics:loading:start", handleLoadingStart);
+    window.addEventListener("statistics:loading:end", handleLoadingEnd);
+    window.addEventListener("open:outlet:selector", handleOpenOutletSelector);
 
     return () => {
-      window.removeEventListener('statistics:loading:start', handleLoadingStart);
-      window.removeEventListener('statistics:loading:end', handleLoadingEnd);
-      window.removeEventListener('open:outlet:selector', handleOpenOutletSelector);
+      window.removeEventListener(
+        "statistics:loading:start",
+        handleLoadingStart
+      );
+      window.removeEventListener("statistics:loading:end", handleLoadingEnd);
+      window.removeEventListener(
+        "open:outlet:selector",
+        handleOpenOutletSelector
+      );
     };
   }, []);
 
@@ -112,9 +118,9 @@ const OutletHeader = () => {
     // Reset date range to 'today' when outlet changes
     const newDateRange = { type: "today" };
     setDateRange(newDateRange);
-    
+
     // Persist the reset date range
-    localStorage.setItem('statistics_date_range', JSON.stringify(newDateRange));
+    localStorage.setItem("statistics_date_range", JSON.stringify(newDateRange));
 
     // Dispatch an event to notify other components that the outlet has changed
     const event = new CustomEvent("outlet:changed", { detail: outlet });
@@ -123,10 +129,10 @@ const OutletHeader = () => {
 
   const handleDateRangeChange = (range) => {
     setDateRange(range);
-    
+
     // Persist the date range to localStorage
-    localStorage.setItem('statistics_date_range', JSON.stringify(range));
-    
+    localStorage.setItem("statistics_date_range", JSON.stringify(range));
+
     // Dispatch a custom event that components can listen for
     const event = new CustomEvent("daterange:changed", { detail: range });
     window.dispatchEvent(event);
@@ -137,37 +143,43 @@ const OutletHeader = () => {
     try {
       // If already loading or in cooldown, don't allow refresh
       if (isDataLoading || refreshCooldown) {
-        console.warn('Refresh action blocked: ' + 
-          (isDataLoading ? 'Data is still loading' : 'In cooldown period'));
+        console.warn(
+          "Refresh action blocked: " +
+            (isDataLoading ? "Data is still loading" : "In cooldown period")
+        );
         return Promise.resolve();
       }
 
       // Dispatch refresh request event before starting the refresh
-      window.dispatchEvent(new CustomEvent('refresh:requested'));
+      window.dispatchEvent(new CustomEvent("refresh:requested"));
 
       // Dispatch events to refresh data
-      window.dispatchEvent(new CustomEvent("daterange:changed", { 
-        detail: dateRange 
-      }));
+      window.dispatchEvent(
+        new CustomEvent("daterange:changed", {
+          detail: dateRange,
+        })
+      );
 
       if (currentOutlet) {
-        window.dispatchEvent(new CustomEvent("outlet:changed", { 
-          detail: currentOutlet 
-        }));
+        window.dispatchEvent(
+          new CustomEvent("outlet:changed", {
+            detail: currentOutlet,
+          })
+        );
       }
 
       return Promise.resolve();
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.error("Error refreshing data:", error);
       setIsDataLoading(false);
-      window.dispatchEvent(new CustomEvent('statistics:loading:end'));
+      window.dispatchEvent(new CustomEvent("statistics:loading:end"));
       return Promise.reject(error);
     }
   };
 
   const handleLogout = () => {
     // Clear persisted date range on logout
-    localStorage.removeItem('statistics_date_range');
+    localStorage.removeItem("statistics_date_range");
     logout();
   };
 
@@ -215,15 +227,14 @@ const OutletHeader = () => {
           {/* Date Range Picker - always visible when outlet is selected but only enabled on Statistics page */}
           {currentOutlet && (
             <>
-              <div className="hidden md:block ml-4">
-                <DateRangePicker
-                  onChange={
-                    isStatisticsPage ? handleDateRangeChange : undefined
-                  }
-                  initialValue="today"
-                  disabled={!isStatisticsPage}
-                />
-              </div>
+              {isStatisticsPage && (
+                <div className="hidden md:block ml-4">
+                  <DateRangePicker
+                    onChange={handleDateRangeChange}
+                    initialValue="today"
+                  />
+                </div>
+              )}
               {currentOutlet && (
                 <RefreshButton
                   onRefresh={handleRefresh}
