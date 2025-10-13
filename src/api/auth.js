@@ -14,7 +14,7 @@ export const authApi = {
   checkVersion: async () => {
     const response = await axios.post(`${COMMON_PREFIX}/check_version`, {
       app_type: APP_TYPE_VERSIONCHECK,
-      app_version: APP_VERSION,
+      version: APP_VERSION,
     });
     return response.data;
   },
