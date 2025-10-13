@@ -26,8 +26,8 @@ export const STATISTICS_PREFIX = `${API_PREFIX}/outlet_statistics`;
 // App metadata
 export const APP_VERSION = "2.1.1";
 export const APP_TYPE = "money_dashboard"; // used for general references
-export const APP_TYPE_VERSIONCHECK = "money_dashbaord"; // required by check_version (backend expected spelling)
-export const APP_TYPE_DASHBOARD = "money_dashbaord"; // backend expected value for auth
+export const APP_TYPE_VERSIONCHECK = "money_dashboard"; // required by check_version (backend expected spelling)
+export const APP_TYPE_DASHBOARD = "money_dashboard"; // backend expected value for auth
 
 const axiosInstance = axios.create({
   baseURL: isProductionMode ? BASE_URL.prod : BASE_URL.dev,
