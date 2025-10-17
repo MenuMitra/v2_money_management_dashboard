@@ -113,22 +113,54 @@ export default function OutletDetails() {
     return formatter.format(num);
   };
 
-  const formatTime = (datetimeStr) => {
-    if (!datetimeStr) return "N/A";
+  const formatTime = (raw) => {
+    if (!raw) return "N/A";
 
-    try {
-      const timePart = datetimeStr.split(" ")[1];
-      if (!timePart) return "N/A";
+    const value = String(raw).trim();
 
-      const [hours, minutes] = timePart.split(":");
-      const h = parseInt(hours, 10);
-      const ampm = h >= 12 ? "PM" : "AM";
-      const hour12 = h % 12 || 12;
-
+    // Helper to format 24h -> 12h with AM/PM
+    const to12h = (h24, m) => {
+      const hoursNum = Number(h24);
+      const minutes = String(m).padStart(2, "0");
+      if (Number.isNaN(hoursNum)) return null;
+      const ampm = hoursNum >= 12 ? "PM" : "AM";
+      const hour12 = hoursNum % 12 || 12;
       return `${hour12}:${minutes} ${ampm}`;
-    } catch (e) {
-      return datetimeStr;
+    };
+
+    // Case 1: Explicit 12h with AM/PM e.g. "03:29:00 PM" or "4:22 pm"
+    const match12h = value.match(
+      /^(?:.*?\b)?(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)\b/i
+    );
+    if (match12h) {
+      let [, h, m, ap] = match12h;
+      // Normalize hour to 1-12 and minutes 00-59
+      let hourNum = Number(h);
+      if (hourNum <= 0) hourNum = 12;
+      if (hourNum > 12) hourNum = hourNum % 12 || 12;
+      const minutes = String(m).padStart(2, "0");
+      const ampm = ap.toUpperCase();
+      return `${hourNum}:${minutes} ${ampm}`;
     }
+
+    // Case 2: ISO or date-time like "2025-09-29T11:48:13" or "2025-09-29 15:04:05"
+    const matchIso = value.match(/\b(\d{2}):(\d{2})(?::\d{2})\b/);
+    if (matchIso) {
+      const [, h, m] = matchIso;
+      const formatted = to12h(h, m);
+      if (formatted) return formatted;
+    }
+
+    // Case 3: Plain 24h time like "15:30" or "09:05"
+    const match24h = value.match(/^\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*$/);
+    if (match24h) {
+      const [, h, m] = match24h;
+      const formatted = to12h(h, m);
+      if (formatted) return formatted;
+    }
+
+    // Fallback: return as-is
+    return value || "N/A";
   };
 
   const toTitleCase = (str) => {
