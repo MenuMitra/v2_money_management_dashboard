@@ -186,6 +186,14 @@ export default function Login() {
       if (value !== "" && index < 3) {
         otpRefs[index + 1].current.focus();
       }
+
+      // If all 4 digits are filled, auto verify with the latest array
+      if (value !== "" && newOtp.every((digit) => digit !== "")) {
+        // Allow state to update before verifying
+        setTimeout(() => {
+          handleVerifyOtp(undefined, newOtp);
+        }, 0);
+      }
     }
   };
 
@@ -198,12 +206,14 @@ export default function Login() {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
+  const handleVerifyOtp = async (e, providedOtpArray) => {
     if (e) e.preventDefault();
     setError("");
 
+    const otpArray = providedOtpArray ?? otp;
+
     // Check if OTP is complete
-    if (otp.some((digit) => !digit)) {
+    if (otpArray.some((digit) => !digit)) {
       setError("Please enter the complete 4-digit OTP");
       return;
     }
@@ -211,7 +221,7 @@ export default function Login() {
     // Get device information
     const deviceId = getOrGenerateDeviceId();
     const deviceModel = getDeviceInfo();
-    const enteredOtp = otp.join("");
+    const enteredOtp = otpArray.join("");
 
     // Get FCM token if available (implement this later if needed)
     const fcmToken = localStorage.getItem("fcm_token") || null;
@@ -359,10 +369,43 @@ export default function Login() {
                   placeholder="Enter 10-digit mobile number"
                   value={mobileNumber}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === "" || /^\d+$/.test(value)) {
-                      setMobileNumber(value.slice(0, 10));
+                    // Allow only digits, ensure first digit is 6-9, max length 10
+                    let value = e.target.value.replace(/\D/g, "");
+                    if (value.length > 0 && !/^[6-9]/.test(value)) {
+                      value = value.replace(/^[0-5]+/, "");
                     }
+                    setMobileNumber(value.slice(0, 10));
+                  }}
+                  onKeyDown={(e) => {
+                    const key = e.key;
+                    const controlKeys = [
+                      "Backspace",
+                      "Delete",
+                      "ArrowLeft",
+                      "ArrowRight",
+                      "Tab",
+                      "Home",
+                      "End",
+                      "Enter",
+                      "NumpadEnter",
+                    ];
+                    if (!/^\d$/.test(key) && !controlKeys.includes(key)) {
+                      e.preventDefault();
+                      return;
+                    }
+                    // Prevent 0-5 as the first digit
+                    if (mobileNumber.length === 0 && /^[0-5]$/.test(key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData.getData("text") || "";
+                    let value = pasted.replace(/\D/g, "");
+                    if (value.length > 0 && !/^[6-9]/.test(value)) {
+                      value = value.replace(/^[0-5]+/, "");
+                    }
+                    setMobileNumber(value.slice(0, 10));
+                    e.preventDefault();
                   }}
                   disabled={loading}
                 />
