@@ -129,15 +129,21 @@ export default function OutletDetails() {
     };
 
     // Case 1: Explicit 12h with AM/PM e.g. "03:29:00 PM" or "4:22 pm"
+    // Match patterns like "5:40 PM", "05:40:00 PM", "12:30 AM", etc.
     const match12h = value.match(
-      /^(?:.*?\b)?(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)\b/i
+      /(?:^|\b)(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)\b/i
     );
     if (match12h) {
       let [, h, m, ap] = match12h;
       // Normalize hour to 1-12 and minutes 00-59
       let hourNum = Number(h);
-      if (hourNum <= 0) hourNum = 12;
-      if (hourNum > 12) hourNum = hourNum % 12 || 12;
+      // Handle midnight and noon
+      if (hourNum === 12) {
+        hourNum = 12;
+      } else if (hourNum > 12) {
+        // For times like "13:00 PM" (invalid but handle gracefully)
+        hourNum = hourNum % 12 || 12;
+      }
       const minutes = String(m).padStart(2, "0");
       const ampm = ap.toUpperCase();
       return `${hourNum}:${minutes} ${ampm}`;
