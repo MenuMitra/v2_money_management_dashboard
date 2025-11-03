@@ -1,5 +1,28 @@
 import React, { useEffect, useState, useRef } from "react";
 import { FaXmark } from "react-icons/fa6";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faShoppingBag,
+  faRupeeSign,
+  faCalculator,
+  faClock,
+  faArrowLeft,
+  faCalendarDays,
+  faCircleXmark,
+  faCheck,
+  faXmark,
+  faGift,
+  faBook,
+  faCreditCard,
+  faHome,
+  faTruck,
+  faUtensils,
+  faChartBar,
+  faFileInvoiceDollar,
+  faBolt,
+  faCopy,
+  faExclamationCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { useStatistics } from "../api/statistics";
 import ReactApexChart from "react-apexcharts";
 import { useOutletId, useOutletWarning } from "../hooks/useOutletId";
@@ -335,19 +358,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: data.success_orders || 0,
       color: "bg-green-100 text-green-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-green-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faCheck} className="h-5 w-5 text-green-500 mt-8" />
       ),
     },
     {
@@ -355,19 +366,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: data.cancelled_orders || 0,
       color: "bg-red-100 text-red-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-red-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faXmark} className="h-5 w-5 text-red-500 mt-8" />
       ),
     },
     {
@@ -375,19 +374,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: data.complementary_orders || 0,
       color: "bg-purple-100 text-purple-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-purple-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faGift} className="h-5 w-5 text-purple-500 mt-8" />
       ),
     },
     {
@@ -395,19 +382,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: data.KOT_orders || 0,
       color: "bg-yellow-100 text-yellow-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-yellow-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faBook} className="h-5 w-5 text-yellow-500 mt-8" />
       ),
     },
     {
@@ -415,19 +390,7 @@ const OrderStatisticsCard = ({ orderStats }) => {
       count: data.udhari_orders || 0,
       color: "bg-blue-100 text-blue-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-blue-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faCreditCard} className="h-5 w-5 text-blue-500 mt-8" />
       ),
     },
   ];
@@ -481,19 +444,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: data["dine-in"] || 0,
       color: "bg-purple-100 text-purple-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-purple-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faHome} className="h-5 w-5 text-purple-500 mt-8" />
       ),
     },
     {
@@ -501,19 +452,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: data["parcel"] || 0,
       color: "bg-green-100 text-green-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-green-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faTruck} className="h-5 w-5 text-green-500 mt-8" />
       ),
     },
     {
@@ -521,19 +460,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: data["delivery"] || 0,
       color: "bg-blue-100 text-blue-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-blue-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faBolt} className="h-5 w-5 text-blue-500 mt-8" />
       ),
     },
     {
@@ -541,19 +468,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: data["counter"] || 0,
       color: "bg-red-100 text-red-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-red-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faCopy} className="h-5 w-5 text-red-500 mt-8" />
       ),
     },
     {
@@ -561,19 +476,7 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
       count: data["drive-through"] || 0,
       color: "bg-yellow-100 text-yellow-800",
       icon: (
-        <svg
-          className="h-5 w-5 text-yellow-500 mt-8"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-          />
-        </svg>
+        <FontAwesomeIcon icon={faArrowLeft} className="h-5 w-5 text-yellow-500 mt-8" />
       ),
     },
   ];
@@ -1796,52 +1699,16 @@ const PeakTimeAnalysisChart = ({ peakTimeData }) => {
         {/* Summary badges */}
         <div className="flex flex-wrap gap-2 mt-2">
           <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-            <svg
-              className="h-4 w-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
+            <FontAwesomeIcon icon={faShoppingBag} className="h-4 w-4 mr-1" />
             Total: {totalOrders} orders
           </div>
           <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-            <svg
-              className="h-4 w-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <FontAwesomeIcon icon={faRupeeSign} className="h-4 w-4 mr-1" />
             Revenue: {formatCurrency(totalRevenue)}
           </div>
           {peakPeriod && data[peakPeriod.key].order_count > 0 && (
             <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
-              <svg
-                className="h-4 w-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+              <FontAwesomeIcon icon={faBolt} className="h-4 w-4 mr-1" />
               Peak: {peakPeriod.name}
             </div>
           )}
@@ -3265,20 +3132,7 @@ export default function Statistics() {
             className="mr-3 p-1 rounded-full hover:bg-gray-100"
             aria-label="Go back"
           >
-            <svg
-              className="w-6 h-6 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
+            <FontAwesomeIcon icon={faArrowLeft} className="w-6 h-6 text-gray-500" />
           </button>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
             Statistics Dashboard
@@ -3301,20 +3155,7 @@ export default function Statistics() {
         {activeDateRangeText && (
           <div className="mt-2 sm:mt-0 flex items-center">
             <span className="inline-flex items-center px-4 py-2 rounded-md bg-primary-50 text-primary-800 border border-primary-200 shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-primary-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+              <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5 mr-2 text-primary-500" />
               <span className="font-medium">
                 Filtered by: {activeDateRangeText}
               </span>
@@ -3328,18 +3169,7 @@ export default function Statistics() {
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-red-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <FontAwesomeIcon icon={faCircleXmark} className="h-5 w-5 text-red-400" />
             </div>
             <div className="ml-3">
               <p className="text-sm text-red-700">
@@ -3548,67 +3378,19 @@ const SummaryCard = ({ title, value, icon }) => {
     switch (icon) {
       case "orders":
         return (
-          <svg
-            className="h-8 w-8 text-blue-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-            />
-          </svg>
+          <FontAwesomeIcon icon={faShoppingBag} className="h-8 w-8 text-blue-500" />
         );
       case "revenue":
         return (
-          <svg
-            className="h-8 w-8 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <FontAwesomeIcon icon={faRupeeSign} className="h-8 w-8 text-green-500" />
         );
       case "average":
         return (
-          <svg
-            className="h-8 w-8 text-purple-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-            />
-          </svg>
+          <FontAwesomeIcon icon={faCalculator} className="h-8 w-8 text-purple-500" />
         );
       case "time":
         return (
-          <svg
-            className="h-8 w-8 text-orange-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <FontAwesomeIcon icon={faClock} className="h-8 w-8 text-orange-500" />
         );
       default:
         return null;

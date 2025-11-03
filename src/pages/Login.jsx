@@ -31,16 +31,16 @@ const menuMitraSocialLinks = [
     color: "text-blue-600 hover:bg-blue-50 hover:border-blue-500",
   },
   {
-    name: "YouTube",
-    url: "https://www.youtube.com/@menumitra",
-    icon: "fab fa-youtube",
-    color: "text-red-600 hover:bg-red-50 hover:border-red-500",
-  },
-  {
     name: "Instagram",
     url: "https://www.instagram.com/menumitra/",
     icon: "ri-instagram-fill",
     color: "text-pink-600 hover:bg-pink-50 hover:border-pink-500",
+  },
+  {
+    name: "YouTube",
+    url: "https://www.youtube.com/@menumitra",
+    icon: "fab fa-youtube",
+    color: "text-red-600 hover:bg-red-50 hover:border-red-500",
   },
 ];
 
@@ -272,7 +272,7 @@ export default function Login() {
       const response = await resendOtp(mobileNumber);
 
       if (response.success) {
-        setCountdown(15);
+        setCountdown(20);
         setResendDisabled(true);
 
         // Focus the first OTP input after resending
@@ -567,6 +567,33 @@ export default function Login() {
                 {menuMitraCompanyInfo.name}
               </a>
             </div>
+            {/* Footer Links (Home, Book a Demo, Contact, Support) */}
+            <div className="mt-8 flex justify-center space-x-6">
+              <a
+                href="https://menumitra.com/"
+                className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
+              >
+                Home
+              </a>
+              <a
+                href="https://menumitra.com/book_demo"
+                className="text-[#2a6db0] hover:text-[#1f4e7d] font-medium text-base"
+              >
+                Book a Demo
+              </a>
+              <a
+                href="https://menumitra.com/about_us"
+                className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
+              >
+                Contact
+              </a>
+              <a
+                href="https://menumitra.com/support"
+                className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
+              >
+                Support
+              </a>
+            </div>
 
             <div className="mt-6 flex justify-center space-x-6">
               {menuMitraSocialLinks.map((social) => (
@@ -587,34 +614,6 @@ export default function Login() {
               <span className="font-medium">Version {APP_VERSION}</span>
               <span>|</span>
               <span>13 Aug 2025</span>
-            </div>
-
-            {/* Footer Links (Home, Book a Demo, Contact, Support) */}
-            <div className="mt-8 flex justify-center space-x-6">
-              <a
-                href="https://menumitra.com/"
-                className="text-gray-300 hover:text-primary-600 font-medium text-base"
-              >
-                Home
-              </a>
-              <a
-                href="https://menumitra.com/book_demo"
-                className="text-gray-300 hover:text-primary-600 font-medium text-base"
-              >
-                Book a Demo
-              </a>
-              <a
-                href="https://menumitra.com/about_us"
-                className="text-gray-300 hover:text-primary-600 font-medium text-base"
-              >
-                Contact
-              </a>
-              <a
-                href="https://menumitra.com/support"
-                className="text-gray-300 hover:text-primary-600 font-medium text-base"
-              >
-                Support
-              </a>
             </div>
 
             {/* Contact info commented out as requested */}

@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { useOutlet } from "../context/OutletContext";
 import { useAuth } from "../context/AuthContext";
 import OutletSelector from "./OutletSelector";
@@ -302,24 +304,14 @@ const OutletHeader = () => {
               <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-1 z-50 border border-gray-200 w-32">
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 hover:text-primary-600 transition-colors focus:outline-none"
+                  className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100 hover:text-red-700 transition-colors focus:outline-none"
                 >
                   <div className="flex items-center">
-                    <svg
+                    <FontAwesomeIcon
+                      icon={faRightFromBracket}
                       className="h-4 w-4 mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                    Logout
+                    />
+                    <span>Logout</span>
                   </div>
                 </button>
               </div>

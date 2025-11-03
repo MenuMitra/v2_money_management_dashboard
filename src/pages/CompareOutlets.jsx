@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faArrowsRotate,
+  faRightLeft,
+  faXmark,
+  faPlus,
+  faBuilding,
+} from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { api, API_PATHS } from "../api/index";
 import { useOutlet } from "../context/OutletContext";
 import { useOutletWarning } from "../hooks/useOutletId.jsx";
 import OutletSelector from "../components/OutletSelector";
 import { Breadcrumb } from "../components";
-import {useOutletComparison, outletCompareKeys} from "../hooks/queries/useOutletComparison";
+import {
+  useOutletComparison,
+  outletCompareKeys,
+} from "../hooks/queries/useOutletComparison";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 export default function CompareOutlets() {
@@ -281,90 +293,92 @@ export default function CompareOutlets() {
   };
 
   // Update the handleOutletSelect function to check for inactive outlet
-const handleOutletSelect = async (selectedOutlet) => {
-  try {
-    setError(null);
+  const handleOutletSelect = async (selectedOutlet) => {
+    try {
+      setError(null);
 
-    if (!selectedOutlet) {
-      throw new Error("No outlet selected");
+      if (!selectedOutlet) {
+        throw new Error("No outlet selected");
+      }
+
+      console.log("Selected outlet data:", selectedOutlet);
+
+      // Check if outlet is inactive
+      if (selectedOutlet.is_active === false) {
+        setError("Cannot select an inactive outlet for comparison");
+        return;
+      }
+
+      // Limit maximum outlets
+      if (
+        selectedOutlets.length >= MAX_COMPARE_OUTLETS &&
+        refreshOutletIndex === null
+      ) {
+        setError(`You can only compare up to ${MAX_COMPARE_OUTLETS} outlets`);
+        return;
+      }
+
+      // Prevent selecting current outlet
+      if (
+        selectedOutlet.outlet_id.toString() ===
+        currentOutlet?.outlet_id?.toString()
+      ) {
+        setError("You cannot select the current outlet for comparison");
+        return;
+      }
+
+      // Prevent duplicates
+      if (
+        selectedOutlets.some(
+          (o) => o.outlet_id.toString() === selectedOutlet.outlet_id.toString()
+        )
+      ) {
+        setError("This outlet is already selected for comparison");
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Fetch comparison data
+      const outletId = selectedOutlet.outlet_id;
+      const comparisonData = await fetchOutletCompareDetails(outletId);
+
+      if (!comparisonData) {
+        throw new Error(
+          `Could not fetch comparison data for outlet ${outletId}`
+        );
+      }
+
+      // Prepare the outlet object with all data
+      const outletWithData = {
+        id: outletId,
+        outlet_id: outletId,
+        name: selectedOutlet.name,
+        address: selectedOutlet.address || "",
+        ...comparisonData,
+      };
+
+      if (refreshOutletIndex !== null) {
+        // Replace existing outlet at index
+        setSelectedOutlets((prev) => {
+          const copy = [...prev];
+          copy[refreshOutletIndex] = outletWithData;
+          return copy;
+        });
+      } else {
+        // Add new outlet
+        setSelectedOutlets((prev) => [...prev, outletWithData]);
+      }
+
+      setIsOutletSelectorOpen(false);
+      setRefreshOutletIndex(null);
+    } catch (err) {
+      console.error("Error adding outlet:", err);
+      setError(`Failed to add outlet for comparison: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
-
-    console.log("Selected outlet data:", selectedOutlet);
-
-    // Check if outlet is inactive
-    if (selectedOutlet.is_active === false) {
-      setError("Cannot select an inactive outlet for comparison");
-      return;
-    }
-
-    // Limit maximum outlets
-    if (
-      selectedOutlets.length >= MAX_COMPARE_OUTLETS &&
-      refreshOutletIndex === null
-    ) {
-      setError(`You can only compare up to ${MAX_COMPARE_OUTLETS} outlets`);
-      return;
-    }
-
-    // Prevent selecting current outlet
-    if (
-      selectedOutlet.outlet_id.toString() === currentOutlet?.outlet_id?.toString()
-    ) {
-      setError("You cannot select the current outlet for comparison");
-      return;
-    }
-
-    // Prevent duplicates
-    if (
-      selectedOutlets.some(
-        (o) => o.outlet_id.toString() === selectedOutlet.outlet_id.toString()
-      )
-    ) {
-      setError("This outlet is already selected for comparison");
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Fetch comparison data
-    const outletId = selectedOutlet.outlet_id;
-    const comparisonData = await fetchOutletCompareDetails(outletId);
-
-    if (!comparisonData) {
-      throw new Error(`Could not fetch comparison data for outlet ${outletId}`);
-    }
-
-    // Prepare the outlet object with all data
-    const outletWithData = {
-      id: outletId,
-      outlet_id: outletId,
-      name: selectedOutlet.name,
-      address: selectedOutlet.address || "",
-      ...comparisonData,
-    };
-
-    if (refreshOutletIndex !== null) {
-      // Replace existing outlet at index
-      setSelectedOutlets((prev) => {
-        const copy = [...prev];
-        copy[refreshOutletIndex] = outletWithData;
-        return copy;
-      });
-    } else {
-      // Add new outlet
-      setSelectedOutlets((prev) => [...prev, outletWithData]);
-    }
-
-    setIsOutletSelectorOpen(false);
-    setRefreshOutletIndex(null);
-  } catch (err) {
-    console.error("Error adding outlet:", err);
-    setError(`Failed to add outlet for comparison: ${err.message}`);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   const handleRefreshOutlet = (index) => {
     const outletToRefresh = selectedOutlets[index];
@@ -567,22 +581,7 @@ const handleOutletSelect = async (selectedOutlet) => {
       className="group h-9 w-9 rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
       disabled={isLoading || isLoadingComparison}
     >
-      <svg
-        className="w-5 h-5"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <g transform="scale(-1,1) translate(-24,0)">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          />
-        </g>
-      </svg>
+      <FontAwesomeIcon icon={faArrowsRotate} className="w-5 h-5" />
     </button>
   );
 
@@ -612,19 +611,10 @@ const handleOutletSelect = async (selectedOutlet) => {
                 className="mr-3 p-1 rounded-full hover:bg-gray-100"
                 aria-label="Go back"
               >
-                <svg
+                <FontAwesomeIcon
+                  icon={faArrowLeft}
                   className="w-6 h-6 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 00/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
+                />
               </button>
               <h1 className="text-xl font-bold text-gray-800">
                 Compare Outlets
@@ -680,39 +670,20 @@ const handleOutletSelect = async (selectedOutlet) => {
                             className="text-blue-600 hover:text-blue-800 p-1 rounded border border-gray-300 mx-2"
                             title="Change outlet"
                           >
-                            <svg
+                            <FontAwesomeIcon
+                              icon={faRightLeft}
                               className="h-5 w-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                              />
-                            </svg>
-                          </button> 
+                            />
+                          </button>
                           <button
                             onClick={() => handleRemoveOutlet(idx)}
                             className="text-red-600 hover:text-red-800 p-1 rounded border border-gray-300 mx-2"
                             title="Remove outlet"
-                          > 
-                            <svg
+                          >
+                            <FontAwesomeIcon
+                              icon={faXmark}
                               className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 00/svg"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
+                            />
                           </button>
                         </div>
                       </div>
@@ -727,20 +698,10 @@ const handleOutletSelect = async (selectedOutlet) => {
                         className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
                         disabled={isPageLoading}
                       >
-                        <svg
+                        <FontAwesomeIcon
+                          icon={faPlus}
                           className="w-4 h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                          />
-                        </svg>
+                        />
                         Select Outlet
                       </button>
                     </th>
@@ -758,20 +719,10 @@ const handleOutletSelect = async (selectedOutlet) => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start">
                         <div className="flex-shrink-0 bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center text-blue-600">
-                          <svg
+                          <FontAwesomeIcon
+                            icon={faBuilding}
                             className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                            />
-                          </svg>
+                          />
                         </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">
@@ -803,20 +754,10 @@ const handleOutletSelect = async (selectedOutlet) => {
                       <div className="flex justify-between">
                         <div className="flex items-start">
                           <div className="flex-shrink-0 bg-green-100 w-8 h-8 rounded-full flex items-center justify-center text-green-600">
-                            <svg
+                            <FontAwesomeIcon
+                              icon={faBuilding}
                               className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                              />
-                            </svg>
+                            />
                           </div>
                           <div className="ml-3">
                             <p className="text-sm font-medium text-gray-900">
@@ -862,22 +803,10 @@ const handleOutletSelect = async (selectedOutlet) => {
                           className="group h-9 w-9 rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
                           title="Refresh outlet data"
                         >
-                          <svg
+                          <FontAwesomeIcon
+                            icon={faArrowsRotate}
                             className="w-5 h-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <g transform="scale(-1,1) translate(-24,0)">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </g>
-                          </svg>
+                          />
                         </button>
                       </div>
                     </td>

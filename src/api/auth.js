@@ -62,6 +62,7 @@ export const authApi = {
       mobile,
       app_source: "money_dashboard",
       app_type: APP_TYPE_DASHBOARD,
+      version: APP_VERSION,
     });
     return response.data;
   },
