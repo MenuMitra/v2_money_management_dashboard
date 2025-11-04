@@ -44,6 +44,7 @@ const ReportTable = ({
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Initialize column selection state
   useEffect(() => {
@@ -125,6 +126,25 @@ const ReportTable = ({
       console.error("Error generating report:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Refresh data in-place without resetting UI state
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await apiCallback(filterParams);
+      if (response && Array.isArray(response)) {
+        setData(response);
+        // filteredData and displayedData will recompute via existing effects
+        if (onDataLoaded && typeof onDataLoaded === "function") {
+          onDataLoaded(response);
+        }
+      }
+    } catch (err) {
+      console.error("Error refreshing report:", err);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -662,13 +682,13 @@ const ReportTable = ({
 
                   {/* Refresh Button */}
                   <button
-                    onClick={handleGenerateReport}
+                    onClick={handleRefresh}
                     className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
                     title="Refresh Report"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
+                      className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"

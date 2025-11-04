@@ -31,7 +31,7 @@ export default function StaffReports() {
       exportFormat: (row) => capitalizeWords(row.name)
     },
     {
-      header: 'Role',
+      Header: 'Role',
       accessor: 'role',
       Cell: (row) => (
         <div className="capitalize">{row.role || 'N/A'}</div>
@@ -39,24 +39,24 @@ export default function StaffReports() {
       exportFormat: (row) => capitalizeWords(row.role)
     },
     {
-      header: 'Mobile',
+      Header: 'Mobile',
       accessor: 'mobile',
       Cell: (row) => row.mobile || 'N/A'
     },
     {
-      header: 'Email',
+      Header: 'Email',
       accessor: 'email',
       Cell: (row) => row.email || 'N/A',
       exportFormat: (row) => capitalizeWords(row.email)
     },
     {
-      header: 'Address',
+      Header: 'Address',
       accessor: 'address',
       Cell: (row) => row.address || 'N/A',
       exportFormat: (row) => capitalizeWords(row.address)
     },
     {
-      header: 'Status',
+      Header: 'Status',
       accessor: 'is_active',
       Cell: (row) => {
         const isActive = row.is_active;
@@ -80,12 +80,13 @@ export default function StaffReports() {
       }
     },
     {
-      header: 'Last Login',
+      Header: 'Last Login',
       accessor: 'last_login',
-      Cell: (row) => row.last_login || 'N/A'
+      Cell: (row) => row.last_login || 'N/A',
+      exportFormat: (row) => row.last_login || 'N/A'
     },
     {
-      header: 'Staff Type',
+      Header: 'Staff Type',
       accessor: 'type',
       Cell: (row) => {
         const type = row.type;

@@ -118,6 +118,12 @@ const FoodTypeChart = ({ foodTypeData }) => {
       toolbar: {
         show: false,
       },
+      zoom: {
+        enabled: false,
+      },
+      selection: {
+        enabled: false,
+      },
     },
     plotOptions: {
       bar: {
@@ -145,6 +151,9 @@ const FoodTypeChart = ({ foodTypeData }) => {
         },
       },
       tickPlacement: "on",
+      crosshairs: {
+        show: false,
+      },
     },
     yaxis: {
       title: {
@@ -155,6 +164,10 @@ const FoodTypeChart = ({ foodTypeData }) => {
       opacity: 1,
     },
     tooltip: {
+      followCursor: true,
+      shared: true,
+      intersect: false,
+      fixed: { enabled: false },
       y: {
         formatter: function (val) {
           return val + " orders";
@@ -553,6 +566,12 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
       toolbar: {
         show: false,
       },
+      zoom: {
+        enabled: false,
+      },
+      selection: {
+        enabled: false,
+      },
     },
     plotOptions: {
       bar: {
@@ -579,6 +598,9 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
         },
       },
       tickPlacement: "on",
+      crosshairs: {
+        show: false,
+      },
     },
     yaxis: {
       title: {
@@ -589,6 +611,10 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
       opacity: 1,
     },
     tooltip: {
+      followCursor: true,
+      shared: true,
+      intersect: false,
+      fixed: { enabled: false },
       y: {
         formatter: function (val) {
           return val + " orders";
@@ -1290,6 +1316,12 @@ const AppUsageStatsChart = ({ appUsageData }) => {
       toolbar: {
         show: false,
       },
+      zoom: {
+        enabled: false,
+      },
+      selection: {
+        enabled: false,
+      },
     },
     plotOptions: {
       bar: {
@@ -1335,6 +1367,9 @@ const AppUsageStatsChart = ({ appUsageData }) => {
           fontFamily: "Inter, sans-serif",
         },
       },
+      crosshairs: {
+        show: false,
+      },
     },
     yaxis: {
       labels: {
@@ -1356,6 +1391,10 @@ const AppUsageStatsChart = ({ appUsageData }) => {
       },
     },
     tooltip: {
+      followCursor: true,
+      shared: true,
+      intersect: false,
+      fixed: { enabled: false },
       y: {
         formatter: function (val) {
           return val + " usages";
@@ -1601,6 +1640,12 @@ const PeakTimeAnalysisChart = ({ peakTimeData }) => {
       toolbar: {
         show: false,
       },
+      zoom: {
+        enabled: false,
+      },
+      selection: {
+        enabled: false,
+      },
     },
     plotOptions: {
       bar: {
@@ -1634,6 +1679,9 @@ const PeakTimeAnalysisChart = ({ peakTimeData }) => {
           fontFamily: "Inter, sans-serif",
         },
       },
+      crosshairs: {
+        show: false,
+      },
     },
     yaxis: {
       title: {
@@ -1644,6 +1692,10 @@ const PeakTimeAnalysisChart = ({ peakTimeData }) => {
       opacity: 1,
     },
     tooltip: {
+      followCursor: true,
+      shared: true,
+      intersect: false,
+      fixed: { enabled: false },
       y: {
         formatter: function (val) {
           return val + " orders";
