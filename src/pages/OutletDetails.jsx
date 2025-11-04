@@ -14,7 +14,7 @@ import {
   faTableColumns,
   faUser,
   faUserShield,
-  faChefHat,
+  faHatChef,
   faBoxes,
   faLayerGroup,
   faCopy,
@@ -30,7 +30,7 @@ import {
   faUtensils as faUtensils2,
   faTag,
   faPhone,
-  faMapMarkerAlt,
+  faLocationDot,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function OutletDetails() {
@@ -355,7 +355,7 @@ export default function OutletDetails() {
         />
       ),
       chef: (
-        <FontAwesomeIcon icon={faChefHat} className="h-5 w-5 text-orange-600" />
+        <FontAwesomeIcon icon={faHatChef} className="h-5 w-5 text-orange-600" />
       ),
       Inventory_Items: (
         <FontAwesomeIcon icon={faBoxes} className="h-5 w-5 text-teal-600" />
@@ -805,7 +805,7 @@ export default function OutletDetails() {
                     )}
                   </div>
                   <FontAwesomeIcon
-                    icon={faChefHat}
+                    icon={faHatChef}
                     className="w-4 h-4 text-gray-400"
                   />
                 </div>
@@ -913,7 +913,7 @@ export default function OutletDetails() {
                     {isPageLoading ? "N/A" : toTitleCase(outletData.address)}
                   </div>
                   <FontAwesomeIcon
-                    icon={faMapMarkerAlt}
+                    icon={faLocationDot}
                     className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5"
                   />
                 </div>
