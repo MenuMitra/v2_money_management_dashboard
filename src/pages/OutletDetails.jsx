@@ -14,7 +14,7 @@ import {
   faTableColumns,
   faUser,
   faUserShield,
-  faHatChef,
+  faDrumstickBite,
   faBoxes,
   faLayerGroup,
   faCopy,
@@ -355,7 +355,10 @@ export default function OutletDetails() {
         />
       ),
       chef: (
-        <FontAwesomeIcon icon={faHatChef} className="h-5 w-5 text-orange-600" />
+        <FontAwesomeIcon
+          icon={faDrumstickBite}
+          className="h-5 w-5 text-orange-600"
+        />
       ),
       Inventory_Items: (
         <FontAwesomeIcon icon={faBoxes} className="h-5 w-5 text-teal-600" />
@@ -805,7 +808,7 @@ export default function OutletDetails() {
                     )}
                   </div>
                   <FontAwesomeIcon
-                    icon={faHatChef}
+                    icon={faDrumstickBite}
                     className="w-4 h-4 text-gray-400"
                   />
                 </div>
