@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { authApi } from "../api/auth";
 import { APP_VERSION } from "../api/axios";
-import { isUpdateRequired } from "../utils/versionUtils";
 
 // MenuMitra company info and social links
 const menuMitraCompanyInfo = {};
@@ -125,36 +123,6 @@ export default function Login() {
     }
 
     try {
-      // Version check before sending OTP
-      try {
-        const versionResp = await authApi.checkVersion();
-        // Handle server-driven flags first if present
-        if (versionResp?.force_update || versionResp?.update_required) {
-          const msg =
-            versionResp?.message ||
-            "A new version is required. Please update the app.";
-          setError(msg);
-          return;
-        }
-        // If server provides latest/min version, do a local comparison as fallback
-        const serverVersion =
-          versionResp?.latest_version ||
-          versionResp?.min_version ||
-          versionResp?.required_version;
-        if (serverVersion && isUpdateRequired(APP_VERSION, serverVersion)) {
-          setError(
-            `Update required. Current ${APP_VERSION}, required ${serverVersion}. Please update.`
-          );
-          return;
-        }
-      } catch (verErr) {
-        // If version check fails, block login to be safe
-        setError(
-          "Unable to verify app version. Please check your internet or try again later."
-        );
-        return;
-      }
-
       const response = await login(mobileNumber);
 
       if (response.success) {
@@ -576,13 +544,13 @@ export default function Login() {
                 Home
               </a>
               <a
-                href="https://menumitra.com/book_demo"
+                href="https://menumitra.com/book-demo"
                 className="text-[#2a6db0] hover:text-[#1f4e7d] font-medium text-base"
               >
                 Book a Demo
               </a>
               <a
-                href="https://menumitra.com/about_us"
+                href="https://menumitra.com/contact"
                 className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
               >
                 Contact
