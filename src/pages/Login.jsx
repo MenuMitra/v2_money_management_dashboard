@@ -18,7 +18,7 @@ const menuMitraAppInfo = {
 const menuMitraSocialLinks = [
   {
     name: "Google",
-    url: "https://www.google.com/company/102429337/admin/dashboard/",
+    url: "https://menumitra.com/",
     icon: "ri-google-fill",
     color: "text-green-700 hover:bg-blue-50 hover:border-blue-600",
   },
@@ -68,6 +68,7 @@ export default function Login() {
   const [countdown, setCountdown] = useState(0);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [error, setError] = useState("");
+  const [invalidOtp, setInvalidOtp] = useState(false);
   const otpRefs = [useRef(), useRef(), useRef(), useRef()];
   const mobileInputRef = useRef(null);
 
@@ -150,6 +151,12 @@ export default function Login() {
       newOtp[index] = value;
       setOtp(newOtp);
 
+      // Clear invalid OTP error when user starts typing
+      if (invalidOtp) {
+        setInvalidOtp(false);
+        setError("");
+      }
+
       // Auto-focus next input if current one is filled
       if (value !== "" && index < 3) {
         otpRefs[index + 1].current.focus();
@@ -208,11 +215,24 @@ export default function Login() {
 
       if (response.success) {
         // Login successful - navigation will happen through the auth context
+        setInvalidOtp(false);
         navigate("/", { replace: true });
       } else {
-        setError(response.error);
+        // Check if error is related to invalid OTP
+        const errorMessage = response.error || "";
+        const isInvalidOtpError =
+          errorMessage.toLowerCase().includes("otp") ||
+          errorMessage.toLowerCase().includes("invalid") ||
+          errorMessage.toLowerCase().includes("incorrect") ||
+          errorMessage.toLowerCase().includes("wrong");
+        
+        if (isInvalidOtpError) {
+          setInvalidOtp(true);
+        }
+        setError(errorMessage);
       }
     } catch (err) {
+      setInvalidOtp(true);
       setError("Failed to verify OTP. Please try again.");
     }
   };
@@ -221,6 +241,7 @@ export default function Login() {
     setShowOtpForm(false);
     setOtp(["", "", "", ""]);
     setError("");
+    setInvalidOtp(false);
 
     // Focus the mobile input field after going back
     setTimeout(() => {
@@ -235,6 +256,7 @@ export default function Login() {
 
     setError("");
     setOtp(["", "", "", ""]);
+    setInvalidOtp(false);
 
     try {
       const response = await resendOtp(mobileNumber);
@@ -309,7 +331,9 @@ export default function Login() {
 
           {error && (
             <div
-              className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded relative"
+              className={`bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded relative ${
+                showOtpForm ? "text-center" : ""
+              }`}
               role="alert"
             >
               <span className="block sm:inline">{error}</span>
@@ -460,7 +484,11 @@ export default function Login() {
                       value={otp[index]}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-16 h-16 text-center text-3xl font-semibold border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      className={`w-16 h-16 text-center text-3xl font-semibold border rounded-md shadow-sm focus:outline-none ${
+                        invalidOtp
+                          ? "border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 focus:ring-primary-500 focus:border-primary-500"
+                      }`}
                       disabled={loading}
                     />
                   ))}
@@ -539,24 +567,32 @@ export default function Login() {
             <div className="mt-8 flex justify-center space-x-6">
               <a
                 href="https://menumitra.com/"
+                target="_blank"
+                rel="noreferrer"
                 className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
               >
                 Home
               </a>
               <a
                 href="https://menumitra.com/book-demo"
+                target="_blank"
+                rel="noreferrer"
                 className="text-[#2a6db0] hover:text-[#1f4e7d] font-medium text-base"
               >
                 Book a Demo
               </a>
               <a
                 href="https://menumitra.com/contact"
+                target="_blank"
+                rel="noreferrer"
                 className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
               >
                 Contact
               </a>
               <a
-                href="https://menumitra.com/support"
+                href="https://menumitra.com/customer-care"
+                target="_blank"
+                rel="noreferrer"
                 className="text-[#2a6db0]  hover:text-primary-600 font-medium text-base"
               >
                 Support
@@ -581,7 +617,7 @@ export default function Login() {
             <div className="flex justify-center items-center gap-3 mt-4 text-base text-gray-500 dark:text-gray-400">
               <span className="font-medium">Version {APP_VERSION}</span>
               <span>|</span>
-              <span>13 Aug 2025</span>
+              <span>04-Nov-2025</span>
             </div>
 
             {/* Contact info commented out as requested */}

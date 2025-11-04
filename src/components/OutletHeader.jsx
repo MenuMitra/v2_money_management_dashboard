@@ -14,6 +14,7 @@ const OutletHeader = () => {
   const { logout, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [dateRange, setDateRange] = useState(() => {
     // Load persisted date range from localStorage on component mount
     const persisted = localStorage.getItem("statistics_date_range");
@@ -34,6 +35,7 @@ const OutletHeader = () => {
   const role = localStorage.getItem("role") || "User";
   const userName = localStorage.getItem("user_name") || "User";
   const userId = localStorage.getItem("user_id");
+  const userEmail = localStorage.getItem("user_email") || localStorage.getItem("mobile_number") || "";
 
   // Store the current user ID to detect changes
   const userIdRef = useRef(userId);
@@ -54,6 +56,7 @@ const OutletHeader = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
 
   // Listen for loading state changes from Statistics page
   useEffect(() => {
@@ -179,10 +182,20 @@ const OutletHeader = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogout(false); // Close the dropdown
+    setShowLogoutConfirm(true); // Show confirmation modal
+  };
+
+  const handleConfirmLogout = () => {
     // Clear persisted date range on logout
     localStorage.removeItem("statistics_date_range");
+    setShowLogoutConfirm(false); // Close the modal
     logout();
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutConfirm(false); // Close the modal
   };
 
   const toggleLogout = () => {
@@ -202,7 +215,7 @@ const OutletHeader = () => {
               {loading ? (
                 <span className="animate-pulse">Loading...</span>
               ) : currentOutlet ? (
-                <span className="font-medium truncate">
+                <span className="font-medium truncate capitalize">
                   {currentOutlet.name}
                 </span>
               ) : (
@@ -262,7 +275,7 @@ const OutletHeader = () => {
           >
             <div className="flex flex-row items-center cursor-pointer">
               <div className="text-sm hidden md:block mr-2">
-                <p className="text-gray-700 font-medium leading-tight">
+                <p className="text-gray-700 font-medium leading-tight capitalize">
                   {userName}
                 </p>
                 <p className="text-xs text-gray-500 capitalize leading-tight">
@@ -290,7 +303,7 @@ const OutletHeader = () => {
                 </svg>
               </div>
               <div className="text-sm md:hidden ml-2">
-                <p className="text-gray-700 font-medium leading-tight">
+                <p className="text-gray-700 font-medium leading-tight capitalize">
                   {userName}
                 </p>
                 <p className="text-xs text-gray-500 capitalize leading-tight">
@@ -299,11 +312,27 @@ const OutletHeader = () => {
               </div>
             </div>
 
-            {/* Improved Logout button that appears on click */}
+            {/* Improved Logout dropdown that appears on click */}
             {showLogout && (
-              <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-1 z-50 border border-gray-200 w-32">
+              <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-2 z-50 border border-gray-200 w-56">
+                {/* User Information Section */}
+                <div className="px-4 py-2">
+                  <p className="text-sm font-semibold text-gray-800 leading-tight capitalize">
+                    {userName}
+                  </p>
+                  {userEmail && (
+                    <p className="text-xs text-gray-600 leading-tight mt-1">
+                      {userEmail}
+                    </p>
+                  )}
+                </div>
+                
+                {/* Separator */}
+                <div className="border-t border-gray-200 my-1"></div>
+                
+                {/* Logout Button */}
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100 hover:text-red-700 transition-colors focus:outline-none"
                 >
                   <div className="flex items-center">
@@ -325,6 +354,53 @@ const OutletHeader = () => {
         onClose={handleCloseModal}
         onSelect={handleSelectOutlet}
       />
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            {/* Header Section */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-center">
+                <FontAwesomeIcon
+                  icon={faRightFromBracket}
+                  className="h-5 w-5 text-red-600 mr-3"
+                />
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Confirm Logout
+                </h3>
+              </div>
+            </div>
+
+            {/* Message Section */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <p className="text-sm text-gray-700 text-center">
+                Are you sure you want to logout?
+              </p>
+            </div>
+
+            {/* Action Buttons Section */}
+            <div className="px-6 py-4 flex justify-between gap-3">
+              <button
+                onClick={handleCancelLogout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmLogout}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center"
+              >
+                <FontAwesomeIcon
+                  icon={faRightFromBracket}
+                  className="h-4 w-4 mr-2"
+                />
+                Exit Me
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

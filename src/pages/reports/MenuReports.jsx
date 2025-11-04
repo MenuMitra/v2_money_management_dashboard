@@ -114,7 +114,8 @@ export default function MenuReports() {
         <div className="font-medium text-gray-900 whitespace-nowrap">
           {row.menu_name}
         </div>
-      )
+      ),
+      exportFormat: (row) => row.menu_name || '-'
     },
     {
       Header: 'Category',
@@ -130,7 +131,8 @@ export default function MenuReports() {
       Header: 'Description',
       accessor: 'description',
       minWidth: 250,
-      Cell: (row) => <ExpandableCell value={row.description} />
+      Cell: (row) => <ExpandableCell value={row.description} />,
+      exportFormat: (row) => (row.description ? String(row.description) : '-')
     },
     {
       Header: 'Status',
@@ -141,6 +143,7 @@ export default function MenuReports() {
           {row.is_available ? 'Available' : 'Unavailable'}
         </div>
       ),
+      exportFormat: (row) => (row.is_available ? 'Available' : 'Unavailable'),
       sortFunction: (a, b, direction) => {
         const aValue = a.is_available ? 1 : 0;
         const bValue = b.is_available ? 1 : 0;
@@ -169,7 +172,8 @@ export default function MenuReports() {
       },
       exportFormat: (row) => {
         if (!row.portions || row.portions.length === 0) return 'No portions';
-        return row.portions.map(p => `${p.portion_name} (₹${p.price})`).join(', ');
+        // Use 'Rs' for reliable PDF rendering
+        return row.portions.map(p => `${p.portion_name} (Rs ${p.price})`).join(', ');
       }
     }
   ];

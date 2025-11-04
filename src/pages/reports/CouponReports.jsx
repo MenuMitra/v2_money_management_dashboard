@@ -27,88 +27,77 @@ export default function CouponReports() {
     }
   };
 
-  // Define columns for the coupon report
+// Define columns for the coupon report
 const columns = [
   {
-    header: 'Order Number',
+    Header: 'Order Number',
     accessor: 'order_number',
     Cell: (row) => (
       <div className="font-medium text-gray-900">#{row.order_number || 'N/A'}</div>
     )
   },
   {
-    header: 'Order Type',
+    Header: 'Order Type',
     accessor: 'order_type',
     Cell: (row) => (
       <div className="capitalize">{row.order_type || 'N/A'}</div>
     )
   },
   {
-    header: 'Status',
+    Header: 'Status',
     accessor: 'order_status',
     Cell: (row) => {
-      const status = row.order_status?.toLowerCase();
-      if (status === 'completed') {
-        return (
-          <div className="text-sm capitalize text-gray-700">
-            {row.order_status}
-          </div>
-        );
-      } else if (status === 'cancelled') {
-        return (
-          <div className="text-sm capitalize text-gray-700">
-            {row.order_status}
-          </div>
-        );
-      } else {
-        return (
-          <div className="text-sm capitalize text-gray-700">
-            {row.order_status || 'Unknown'}
-          </div>
-        );
-      }
+      const status = row.order_status
+        ? row.order_status.charAt(0).toUpperCase() + row.order_status.slice(1).toLowerCase()
+        : 'Unknown';
+      return (
+        <div className="text-sm text-gray-700">{status}</div>
+      );
     }
   },
   {
-    header: 'Coupon Code',
+    Header: 'Coupon Code',
     accessor: 'coupon_code',
     Cell: (row) => (
       <div className="font-medium text-gray-900">{row.coupon_code || 'N/A'}</div>
     )
   },
   {
-    header: 'Coupon Type',
+    Header: 'Coupon Type',
     accessor: 'coupon_type',
     Cell: (row) => (
       <div className="capitalize">{row.coupon_type || 'N/A'}</div>
     )
   },
-{
-  header: 'Discount',
-  accessor: 'discount_amount',
-  Cell: (row) => {
-    const discount = (row.total_bill_amount || 0) - (row.final_grand_total || 0);
-    return (
-      <div className="font-medium text-gray-900">
-        ₹{discount.toFixed(2)}
-      </div>
-    );
-  }
-},
-
   {
-    header: 'Bill Amount',
-    accessor: 'total_bill_amount',
-    Cell: (row) => (
-      <div>₹{row.total_bill_amount?.toFixed(2) || '0.00'}</div>
-    )
+    Header: 'Discount',
+    accessor: 'discount_amount',
+    Cell: (row) => {
+      const discount = (row.total_bill_amount || 0) - (row.final_grand_total || 0);
+      return (
+        <div className="font-medium text-gray-900">Rs {discount.toFixed(2)}</div>
+      );
+    },
+    exportFormat: (row) => {
+      const discount = (row.total_bill_amount || 0) - (row.final_grand_total || 0);
+      return `Rs ${discount.toFixed(2)}`;
+    }
   },
   {
-    header: 'Final Amount',
+    Header: 'Bill Amount',
+    accessor: 'total_bill_amount',
+    Cell: (row) => (
+      <div>Rs {(row.total_bill_amount ?? 0).toFixed(2)}</div>
+    ),
+    exportFormat: (row) => `Rs ${(row.total_bill_amount ?? 0).toFixed(2)}`
+  },
+  {
+    Header: 'Final Amount',
     accessor: 'final_grand_total',
     Cell: (row) => (
-      <div className="font-medium text-gray-900">₹{row.final_grand_total?.toFixed(2) || '0.00'}</div>
-    )
+      <div className="font-medium text-gray-900">Rs {(row.final_grand_total ?? 0).toFixed(2)}</div>
+    ),
+    exportFormat: (row) => `Rs ${(row.final_grand_total ?? 0).toFixed(2)}`
   }
 ];
 
