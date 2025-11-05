@@ -304,7 +304,7 @@ export default function CompareOutlets() {
       console.log("Selected outlet data:", selectedOutlet);
 
       // Check if outlet is inactive
-      if (selectedOutlet.is_active === false) {
+      if (selectedOutlet.is_active === false || selectedOutlet.outlet_status === false) {
         setError("Cannot select an inactive outlet for comparison");
         return;
       }
