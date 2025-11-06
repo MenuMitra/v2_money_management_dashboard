@@ -660,14 +660,12 @@ const CollectionSourcesCard = ({ collectionData }) => {
   const methodsToDisplay =
     visiblePaymentMethods.length > 0 ? visiblePaymentMethods : paymentMethods;
 
-  // Calculate max amount for progress bars (exclude pending amounts)
-  // This ensures progress bars don't overflow when pending amounts are larger than collected total
-  const collectedMethods = methodsToDisplay.filter(
-    (method) => method.name !== "Udhari Pending"
-  );
-  const maxCollectedAmount = Math.max(
-    ...collectedMethods.map((method) => method.amount),
-    totalAmount || 0
+  // Calculate total of all amounts (including pending) for progress bar calculation
+  // Each bar represents its percentage of the total collection
+  // Formula: (method.amount / sum of all amounts) * 100
+  const sumOfAllAmounts = methodsToDisplay.reduce(
+    (sum, method) => sum + (method.amount || 0),
+    0
   );
 
   return (
@@ -693,13 +691,15 @@ const CollectionSourcesCard = ({ collectionData }) => {
       </div>
       <div className="p-5 space-y-4">
         {methodsToDisplay.map((method, index) => {
-          // For Udhari Pending, don't show progress bar or use a different scale
-          const isPending = method.name === "Udhari Pending";
-          const scaleAmount = isPending ? maxCollectedAmount : maxCollectedAmount;
-          const barWidth = Math.min(
-            (method.amount / (scaleAmount || 1)) * 100,
-            100
-          );
+          // Calculate bar width as percentage of total of all amounts
+          // Formula: (method.amount / sum of all amounts) * 100
+          // This shows each method's proportion of the total collection
+          let barWidth = 0;
+          if (sumOfAllAmounts > 0) {
+            barWidth = (method.amount / sumOfAllAmounts) * 100;
+            // Ensure it doesn't exceed 100% (shouldn't happen, but safety check)
+            barWidth = Math.min(barWidth, 100);
+          }
 
           return (
             <div key={index} className="space-y-2">
@@ -714,9 +714,9 @@ const CollectionSourcesCard = ({ collectionData }) => {
                   <span className="text-gray-500">({method.orders} orders)</span>
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="w-full bg-gray-200 rounded-full h-2.5 relative overflow-hidden">
                 <div
-                  className={`${method.color} h-2.5 rounded-full`}
+                  className={`${method.color} h-2.5 rounded-full transition-all duration-300`}
                   style={{
                     width: `${barWidth}%`,
                     maxWidth: "100%",
