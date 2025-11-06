@@ -220,11 +220,12 @@ export default function PaymentReports() {
         >
           <option value="all">All Payment Methods</option>
           <option value="upi">UPI</option>
+          <option value="gpay">GPay</option>
+          <option value="phonepay">PhonePe</option>
           <option value="cash">Cash</option>
           <option value="card">Card</option>
-          <option value="complementary">Complementary</option>
-          <option value="udhari">Udhari</option>
           <option value="advance_payment">Advance Payment</option>
+          <option value="unknown">Unknown</option>
         </select>
       </div>
     </div>
