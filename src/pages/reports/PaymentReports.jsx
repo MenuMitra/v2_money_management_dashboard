@@ -222,6 +222,8 @@ export default function PaymentReports() {
           <option value="upi">UPI</option>
           <option value="cash">Cash</option>
           <option value="card">Card</option>
+          <option value="complementary">Complementary</option>
+          <option value="udhari">Udhari</option>
           <option value="advance_payment">Advance Payment</option>
         </select>
       </div>
