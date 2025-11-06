@@ -579,6 +579,10 @@ const CollectionSourcesCard = ({ collectionData }) => {
     udhari_paid_amount: 0,
     udhari_pending_orders: 0,
     udhari_paid_orders: 0,
+    unknown_payment_amount: 0,
+    unknown_payment_orders: 0,
+    other_amount: 0,
+    other_orders: 0,
   };
 
   const formatCurrency = (amount) => {
@@ -639,6 +643,12 @@ const CollectionSourcesCard = ({ collectionData }) => {
       orders: data.udhari_pending_orders || 0,
       color: "bg-red-500",
     },
+    {
+      name: "Unknown Payment",
+      amount: data.unknown_payment_amount || 0,
+      orders: data.unknown_payment_orders || 0,
+      color: "bg-gray-500",
+    },
   ];
 
   // Filter out payment methods with zero amounts and orders
@@ -649,6 +659,16 @@ const CollectionSourcesCard = ({ collectionData }) => {
   // If all payment methods have zero values, show all methods (default behavior)
   const methodsToDisplay =
     visiblePaymentMethods.length > 0 ? visiblePaymentMethods : paymentMethods;
+
+  // Calculate max amount for progress bars (exclude pending amounts)
+  // This ensures progress bars don't overflow when pending amounts are larger than collected total
+  const collectedMethods = methodsToDisplay.filter(
+    (method) => method.name !== "Udhari Pending"
+  );
+  const maxCollectedAmount = Math.max(
+    ...collectedMethods.map((method) => method.amount),
+    totalAmount || 0
+  );
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -672,29 +692,40 @@ const CollectionSourcesCard = ({ collectionData }) => {
         </div>
       </div>
       <div className="p-5 space-y-4">
-        {methodsToDisplay.map((method, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">
-                {method.name}
-              </span>
-              <span className="text-sm">
-                <span className="font-medium text-gray-900">
-                  {formatCurrency(method.amount)}
-                </span>{" "}
-                <span className="text-gray-500">({method.orders} orders)</span>
-              </span>
+        {methodsToDisplay.map((method, index) => {
+          // For Udhari Pending, don't show progress bar or use a different scale
+          const isPending = method.name === "Udhari Pending";
+          const scaleAmount = isPending ? maxCollectedAmount : maxCollectedAmount;
+          const barWidth = Math.min(
+            (method.amount / (scaleAmount || 1)) * 100,
+            100
+          );
+
+          return (
+            <div key={index} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">
+                  {method.name}
+                </span>
+                <span className="text-sm">
+                  <span className="font-medium text-gray-900">
+                    {formatCurrency(method.amount)}
+                  </span>{" "}
+                  <span className="text-gray-500">({method.orders} orders)</span>
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className={`${method.color} h-2.5 rounded-full`}
+                  style={{
+                    width: `${barWidth}%`,
+                    maxWidth: "100%",
+                  }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div
-                className={`${method.color} h-2.5 rounded-full`}
-                style={{
-                  width: `${(method.amount / (totalAmount || 1)) * 100}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -3652,7 +3683,10 @@ export default function Statistics() {
                 )}
                 title="Avg. Order Value"
                 icon="average"
-                tooltipContent="Average bill amount per order (total bill ÷ total orders)"
+                tooltipContent={
+                  `Average bill amount per order (total bill ÷ total orders)\n` +
+                  `Total Bill Amount: ${formatCurrency(displayData.analytic_reports.total_bill_amount)} (raw amount - sum of menu items, excludes discounts & GST)`
+                }
               />
             )}
           {(isLoading ||
