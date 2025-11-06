@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { FaXmark } from "react-icons/fa6";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,6 +22,7 @@ import {
   faBolt,
   faCopy,
   faExclamationCircle,
+  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { useStatistics } from "../api/statistics";
 import ReactApexChart from "react-apexcharts";
@@ -30,6 +31,339 @@ import { Breadcrumb } from "../components";
 import { useNavigate } from "react-router-dom";
 import { getDateRangeFromType, formatDateForAPI } from "../utils/dateUtils";
 import { SubscriptionRemainDay } from "./SubscriptionRemainDay";
+
+// Tooltip Component for calculation explanations
+const InfoTooltip = ({ content, className = "", preferredPosition = "right" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [tooltipStyle, setTooltipStyle] = useState({});
+  const [position, setPosition] = useState(preferredPosition);
+  const [arrowStyle, setArrowStyle] = useState({});
+  const tooltipRef = useRef(null);
+  const buttonRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const containerRef = useRef(null);
+
+  const calculatePosition = useCallback(() => {
+    if (!buttonRef.current || !tooltipRef.current) return;
+
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    const tooltipWidth = tooltipRef.current.offsetWidth || 320;
+    const tooltipHeight = tooltipRef.current.offsetHeight || 200;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    const spaceRight = viewportWidth - buttonRect.right;
+    const spaceLeft = buttonRect.left;
+    const spaceAbove = buttonRect.top;
+    const spaceBelow = viewportHeight - buttonRect.bottom;
+    const padding = 10; // Minimum padding from viewport edges
+
+    let tooltipPosition = preferredPosition;
+    let style = {};
+
+    if (preferredPosition === "bottom") {
+      // Bottom positioning - check if there's enough space below
+      const neededSpace = tooltipHeight + 20;
+
+      if (spaceBelow < neededSpace && spaceAbove > spaceBelow) {
+        // Not enough space below, position above instead
+        tooltipPosition = "top";
+        const top = buttonRect.top - tooltipHeight - 8;
+
+        // Calculate horizontal position
+        let left = buttonRect.left + buttonRect.width / 2 - tooltipWidth / 2;
+        const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+
+        // Adjust if going off left edge
+        if (left < padding) {
+          left = padding;
+        }
+        // Adjust if going off right edge
+        else if (left + tooltipWidth > viewportWidth - padding) {
+          left = viewportWidth - tooltipWidth - padding;
+        }
+
+        // Calculate arrow position relative to tooltip
+        const arrowLeft = buttonCenterX - left;
+
+        style = {
+          position: "fixed",
+          top: `${Math.max(padding, top)}px`,
+          left: `${left}px`,
+          transform: "none",
+        };
+
+        setArrowStyle({
+          left: `${Math.max(12, Math.min(arrowLeft, tooltipWidth - 12))}px`,
+        });
+      } else {
+        // Position below
+        tooltipPosition = "bottom";
+        const top = buttonRect.bottom + 8;
+
+        // Calculate horizontal position
+        let left = buttonRect.left + buttonRect.width / 2 - tooltipWidth / 2;
+        const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+
+        // Adjust if going off left edge
+        if (left < padding) {
+          left = padding;
+        }
+        // Adjust if going off right edge
+        else if (left + tooltipWidth > viewportWidth - padding) {
+          left = viewportWidth - tooltipWidth - padding;
+        }
+
+        // Calculate arrow position relative to tooltip
+        const arrowLeft = buttonCenterX - left;
+
+        style = {
+          position: "fixed",
+          top: `${top}px`,
+          left: `${left}px`,
+          transform: "none",
+        };
+
+        setArrowStyle({
+          left: `${Math.max(12, Math.min(arrowLeft, tooltipWidth - 12))}px`,
+        });
+      }
+    } else {
+      // Right/Left positioning
+      if (spaceRight < tooltipWidth + 20 && spaceLeft > tooltipWidth + 20) {
+        tooltipPosition = "left";
+      }
+
+      // Calculate vertical position
+      let top = buttonRect.top + buttonRect.height / 2 - tooltipHeight / 2;
+
+      // Adjust if going off top
+      if (top < padding) {
+        top = padding;
+      }
+      // Adjust if going off bottom
+      else if (top + tooltipHeight > viewportHeight - padding) {
+        top = viewportHeight - tooltipHeight - padding;
+      }
+
+      // Calculate horizontal position
+      let left;
+      if (tooltipPosition === "right") {
+        left = buttonRect.right + 8;
+        // If going off right edge, position to left instead
+        if (left + tooltipWidth > viewportWidth - padding) {
+          left = buttonRect.left - tooltipWidth - 8;
+          tooltipPosition = "left";
+        }
+      } else {
+        left = buttonRect.left - tooltipWidth - 8;
+        // If going off left edge, position to right instead
+        if (left < padding) {
+          left = buttonRect.right + 8;
+          tooltipPosition = "right";
+        }
+      }
+
+      style = {
+        position: "fixed",
+        top: `${top}px`,
+        left: `${left}px`,
+        transform: "none",
+      };
+
+      // For right/left positioning, arrow is centered vertically
+      setArrowStyle({});
+    }
+
+    setPosition(tooltipPosition);
+    setTooltipStyle(style);
+  }, [preferredPosition]);
+
+  const handleMouseEnter = () => {
+    // Clear any pending timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setIsVisible(true);
+    // Calculate position after a brief delay to allow DOM to update
+    setTimeout(() => {
+      calculatePosition();
+    }, 10);
+  };
+
+  const handleMouseLeave = () => {
+    // Add a small delay before closing to allow moving to tooltip
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+      timeoutRef.current = null;
+    }, 150);
+  };
+
+  // Recalculate position on scroll or resize
+  useEffect(() => {
+    if (isVisible) {
+      const handleScroll = () => calculatePosition();
+      const handleResize = () => calculatePosition();
+
+      window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("scroll", handleScroll, true);
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [isVisible, calculatePosition]);
+
+  return (
+    <div className={`relative inline-block ${className}`} ref={containerRef} style={{ zIndex: 1 }}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onClick={() => {
+          if (!isVisible) {
+            handleMouseEnter();
+          } else {
+            setIsVisible(false);
+          }
+        }}
+        aria-label="Show calculation info"
+      >
+        <FontAwesomeIcon icon={faInfoCircle} className="h-4 w-4" />
+      </button>
+      {isVisible && content && (
+        <div
+          ref={tooltipRef}
+          className="fixed w-80 max-w-[90vw] p-3 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg shadow-xl"
+          style={{
+            ...tooltipStyle,
+            zIndex: 99999,
+            maxHeight: "400px",
+            overflowY: "auto",
+            pointerEvents: "auto",
+          }}
+          onMouseEnter={() => {
+            // Clear timeout when entering tooltip
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+            setIsVisible(true);
+          }}
+          onMouseLeave={handleMouseLeave}
+        >
+          <div className="whitespace-pre-line leading-relaxed">{content}</div>
+          {/* Arrow pointing to the button */}
+          {position === "bottom" ? (
+            <>
+              <div
+                className="absolute -top-2 transform -translate-x-1/2"
+                style={{
+                  ...arrowStyle,
+                  width: 0,
+                  height: 0,
+                  borderLeft: "9px solid transparent",
+                  borderRight: "9px solid transparent",
+                  borderBottom: "9px solid #d1d5db",
+                }}
+              />
+              <div
+                className="absolute -top-1 transform -translate-x-1/2"
+                style={{
+                  ...arrowStyle,
+                  width: 0,
+                  height: 0,
+                  borderLeft: "8px solid transparent",
+                  borderRight: "8px solid transparent",
+                  borderBottom: "8px solid white",
+                }}
+              />
+            </>
+          ) : position === "top" ? (
+            <>
+              <div
+                className="absolute -bottom-2 transform -translate-x-1/2"
+                style={{
+                  ...arrowStyle,
+                  width: 0,
+                  height: 0,
+                  borderLeft: "9px solid transparent",
+                  borderRight: "9px solid transparent",
+                  borderTop: "9px solid #d1d5db",
+                }}
+              />
+              <div
+                className="absolute -bottom-1 transform -translate-x-1/2"
+                style={{
+                  ...arrowStyle,
+                  width: 0,
+                  height: 0,
+                  borderLeft: "8px solid transparent",
+                  borderRight: "8px solid transparent",
+                  borderTop: "8px solid white",
+                }}
+              />
+            </>
+          ) : position === "right" ? (
+            <>
+              <div
+                className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2"
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderTop: "9px solid transparent",
+                  borderBottom: "9px solid transparent",
+                  borderRight: "9px solid #d1d5db",
+                }}
+              />
+              <div
+                className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2"
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderTop: "8px solid transparent",
+                  borderBottom: "8px solid transparent",
+                  borderRight: "8px solid white",
+                  marginLeft: "1px",
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <div
+                className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2"
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderTop: "9px solid transparent",
+                  borderBottom: "9px solid transparent",
+                  borderLeft: "9px solid #d1d5db",
+                }}
+              />
+              <div
+                className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2"
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderTop: "8px solid transparent",
+                  borderBottom: "8px solid transparent",
+                  borderLeft: "8px solid white",
+                  marginRight: "1px",
+                }}
+              />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Food Type Chart Component
 const FoodTypeChart = ({ foodTypeData }) => {
@@ -102,10 +436,10 @@ const FoodTypeChart = ({ foodTypeData }) => {
         type === "veg"
           ? "Vegetarian"
           : type === "nonveg"
-          ? "Non-Vegetarian"
-          : type === "vegan"
-          ? "Vegan"
-          : "Egg",
+            ? "Non-Vegetarian"
+            : type === "vegan"
+              ? "Vegan"
+              : "Egg",
       data: daysToDisplay.map((day) => chartData[day][type] || 0),
     };
   });
@@ -189,7 +523,12 @@ const FoodTypeChart = ({ foodTypeData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">Food Types by Day</h3>
+          <InfoTooltip
+            content="Count of items sold by food type (veg/nonveg/vegan/egg) for each weekday, excluding cancelled orders"
+          />
+        </div>
         <p className="text-sm text-gray-500 mb-3">
           Distribution of food types across days of the week
         </p>
@@ -238,6 +577,8 @@ const CollectionSourcesCard = ({ collectionData }) => {
     total_amount: 0,
     udhari_pending_amount: 0,
     udhari_paid_amount: 0,
+    udhari_pending_orders: 0,
+    udhari_paid_orders: 0,
   };
 
   const formatCurrency = (amount) => {
@@ -281,8 +622,8 @@ const CollectionSourcesCard = ({ collectionData }) => {
     },
     {
       name: "Udhari Settle",
-      amount: data.udhari_amount || 0,
-      orders: data.udhari_orders || 0,
+      amount: data.udhari_paid_amount || 0,
+      orders: data.udhari_paid_orders || 0,
       color: "bg-green-500",
     },
     {
@@ -313,9 +654,14 @@ const CollectionSourcesCard = ({ collectionData }) => {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-800">
-            Total Collections Sources
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium text-gray-800">
+              Total Collections Sources
+            </h3>
+            <InfoTooltip
+              content="Breakdown of money collected by payment method (UPI, Cash, Card, Free orders, Credit orders, Advance payments) and total amount collected, excluding cancelled orders and pending credit"
+            />
+          </div>
           {hasTotal && (
             <p className="text-sm text-gray-500">
               <span className="font-medium text-gray-900">
@@ -418,7 +764,12 @@ const OrderStatisticsCard = ({ orderStats }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">Order Statistics</h3>
+          <InfoTooltip
+            content="Summary of order statuses including successful orders, cancelled orders, free orders, kitchen orders, and credit orders"
+          />
+        </div>
       </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {typesToDisplay.map((type, index) => (
@@ -504,9 +855,14 @@ const OrderTypeStatsCard = ({ orderTypeData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">
-          Order Type Statistics
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">
+            Order Type Statistics
+          </h3>
+          <InfoTooltip
+            content="Breakdown of orders by type (dine-in, parcel, delivery, counter, drive-through), excluding cancelled orders"
+          />
+        </div>
       </div>
       <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
         {typesToDisplay.map((type, index) => (
@@ -689,9 +1045,14 @@ const WeeklyOrderStatsChart = ({ weeklyData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">
-          Weekly Order Statistics
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">
+            Weekly Order Statistics
+          </h3>
+          <InfoTooltip
+            content="Order count for each day of the week with identification of busiest and quietest days"
+          />
+        </div>
         <div className="mt-2 flex flex-wrap gap-3">
           {peakDay[0] !== "None" && (
             <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -797,26 +1158,29 @@ const ProductsAnalysisCard = ({ categoryData }) => {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {/* Header & Tabs */}
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
+          <InfoTooltip
+            content="Analysis of menu items showing top sellers, low sellers, items never sold, average prices, and price recommendations based on performance"
+          />
+        </div>
 
         <div className="mt-4 flex justify-center">
           <div
-            className={`grid ${
-              hasTopSellingData + hasLowSellingData + hasNoSellingData === 1
-                ? "grid-cols-1"
-                : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2
+            className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1
+              ? "grid-cols-1"
+              : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2
                 ? "grid-cols-2"
                 : "grid-cols-3"
-            } gap-4 w-full`}
+              } gap-4 w-full`}
           >
             {hasTopSellingData && (
               <button
                 onClick={() => setActiveTab("top")}
-                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${
-                  activeTab === "top"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${activeTab === "top"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 Top Selling
               </button>
@@ -824,11 +1188,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             {hasLowSellingData && (
               <button
                 onClick={() => setActiveTab("low")}
-                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${
-                  activeTab === "low"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${activeTab === "low"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 Low Selling
               </button>
@@ -836,11 +1199,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             {hasNoSellingData && (
               <button
                 onClick={() => setActiveTab("no")}
-                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${
-                  activeTab === "no"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${activeTab === "no"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 No Selling
               </button>
@@ -963,11 +1325,10 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-2 py-1 border mx-1 text-sm rounded-md ${
-                  currentPage === i + 1
-                    ? "bg-purple-600 text-white border-purple-600"
-                    : "bg-white text-gray-500 border-gray-300"
-                }`}
+                className={`px-2 py-1 border mx-1 text-sm rounded-md ${currentPage === i + 1
+                  ? "bg-purple-600 text-white border-purple-600"
+                  : "bg-white text-gray-500 border-gray-300"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -1051,11 +1412,11 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
   const noSellingItemsFromDedicatedField = data.flatMap((category) =>
     category.no_selling && Array.isArray(category.no_selling)
       ? category.no_selling.map((item) => ({
-          menu_name: item.name,
-          sales_count: 0,
-          category_name: category.category_name,
-          item_id: item.item_id,
-        }))
+        menu_name: item.name,
+        sales_count: 0,
+        category_name: category.category_name,
+        item_id: item.item_id,
+      }))
       : []
   );
 
@@ -1089,10 +1450,10 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
     hasTopSellingData
       ? "top"
       : hasLowSellingData
-      ? "low"
-      : hasNoSellingData
-      ? "no"
-      : "top"
+        ? "low"
+        : hasNoSellingData
+          ? "no"
+          : "top"
   );
 
   // Get the items to display based on active tab
@@ -1135,10 +1496,10 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
         return topSellingItems.length > 0
           ? topSellingItems
           : lowSellingItems.length > 0
-          ? lowSellingItems
-          : noSellingItems.length > 0
-          ? noSellingItems
-          : [];
+            ? lowSellingItems
+            : noSellingItems.length > 0
+              ? noSellingItems
+              : [];
     }
   };
 
@@ -1148,24 +1509,22 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
         <h3 className="text-lg font-medium text-gray-800">Products Analysis</h3>
         <div className="mt-4 flex justify-center">
           <div
-            className={`grid ${
-              hasTopSellingData + hasLowSellingData + hasNoSellingData === 1
-                ? "grid-cols-1"
-                : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2
+            className={`grid ${hasTopSellingData + hasLowSellingData + hasNoSellingData === 1
+              ? "grid-cols-1"
+              : hasTopSellingData + hasLowSellingData + hasNoSellingData === 2
                 ? "grid-cols-2"
                 : hasTopSellingData + hasLowSellingData + hasNoSellingData === 3
-                ? "grid-cols-3"
-                : "grid-cols-1"
-            } gap-4 w-full max-w-md`}
+                  ? "grid-cols-3"
+                  : "grid-cols-1"
+              } gap-4 w-full max-w-md`}
           >
             {hasTopSellingData && (
               <button
                 onClick={() => setActiveTab("top")}
-                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === "top"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${activeTab === "top"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 Top Selling
               </button>
@@ -1173,11 +1532,10 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
             {hasLowSellingData && (
               <button
                 onClick={() => setActiveTab("low")}
-                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === "low"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${activeTab === "low"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 Low Selling
               </button>
@@ -1185,11 +1543,10 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
             {hasNoSellingData && (
               <button
                 onClick={() => setActiveTab("no")}
-                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${
-                  activeTab === "no"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${activeTab === "no"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 No Selling
               </button>
@@ -1257,13 +1614,12 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
         <div className="text-sm text-gray-700">
           {useDefaultData
             ? "Sample data"
-            : `${
-                activeTab === "top"
-                  ? "Top"
-                  : activeTab === "low"
-                  ? "Low"
-                  : "Non"
-              } selling items`}
+            : `${activeTab === "top"
+              ? "Top"
+              : activeTab === "low"
+                ? "Low"
+                : "Non"
+            } selling items`}
         </div>
 
         {/* Center section */}
@@ -1439,16 +1795,16 @@ const CategoryPerformanceCard = ({ categoryData }) => {
     categoryData && Array.isArray(categoryData) && categoryData.length > 0
       ? categoryData
       : [
-          {
-            category_name: "Sample Category",
-            total_orders: 0,
-            top_menus: [
-              { menu_name: "Sample Item 1", sales_count: 0 },
-              { menu_name: "Sample Item 2", sales_count: 0 },
-              { menu_name: "Sample Item 3", sales_count: 0 },
-            ],
-          },
-        ];
+        {
+          category_name: "Sample Category",
+          total_orders: 0,
+          top_menus: [
+            { menu_name: "Sample Item 1", sales_count: 0 },
+            { menu_name: "Sample Item 2", sales_count: 0 },
+            { menu_name: "Sample Item 3", sales_count: 0 },
+          ],
+        },
+      ];
 
   // Sort categories by total orders
   const sortedCategoryData = [...data].sort(
@@ -1467,9 +1823,14 @@ const CategoryPerformanceCard = ({ categoryData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">
-          Category Performance
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">
+            Category Performance
+          </h3>
+          <InfoTooltip
+            content="Sales analysis by menu category showing total items sold, total earnings, and top performing items in each category"
+          />
+        </div>
         <p className="text-sm text-gray-500">
           {categoriesToDisplay.length} categories
         </p>
@@ -1501,11 +1862,10 @@ const CategoryPerformanceCard = ({ categoryData }) => {
               <div
                 className="bg-purple-600 h-2.5 rounded-full"
                 style={{
-                  width: `${
-                    (category.total_orders /
-                      (categoriesToDisplay[0].total_orders || 1)) *
+                  width: `${(category.total_orders /
+                    (categoriesToDisplay[0].total_orders || 1)) *
                     100
-                  }%`,
+                    }%`,
                 }}
               ></div>
             </div>
@@ -1523,15 +1883,15 @@ const TopComboOrdersCard = ({ comboData }) => {
     comboData && Array.isArray(comboData) && comboData.length > 0
       ? comboData
       : [
-          {
-            items: [{ name: "Sample Item 1" }, { name: "Sample Item 2" }],
-            order_count: 0,
-          },
-          {
-            items: [{ name: "Sample Item 3" }, { name: "Sample Item 4" }],
-            order_count: 0,
-          },
-        ];
+        {
+          items: [{ name: "Sample Item 1" }, { name: "Sample Item 2" }],
+          order_count: 0,
+        },
+        {
+          items: [{ name: "Sample Item 3" }, { name: "Sample Item 4" }],
+          order_count: 0,
+        },
+      ];
 
   // Filter out combos with zero orders
   const visibleCombos = data.filter((combo) => combo.order_count > 0);
@@ -1542,7 +1902,12 @@ const TopComboOrdersCard = ({ comboData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">Top Combo Orders</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">Top Combo Orders</h3>
+          <InfoTooltip
+            content="Most popular combinations of items ordered together in the same order"
+          />
+        </div>
         <p className="text-sm text-gray-500">
           Most frequently ordered combinations
         </p>
@@ -1741,9 +2106,14 @@ const PeakTimeAnalysisChart = ({ peakTimeData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">
-          Peak Time Analysis
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">
+            Peak Time Analysis
+          </h3>
+          <InfoTooltip
+            content="Order count and revenue by meal periods (Breakfast 6-11 AM, Lunch 11 AM-4 PM, Brunch 4-8 PM, Dinner 8 PM-12 AM), excluding cancelled, free, and unpaid credit orders"
+          />
+        </div>
         <p className="text-sm text-gray-500 mb-3">
           Order distribution by meal periods
         </p>
@@ -1838,10 +2208,16 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <div>
+          <div className="flex items-center gap-2">
             <h3 className="text-lg font-medium text-gray-800">
               Category Performance
             </h3>
+            <InfoTooltip
+              content="CATEGORY WISE PERFORMANCE:
+Total Orders: Total items sold in this category
+Total Earnings: Total money earned from this category
+Top Menus: Best-selling items in this category"
+            />
             <p className="text-sm text-gray-500">
               {categoriesToDisplay.length} categories
             </p>
@@ -1892,11 +2268,10 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
                   <div
                     className="bg-purple-600 h-2.5 rounded-full"
                     style={{
-                      width: `${
-                        (category.total_earnings /
-                          (categoriesToDisplay[0]?.total_earnings || 1)) *
+                      width: `${(category.total_earnings /
+                        (categoriesToDisplay[0]?.total_earnings || 1)) *
                         100
-                      }%`,
+                        }%`,
                     }}
                   ></div>
                 </div>
@@ -1915,11 +2290,10 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className={`p-2 rounded-md ${
-                      currentPage === 1
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`p-2 rounded-md ${currentPage === 1
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     <svg
                       className="w-4 h-4"
@@ -1940,11 +2314,10 @@ const EnhancedCategoryPerformanceCard = ({ categoryData }) => {
                       setCurrentPage(Math.min(totalPages, currentPage + 1))
                     }
                     disabled={currentPage === totalPages}
-                    className={`p-2 rounded-md ${
-                      currentPage === totalPages
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`p-2 rounded-md ${currentPage === totalPages
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     <svg
                       className="w-4 h-4"
@@ -2059,9 +2432,14 @@ const PriceRecommendationCard = ({ salesData }) => {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-800">
-            Price Recommendations
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium text-gray-800">
+              Price Recommendations
+            </h3>
+            <InfoTooltip
+              content="Analysis of menu items showing top sellers, low sellers, items never sold, average prices, and price recommendations based on performance"
+            />
+          </div>
           {data.statistics && (
             <div className="text-right">
               <p className="text-sm text-gray-500">Menu Analysis</p>
@@ -2136,11 +2514,10 @@ const PriceRecommendationCard = ({ salesData }) => {
                         </span>
                         {priceDifference !== 0 && (
                           <span
-                            className={`text-xs ${
-                              priceDifference > 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
+                            className={`text-xs ${priceDifference > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                              }`}
                           >
                             {priceDifference > 0 ? "+" : ""}
                             {formatCurrency(priceDifference)}(
@@ -2155,19 +2532,18 @@ const PriceRecommendationCard = ({ salesData }) => {
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          item.type === "top"
-                            ? "bg-green-100 text-green-800"
-                            : item.type === "low"
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.type === "top"
+                          ? "bg-green-100 text-green-800"
+                          : item.type === "low"
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {item.type === "top"
                           ? "Top"
                           : item.type === "low"
-                          ? "Low"
-                          : "No Sales"}
+                            ? "Low"
+                            : "No Sales"}
                       </span>
                     </td>
                   </tr>
@@ -2218,11 +2594,10 @@ const PriceRecommendationCard = ({ salesData }) => {
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -2243,11 +2618,10 @@ const PriceRecommendationCard = ({ salesData }) => {
                   setCurrentPage(Math.min(totalPages, currentPage + 1))
                 }
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -2281,13 +2655,13 @@ const CouponStatisticsCard = ({ couponData }) => {
     couponData && Array.isArray(couponData) && couponData.length > 0
       ? couponData
       : [
-          {
-            coupon_id: 1,
-            coupon_name: "SAMPLE001",
-            used_count: 0,
-            max_usage_limit: 50,
-          },
-        ];
+        {
+          coupon_id: 1,
+          coupon_name: "SAMPLE001",
+          used_count: 0,
+          max_usage_limit: 50,
+        },
+      ];
 
   // Filter out coupons with zero usage
   const visibleCoupons = data.filter((coupon) => coupon.used_count > 0);
@@ -2420,11 +2794,10 @@ const CouponStatisticsCard = ({ couponData }) => {
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className={`p-2 rounded-md ${
-                currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`p-2 rounded-md ${currentPage === 1
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               <svg
                 className="w-4 h-4"
@@ -2445,11 +2818,10 @@ const CouponStatisticsCard = ({ couponData }) => {
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
               disabled={currentPage === totalPages}
-              className={`p-2 rounded-md ${
-                currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`p-2 rounded-md ${currentPage === totalPages
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               <svg
                 className="w-4 h-4"
@@ -2510,36 +2882,41 @@ const UdhariPaymentStatsCard = ({ udhariData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">
-          Udhari Payment Statistics
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">
+            Udhari Payment Statistics
+          </h3>
+          <InfoTooltip
+            content="Summary of credit orders showing pending amount and paid amount with counts"
+          />
+        </div>
       </div>
       <div className="p-5">
         <div className="grid grid-cols-2 gap-4">
           {(udhariStats.udhari_pending.amount > 0 ||
             udhariStats.udhari_pending.count > 0) && (
-            <div className="bg-amber-50 p-4 rounded-lg">
-              <p className="text-sm text-amber-700 mb-1">Pending</p>
-              <p className="text-xl font-semibold text-amber-900">
-                {formatCurrency(udhariStats.udhari_pending.amount)}
-              </p>
-              <p className="text-xs text-amber-700 mt-1">
-                {udhariStats.udhari_pending.count} transactions
-              </p>
-            </div>
-          )}
+              <div className="bg-amber-50 p-4 rounded-lg">
+                <p className="text-sm text-amber-700 mb-1">Pending</p>
+                <p className="text-xl font-semibold text-amber-900">
+                  {formatCurrency(udhariStats.udhari_pending.amount)}
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  {udhariStats.udhari_pending.count} transactions
+                </p>
+              </div>
+            )}
           {(udhariStats.udhari_paid.amount > 0 ||
             udhariStats.udhari_paid.count > 0) && (
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-green-700 mb-1">Paid</p>
-              <p className="text-xl font-semibold text-green-900">
-                {formatCurrency(udhariStats.udhari_paid.amount)}
-              </p>
-              <p className="text-xs text-green-700 mt-1">
-                {udhariStats.udhari_paid.count} transactions
-              </p>
-            </div>
-          )}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <p className="text-sm text-green-700 mb-1">Paid</p>
+                <p className="text-xl font-semibold text-green-900">
+                  {formatCurrency(udhariStats.udhari_paid.amount)}
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  {udhariStats.udhari_paid.count} transactions
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </div>
@@ -2574,36 +2951,41 @@ const AdvancePaymentStatsCard = ({ advancePaymentData }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="p-5 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-800">
-          Advance Payment Statistics
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium text-gray-800">
+            Advance Payment Statistics
+          </h3>
+          <InfoTooltip
+            content="Summary of advance/booking payments showing partial payments received and settled/completed bookings with amounts"
+          />
+        </div>
       </div>
       <div className="p-5">
         <div className="grid grid-cols-2 gap-4">
           {(advanceStats.partial_payment.amount > 0 ||
             advanceStats.partial_payment.count > 0) && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-blue-700 mb-1">Partial Payment</p>
-              <p className="text-xl font-semibold text-blue-900">
-                {formatCurrency(advanceStats.partial_payment.amount)}
-              </p>
-              <p className="text-xs text-blue-700 mt-1">
-                {advanceStats.partial_payment.count} transactions
-              </p>
-            </div>
-          )}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-blue-700 mb-1">Partial Payment</p>
+                <p className="text-xl font-semibold text-blue-900">
+                  {formatCurrency(advanceStats.partial_payment.amount)}
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  {advanceStats.partial_payment.count} transactions
+                </p>
+              </div>
+            )}
           {(advanceStats.settled_payment.amount > 0 ||
             advanceStats.settled_payment.count > 0) && (
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <p className="text-sm text-purple-700 mb-1">Settled Payment</p>
-              <p className="text-xl font-semibold text-purple-900">
-                {formatCurrency(advanceStats.settled_payment.amount)}
-              </p>
-              <p className="text-xs text-purple-700 mt-1">
-                {advanceStats.settled_payment.count} transactions
-              </p>
-            </div>
-          )}
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <p className="text-sm text-purple-700 mb-1">Settled Payment</p>
+                <p className="text-xl font-semibold text-purple-900">
+                  {formatCurrency(advanceStats.settled_payment.amount)}
+                </p>
+                <p className="text-xs text-purple-700 mt-1">
+                  {advanceStats.settled_payment.count} transactions
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </div>
@@ -3006,9 +3388,8 @@ export default function Statistics() {
               "Nov",
               "Dec",
             ];
-            return `${date.getDate()} ${
-              months[date.getMonth()]
-            } ${date.getFullYear()}`;
+            return `${date.getDate()} ${months[date.getMonth()]
+              } ${date.getFullYear()}`;
           };
           return `${formatDate(currentDateRange.startDate)} to ${formatDate(
             currentDateRange.endDate
@@ -3228,8 +3609,8 @@ export default function Statistics() {
                 {typeof error === "string"
                   ? error
                   : error?.response?.data?.data?.detail ||
-                    error?.message ||
-                    "An error occurred while fetching statistics"}
+                  error?.message ||
+                  "An error occurred while fetching statistics"}
                 .
                 <button
                   className="ml-2 font-medium underline"
@@ -3252,6 +3633,7 @@ export default function Statistics() {
               value={displayData.analytic_reports.total_orders}
               title="Total Orders"
               icon="orders"
+              tooltipContent="Count of all non-cancelled orders placed"
             />
           )}
           {(isLoading || displayData?.analytic_reports?.total_revenue > 0) && (
@@ -3259,30 +3641,33 @@ export default function Statistics() {
               value={formatCurrency(displayData.analytic_reports.total_revenue)}
               title="Total Revenue"
               icon="revenue"
+              tooltipContent="Sum of money from paid orders excluding cancelled, free, and unpaid credit orders"
             />
           )}
           {(isLoading ||
             displayData?.analytic_reports?.avg_order_value > 0) && (
-            <SummaryCard
-              value={formatCurrency(
-                displayData.analytic_reports.avg_order_value
-              )}
-              title="Avg. Order Value"
-              icon="average"
-            />
-          )}
+              <SummaryCard
+                value={formatCurrency(
+                  displayData.analytic_reports.avg_order_value
+                )}
+                title="Avg. Order Value"
+                icon="average"
+                tooltipContent="Average bill amount per order (total bill ÷ total orders)"
+              />
+            )}
           {(isLoading ||
             (displayData?.analytic_reports?.average_turnover_time &&
               displayData?.analytic_reports?.average_turnover_time !==
-                "0 min")) && (
-            <SummaryCard
-              value={formatTurnoverTime(
-                displayData.analytic_reports.average_turnover_time
-              )}
-              title="Avg. Turnover Time"
-              icon="time"
-            />
-          )}
+              "0 min")) && (
+              <SummaryCard
+                value={formatTurnoverTime(
+                  displayData.analytic_reports.average_turnover_time
+                )}
+                title="Avg. Turnover Time"
+                icon="time"
+                tooltipContent="Average time from when order is placed to when it's paid"
+              />
+            )}
         </div>
 
         {/* Collection Sources and Order Statistics - Only render grid if at least one component has data */}
@@ -3425,7 +3810,7 @@ export default function Statistics() {
   );
 }
 
-const SummaryCard = ({ title, value, icon }) => {
+const SummaryCard = ({ title, value, icon, tooltipContent }) => {
   const getIconComponent = () => {
     switch (icon) {
       case "orders":
@@ -3457,7 +3842,12 @@ const SummaryCard = ({ title, value, icon }) => {
           <div className="ml-5 w-0 flex-1 flex-1">
             <dl>
               <dd>
-                <div className="text-lg font-medium text-gray-900">{value}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-lg font-medium text-gray-900">{value}</div>
+                  {tooltipContent && (
+                    <InfoTooltip content={tooltipContent} className="ml-1" preferredPosition="bottom" />
+                  )}
+                </div>
               </dd>
               <dt className="text-sm font-medium text-gray-500 truncate mt-1">
                 {title}
