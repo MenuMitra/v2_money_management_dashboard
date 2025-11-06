@@ -13,10 +13,10 @@ export default function InventoryReports() {
   const [inOutFilter, setInOutFilter] = useState('all');
   const [selectedSupplier, setSelectedSupplier] = useState('');
 
-  // Define columns for the report table - updated to match exact API response structure
+  // Define columns for the report table
   const columns = [
     {
-      header: 'Item Name',
+      Header: 'Item Name',
       accessor: 'name',
       Cell: (row) => (
         <div>
@@ -25,37 +25,58 @@ export default function InventoryReports() {
             <p className="text-xs text-gray-500 mt-1">{row.description}</p>
           )}
         </div>
-      )
+      ),
+      exportFormat: (row) => row.name
     },
     {
-      header: 'Category',
+      Header: 'Category',
       accessor: 'category',
-      Cell: (row) => row.category || 'Uncategorized'
+      Cell: (row) => row.category || 'Uncategorized',
+      exportFormat: (row) => row.category || 'Uncategorized'
     },
     {
-      header: 'Quantity',
+      Header: 'Quantity',
       accessor: 'quantity',
-      Cell: (row) => `${row.quantity || 0} ${row.unit_of_measure || 'units'}`
-    },
-    {
-      header: 'Unit Price',
-      accessor: 'unit_price',
-      Cell: (row) => `₹${Number(row.unit_price || 0).toFixed(2)}`
-    },
-    {
-      header: 'Total Value',
-      accessor: 'total_value',
       Cell: (row) => {
-        const totalValue = (row.quantity || 0) * (row.unit_price || 0);
-        return `₹${totalValue.toFixed(2)}`;
+        const unit = row.unit_of_measure || row.unit || row.uom || row.unit_name || 'units';
+        const qty = Number(row.quantity || 0);
+        return `${qty} ${unit}`;
+      },
+      exportFormat: (row) => {
+        const unit = row.unit_of_measure || row.unit || row.uom || row.unit_name || 'units';
+        const qty = Number(row.quantity || 0);
+        return `${qty} ${unit}`;
       }
     },
     {
-      header: 'Supplier',
+      Header: 'Unit Price',
+      accessor: 'unit_price',
+      Cell: (row) => {
+        const formatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+        return formatter.format(Number(row.unit_price || 0));
+      },
+      exportFormat: (row) => Number(row.unit_price || 0)
+    },
+    {
+      Header: 'Total Value',
+      accessor: 'total_value',
+      Cell: (row) => {
+        const totalValue = Number(row.quantity || 0) * Number(row.unit_price || 0);
+        const formatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+        return formatter.format(totalValue || 0);
+      },
+      exportFormat: (row) => Number(row.quantity || 0) * Number(row.unit_price || 0)
+    },
+    {
+      Header: 'Supplier',
       accessor: 'supplier',
       Cell: (row) => {
-        const supplier = row.supplier;
-        return supplier && supplier.name ? supplier.name : 'N/A';
+        const supplier = row.supplier || {};
+        return supplier.name || supplier.supplier_name || supplier.company_name || 'N/A';
+      },
+      exportFormat: (row) => {
+        const supplier = row.supplier || {};
+        return supplier.name || supplier.supplier_name || supplier.company_name || '';
       }
     }
   ];
@@ -72,7 +93,7 @@ export default function InventoryReports() {
       delete newParams.filter_type;
       delete newParams.in_or_out;
     } else {
-      newParams.filter_type = ['in_or_out'];
+      newParams.filter_type = 'in_or_out';
       newParams.in_or_out = value;
     }
     

@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 
 export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  
+  const [successMessage, setSuccessMessage] = useState("");
+
   // Mock user data
   const mockUser = {
-    name: 'Outlet Manager',
-    email: 'manager@menusmitra.com',
-    phone: '+91 9876543210',
+    name: "Outlet Manager",
+    email: "manager@menusmitra.com",
+    phone: "+91 9876543210",
   };
-  
+
   // Profile settings
   const [profileSettings, setProfileSettings] = useState({
     name: mockUser.name,
@@ -23,38 +25,38 @@ export default function Settings() {
     orderNotifications: true,
     statusUpdates: true,
     marketingEmails: false,
-    appUpdates: true
+    appUpdates: true,
   });
 
   // App settings
   const [appSettings, setAppSettings] = useState({
-    language: 'english',
-    theme: 'light',
+    language: "english",
+    theme: "light",
     autoRefresh: true,
-    refreshInterval: 5 // minutes
+    refreshInterval: 5, // minutes
   });
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileSettings(prev => ({
+    setProfileSettings((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleNotificationChange = (e) => {
     const { name, checked } = e.target;
-    setNotificationSettings(prev => ({
+    setNotificationSettings((prev) => ({
       ...prev,
-      [name]: checked
+      [name]: checked,
     }));
   };
 
   const handleAppSettingChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setAppSettings(prev => ({
+    setAppSettings((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -63,18 +65,18 @@ export default function Settings() {
     // Simulate API call to save settings
     setTimeout(() => {
       setIsSaving(false);
-      setSuccessMessage('Settings saved successfully');
-      
+      setSuccessMessage("Settings saved successfully");
+
       // Clear success message after 3 seconds
       setTimeout(() => {
-        setSuccessMessage('');
+        setSuccessMessage("");
       }, 3000);
     }, 1000);
   };
 
   const handleLogout = () => {
     // Redirect to login page
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   return (
@@ -82,19 +84,24 @@ export default function Settings() {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your account and application preferences</p>
+        <p className="text-gray-500">
+          Manage your account and application preferences
+        </p>
       </div>
 
       {successMessage && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-md">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                className="h-5 w-5 text-green-400"
+              />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">{successMessage}</p>
+              <p className="text-sm font-medium text-green-800">
+                {successMessage}
+              </p>
             </div>
           </div>
         </div>
@@ -102,10 +109,17 @@ export default function Settings() {
 
       {/* Profile Settings */}
       <div className="card p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Profile Information</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">
+          Profile Information
+        </h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Name
+            </label>
             <input
               type="text"
               id="name"
@@ -116,7 +130,12 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
@@ -127,7 +146,12 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Phone
+            </label>
             <input
               type="text"
               id="phone"
@@ -142,7 +166,9 @@ export default function Settings() {
 
       {/* Notification Settings */}
       <div className="card p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Notification Preferences</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">
+          Notification Preferences
+        </h2>
         <div className="space-y-4">
           <div className="flex items-start">
             <div className="flex items-center h-5">
@@ -156,8 +182,15 @@ export default function Settings() {
               />
             </div>
             <div className="ml-3 text-sm">
-              <label htmlFor="orderNotifications" className="font-medium text-gray-700">Order Notifications</label>
-              <p className="text-gray-500">Receive notifications for new orders and updates</p>
+              <label
+                htmlFor="orderNotifications"
+                className="font-medium text-gray-700"
+              >
+                Order Notifications
+              </label>
+              <p className="text-gray-500">
+                Receive notifications for new orders and updates
+              </p>
             </div>
           </div>
           <div className="flex items-start">
@@ -172,8 +205,15 @@ export default function Settings() {
               />
             </div>
             <div className="ml-3 text-sm">
-              <label htmlFor="statusUpdates" className="font-medium text-gray-700">Status Updates</label>
-              <p className="text-gray-500">Receive notifications about system status and maintenance</p>
+              <label
+                htmlFor="statusUpdates"
+                className="font-medium text-gray-700"
+              >
+                Status Updates
+              </label>
+              <p className="text-gray-500">
+                Receive notifications about system status and maintenance
+              </p>
             </div>
           </div>
           <div className="flex items-start">
@@ -188,8 +228,15 @@ export default function Settings() {
               />
             </div>
             <div className="ml-3 text-sm">
-              <label htmlFor="marketingEmails" className="font-medium text-gray-700">Marketing Emails</label>
-              <p className="text-gray-500">Receive updates about new features and promotions</p>
+              <label
+                htmlFor="marketingEmails"
+                className="font-medium text-gray-700"
+              >
+                Marketing Emails
+              </label>
+              <p className="text-gray-500">
+                Receive updates about new features and promotions
+              </p>
             </div>
           </div>
           <div className="flex items-start">
@@ -204,8 +251,12 @@ export default function Settings() {
               />
             </div>
             <div className="ml-3 text-sm">
-              <label htmlFor="appUpdates" className="font-medium text-gray-700">App Updates</label>
-              <p className="text-gray-500">Receive notifications when the app has new versions available</p>
+              <label htmlFor="appUpdates" className="font-medium text-gray-700">
+                App Updates
+              </label>
+              <p className="text-gray-500">
+                Receive notifications when the app has new versions available
+              </p>
             </div>
           </div>
         </div>
@@ -216,7 +267,12 @@ export default function Settings() {
         <h2 className="text-lg font-medium text-gray-900 mb-4">App Settings</h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="language" className="block text-sm font-medium text-gray-700">Language</label>
+            <label
+              htmlFor="language"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Language
+            </label>
             <select
               id="language"
               name="language"
@@ -232,7 +288,12 @@ export default function Settings() {
             </select>
           </div>
           <div>
-            <label htmlFor="theme" className="block text-sm font-medium text-gray-700">Theme</label>
+            <label
+              htmlFor="theme"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Theme
+            </label>
             <select
               id="theme"
               name="theme"
@@ -257,13 +318,25 @@ export default function Settings() {
               />
             </div>
             <div className="ml-3 text-sm">
-              <label htmlFor="autoRefresh" className="font-medium text-gray-700">Auto Refresh Dashboard</label>
-              <p className="text-gray-500">Automatically refresh dashboard data</p>
+              <label
+                htmlFor="autoRefresh"
+                className="font-medium text-gray-700"
+              >
+                Auto Refresh Dashboard
+              </label>
+              <p className="text-gray-500">
+                Automatically refresh dashboard data
+              </p>
             </div>
           </div>
           {appSettings.autoRefresh && (
             <div>
-              <label htmlFor="refreshInterval" className="block text-sm font-medium text-gray-700">Refresh Interval (minutes)</label>
+              <label
+                htmlFor="refreshInterval"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Refresh Interval (minutes)
+              </label>
               <select
                 id="refreshInterval"
                 name="refreshInterval"
@@ -289,7 +362,7 @@ export default function Settings() {
           disabled={isSaving}
           className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
         >
-          {isSaving ? 'Saving...' : 'Save Settings'}
+          {isSaving ? "Saving..." : "Save Settings"}
         </button>
         <button
           onClick={handleLogout}
@@ -300,4 +373,4 @@ export default function Settings() {
       </div>
     </div>
   );
-} 
+}

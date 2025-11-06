@@ -4,6 +4,15 @@ import { Breadcrumb } from '../../components';
 import { getStaffReport } from '../../api/reports';
 
 export default function StaffReports() {
+  const capitalizeWords = (value) => {
+    if (!value || typeof value !== 'string') return 'N/A';
+    return value
+      .toLowerCase()
+      .split(' ')
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
   // Initialize with minimal required parameters
   const [filterParams, setFilterParams] = useState({
     filter_type: 'all'
@@ -12,38 +21,42 @@ export default function StaffReports() {
   // Define columns for the operational staff
   const columns = [
     {
-      header: 'Name',
+      Header: 'Name',
       accessor: 'name',
       Cell: (row) => (
         <div>
-          <div className="font-medium text-gray-900">{row.name || 'N/A'}</div>
+          <div className="font-medium text-gray-900">{capitalizeWords(row.name)}</div>
         </div>
-      )
+      ),
+      exportFormat: (row) => capitalizeWords(row.name)
     },
     {
-      header: 'Role',
+      Header: 'Role',
       accessor: 'role',
       Cell: (row) => (
         <div className="capitalize">{row.role || 'N/A'}</div>
-      )
+      ),
+      exportFormat: (row) => capitalizeWords(row.role)
     },
     {
-      header: 'Mobile',
+      Header: 'Mobile',
       accessor: 'mobile',
       Cell: (row) => row.mobile || 'N/A'
     },
     {
-      header: 'Email',
+      Header: 'Email',
       accessor: 'email',
-      Cell: (row) => row.email || 'N/A'
+      Cell: (row) => row.email || 'N/A',
+      exportFormat: (row) => capitalizeWords(row.email)
     },
     {
-      header: 'Address',
+      Header: 'Address',
       accessor: 'address',
-      Cell: (row) => row.address || 'N/A'
+      Cell: (row) => row.address || 'N/A',
+      exportFormat: (row) => capitalizeWords(row.address)
     },
     {
-      header: 'Status',
+      Header: 'Status',
       accessor: 'is_active',
       Cell: (row) => {
         const isActive = row.is_active;
@@ -59,15 +72,21 @@ export default function StaffReports() {
         }
         
         return 'N/A';
+      },
+      exportFormat: (row) => {
+        if (row.is_active === true) return 'Active';
+        if (row.is_active === false) return 'Inactive';
+        return 'N/A';
       }
     },
     {
-      header: 'Last Login',
+      Header: 'Last Login',
       accessor: 'last_login',
-      Cell: (row) => row.last_login || 'N/A'
+      Cell: (row) => row.last_login || 'N/A',
+      exportFormat: (row) => row.last_login || 'N/A'
     },
     {
-      header: 'Staff Type',
+      Header: 'Staff Type',
       accessor: 'type',
       Cell: (row) => {
         const type = row.type;
@@ -82,6 +101,12 @@ export default function StaffReports() {
           );
         }
         
+        return 'N/A';
+      },
+      exportFormat: (row) => {
+        const type = row.type;
+        if (type === 'operational') return 'Operational';
+        if (type === 'non-operational') return 'Non-Operational';
         return 'N/A';
       }
     }

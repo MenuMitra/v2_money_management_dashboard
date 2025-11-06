@@ -28,20 +28,12 @@ export default function OrderStatusReports() {
   // Update filter parameters based on date inputs
   const updateFilterParams = (start, end) => {
     const newParams = { filter_type: 'all' };
-    
-    // If either start or end date is provided, switch to date_range filter
-    if (start || end) {
+    // Require both dates to form a valid range
+    if (start && end) {
       newParams.filter_type = 'date_range';
-      
-      if (start) {
-        newParams.start_date = formatInputDateForAPI(start);
-      }
-      
-      if (end) {
-        newParams.end_date = formatInputDateForAPI(end);
-      }
+      newParams.start_date = formatInputDateForAPI(start);
+      newParams.end_date = formatInputDateForAPI(end);
     }
-    
     setFilterParams(newParams);
   };
   
@@ -194,6 +186,8 @@ export default function OrderStatusReports() {
         filterParams={filterParams}
         filterComponent={renderFilters()}
         initialSortConfig={{ key: 'changed_on', direction: 'desc' }}
+        generateDisabled={!(startDate && endDate)}
+        generateDisabledMessage={!(startDate && endDate) ? 'Select date range' : ''}
       />
     </div>
   );

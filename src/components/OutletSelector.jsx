@@ -58,7 +58,13 @@ const OutletSelector = ({
     },
     { 
       enabled: Boolean(userId && isOpen),
-      select: (data) => processOutletData(data)
+      select: (data) => processOutletData(data),
+      // Prevent duplicate/refetches; show cached list while modal is open
+      staleTime: 5 * 60 * 1000,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 0
     }
   );
 

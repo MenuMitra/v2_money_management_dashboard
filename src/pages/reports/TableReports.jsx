@@ -44,28 +44,28 @@ export default function TableReports() {
   // Define columns for the table report
   const columns = [
     {
-      header: 'Table Number',
+      Header: 'Table Number',
       accessor: 'table_number',
       Cell: (row) => (
         <div className="font-medium text-gray-900">#{row.table_number || 'N/A'}</div>
       )
     },
     {
-      header: 'Section',
+      Header: 'Section',
       accessor: 'section_name',
       Cell: (row) => (
         <div className="capitalize">{row.section_name || 'N/A'}</div>
       )
     },
     {
-      header: 'Capacity',
+      Header: 'Capacity',
       accessor: 'capacity',
       Cell: (row) => (
         <div>{row.capacity || 0} persons</div>
       )
     },
     {
-      header: 'Status',
+      Header: 'Status',
       accessor: 'status',
       Cell: (row) => {
         if (row.is_reserved) {
@@ -84,8 +84,16 @@ export default function TableReports() {
       }
     },
     {
-      header: 'Current Order',
+      Header: 'Current Order',
       accessor: 'current_order',
+      exportFormat: (row) => {
+        if (row.current_order) {
+          const num = row.current_order.order_number || '';
+          const status = row.current_order.order_status || '';
+          return status ? `${num} (${status})` : `${num}`;
+        }
+        return 'No active order';
+      },
       Cell: (row) => {
         if (row.current_order) {
           return (
@@ -99,15 +107,17 @@ export default function TableReports() {
       }
     },
     {
-      header: 'Reserved',
+      Header: 'Reserved',
       accessor: 'is_reserved',
+      exportFormat: (row) => (row.is_reserved ? 'Yes' : 'No'),
       Cell: (row) => (
         <div>{row.is_reserved ? 'Yes' : 'No'}</div>
       )
     },
     {
-      header: 'Joined',
+      Header: 'Joined',
       accessor: 'is_joined',
+      exportFormat: (row) => (row.is_joined ? 'Yes' : 'No'),
       Cell: (row) => (
         <div>{row.is_joined ? 'Yes' : 'No'}</div>
       )
