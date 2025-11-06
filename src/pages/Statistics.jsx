@@ -579,8 +579,6 @@ const CollectionSourcesCard = ({ collectionData }) => {
     udhari_paid_amount: 0,
     udhari_pending_orders: 0,
     udhari_paid_orders: 0,
-    unknown_payment_amount: 0,
-    unknown_payment_orders: 0,
     other_amount: 0,
     other_orders: 0,
   };
@@ -642,12 +640,6 @@ const CollectionSourcesCard = ({ collectionData }) => {
       amount: data.udhari_pending_amount || 0,
       orders: data.udhari_pending_orders || 0,
       color: "bg-red-500",
-    },
-    {
-      name: "Unknown Payment",
-      amount: data.unknown_payment_amount || 0,
-      orders: data.unknown_payment_orders || 0,
-      color: "bg-gray-500",
     },
   ];
 
