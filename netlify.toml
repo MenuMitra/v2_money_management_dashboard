@@ -6,18 +6,21 @@
 [context.production.environment]
   VITE_PROD_API_URL = "https://ghanish.in"
   VITE_ENVIRONMENT = "production"
-  # Ensure DEV_URL is not set or empty in production to prevent fallback
+  # Ensure testing URL is not set in production to prevent fallback
+  VITE_TESTING_API_URL = ""
   VITE_DEV_API_URL = ""
 
 # Default context - used for branch previews and other deploys
 [context.default.environment]
+  VITE_TESTING_API_URL = "https://men4u.xyz"
+  VITE_ENVIRONMENT = "testing"
   VITE_DEV_API_URL = "https://men4u.xyz"
-  VITE_ENVIRONMENT = "development"
 
 # Deploy preview context - used for pull request previews
 [context.deploy-preview.environment]
+  VITE_TESTING_API_URL = "https://men4u.xyz"
+  VITE_ENVIRONMENT = "testing"
   VITE_DEV_API_URL = "https://men4u.xyz"
-  VITE_ENVIRONMENT = "development"
 
 [[redirects]]
   from = "/*"
