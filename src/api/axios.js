@@ -5,18 +5,16 @@ const isDev = import.meta.env.DEV; // Vite provides this boolean
 const MODE = import.meta.env.MODE; // 'development' or 'production'
 
 // API URLs - use env variables only, no defaults
-const DEV_URL = import.meta.env.VITE_DEV_API_URL; // Development API URL
+const TESTING_URL = import.meta.env.VITE_TESTING_API_URL || import.meta.env.VITE_DEV_API_URL; // Testing/Development API URL
 const PROD_URL = import.meta.env.VITE_PROD_API_URL; // Production API URL
 
-// Check if we're in production mode based on environment variables
-const isProductionMode =
-  MODE === "production" || import.meta.env.VITE_ENVIRONMENT === "production";
+// Check if we're in production mode - prioritize VITE_ENVIRONMENT over MODE
+// MODE is always 'production' in builds, so we rely on VITE_ENVIRONMENT
+const isProductionMode = import.meta.env.VITE_ENVIRONMENT === "production";
 
-// Base URLs for different environments
-const BASE_URL = {
-  dev: DEV_URL, // Development API URL
-  prod: PROD_URL, // Production API
-};
+// Determine which API URL to use
+// If production mode, use production URL, otherwise use testing URL
+const API_BASE_URL = isProductionMode ? PROD_URL : TESTING_URL;
 
 // Common API path prefixes
 export const API_PREFIX = "/v2";
@@ -30,22 +28,25 @@ export const APP_TYPE_VERSIONCHECK = "money_dashboard"; // required by check_ver
 export const APP_TYPE_DASHBOARD = "money_dashboard"; // backend expected value for auth
 
 const axiosInstance = axios.create({
-  baseURL: isProductionMode ? BASE_URL.prod : BASE_URL.dev,
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Log environment info during development
-if (isDev) {
-  console.log(`[API Config] Running in ${MODE} mode`);
-  console.log(`[API Config] API Prefix: ${API_PREFIX}`);
-  console.log(`[API Config] Production mode: ${isProductionMode}`);
-  console.log(
-    `[API Config] Base URL: ${isProductionMode ? BASE_URL.prod : BASE_URL.dev}`
-  );
-}
+// Log environment info for debugging (always log, not just in dev)
+console.log(`[API Config] Environment Debug:`, {
+  MODE,
+  VITE_ENVIRONMENT: import.meta.env.VITE_ENVIRONMENT,
+  isProductionMode,
+  VITE_TESTING_API_URL: import.meta.env.VITE_TESTING_API_URL,
+  VITE_DEV_API_URL: import.meta.env.VITE_DEV_API_URL,
+  VITE_PROD_API_URL: import.meta.env.VITE_PROD_API_URL,
+  TESTING_URL,
+  PROD_URL,
+  API_BASE_URL,
+});
 
 // Request interceptor for adding auth token and app_source
 axiosInstance.interceptors.request.use(
