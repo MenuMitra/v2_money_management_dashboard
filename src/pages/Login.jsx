@@ -225,7 +225,7 @@ export default function Login() {
           errorMessage.toLowerCase().includes("invalid") ||
           errorMessage.toLowerCase().includes("incorrect") ||
           errorMessage.toLowerCase().includes("wrong");
-        
+
         if (isInvalidOtpError) {
           setInvalidOtp(true);
         }
@@ -279,33 +279,40 @@ export default function Login() {
     }
   };
 
+  // Check if we're in production environment
+  const isProduction =
+    import.meta.env.VITE_ENVIRONMENT === 'production' ||
+    import.meta.env.MODE === 'production';
+
   return (
     <>
-      {/* Testing Environment Bar */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-500 text-white text-center py-1 px-2 font-medium w-full flex items-center justify-center"
-        style={{ height: "28px" }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 mr-1"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      {/* Testing Environment Bar - Only show in non-production */}
+      {!isProduction && (
+        <div
+          className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-500 text-white text-center py-1 px-2 font-medium w-full flex items-center justify-center"
+          style={{ height: "28px" }}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <span>Testing Environment</span>
-      </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>Testing Environment</span>
+        </div>
+      )}
 
       <div
         className="min-h-screen flex items-center justify-center bg-white py-16 px-6 lg:px-12"
-        style={{ paddingTop: "calc(28px + 4rem)" }}
+        style={{ paddingTop: isProduction ? "4rem" : "calc(28px + 4rem)" }}
       >
         <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
           {/* Login Testing Badge */}
@@ -331,9 +338,8 @@ export default function Login() {
 
           {error && (
             <div
-              className={`bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded relative ${
-                showOtpForm ? "text-center" : ""
-              }`}
+              className={`bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded relative ${showOtpForm ? "text-center" : ""
+                }`}
               role="alert"
             >
               <span className="block sm:inline">{error}</span>
@@ -407,11 +413,10 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || mobileNumber.length !== 10}
-                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${
-                    loading || mobileNumber.length !== 10
-                      ? "bg-primary-400 cursor-not-allowed"
-                      : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  }`}
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${loading || mobileNumber.length !== 10
+                    ? "bg-primary-400 cursor-not-allowed"
+                    : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    }`}
                 >
                   {loading ? (
                     <svg
@@ -484,11 +489,10 @@ export default function Login() {
                       value={otp[index]}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className={`w-16 h-16 text-center text-3xl font-semibold border rounded-md shadow-sm focus:outline-none ${
-                        invalidOtp
-                          ? "border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500"
-                          : "border-gray-300 focus:ring-primary-500 focus:border-primary-500"
-                      }`}
+                      className={`w-16 h-16 text-center text-3xl font-semibold border rounded-md shadow-sm focus:outline-none ${invalidOtp
+                        ? "border-red-500 bg-red-50 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-primary-500 focus:border-primary-500"
+                        }`}
                       disabled={loading}
                     />
                   ))}
@@ -500,11 +504,10 @@ export default function Login() {
                   type="button"
                   onClick={handleResendOtp}
                   disabled={resendDisabled || loading}
-                  className={`text-base font-medium focus:outline-none focus:underline ${
-                    resendDisabled || loading
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-primary-600 hover:text-primary-500"
-                  }`}
+                  className={`text-base font-medium focus:outline-none focus:underline ${resendDisabled || loading
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-primary-600 hover:text-primary-500"
+                    }`}
                 >
                   {resendDisabled
                     ? `Resend OTP in ${countdown}s`
@@ -516,11 +519,10 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || otp.some((digit) => !digit)}
-                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${
-                    loading || otp.some((digit) => !digit)
-                      ? "bg-primary-400 cursor-not-allowed"
-                      : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  }`}
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${loading || otp.some((digit) => !digit)
+                    ? "bg-primary-400 cursor-not-allowed"
+                    : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    }`}
                 >
                   {loading ? (
                     <svg
