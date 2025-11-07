@@ -2,9 +2,22 @@
   command = "npm run build"
   publish = "dist"
 
+# Production context - used for production branch deploys
 [context.production.environment]
-  VITE_PROD_API_URL = "https://men4u.xyz"
+  VITE_PROD_API_URL = "https://ghanish.in"
   VITE_ENVIRONMENT = "production"
+  # Ensure DEV_URL is not set or empty in production to prevent fallback
+  VITE_DEV_API_URL = ""
+
+# Default context - used for branch previews and other deploys
+[context.default.environment]
+  VITE_DEV_API_URL = "https://men4u.xyz"
+  VITE_ENVIRONMENT = "development"
+
+# Deploy preview context - used for pull request previews
+[context.deploy-preview.environment]
+  VITE_DEV_API_URL = "https://men4u.xyz"
+  VITE_ENVIRONMENT = "development"
 
 [[redirects]]
   from = "/*"
