@@ -280,9 +280,8 @@ export default function Login() {
   };
 
   // Check if we're in production environment
-  const isProduction =
-    import.meta.env.VITE_ENVIRONMENT === 'production' ||
-    import.meta.env.MODE === 'production';
+  // MODE is always 'production' in builds, so we rely on VITE_ENVIRONMENT
+  const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production';
 
   return (
     <>
