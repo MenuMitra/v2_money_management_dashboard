@@ -13,13 +13,19 @@
 # Default context - used for branch previews and other deploys
 [context.default.environment]
   VITE_TESTING_API_URL = "https://men4u.xyz"
-  VITE_ENVIRONMENT = "development"
+  VITE_ENVIRONMENT = "testing"
   VITE_DEV_API_URL = "https://men4u.xyz"
 
 # Deploy preview context - used for pull request previews
 [context.deploy-preview.environment]
   VITE_TESTING_API_URL = "https://men4u.xyz"
-  VITE_ENVIRONMENT = "development"
+  VITE_ENVIRONMENT = "testing"
+  VITE_DEV_API_URL = "https://men4u.xyz"
+
+# Branch-specific context for testing branch (if you have a testing branch)
+[context.testing.environment]
+  VITE_TESTING_API_URL = "https://men4u.xyz"
+  VITE_ENVIRONMENT = "testing"
   VITE_DEV_API_URL = "https://men4u.xyz"
 
 [[redirects]]
