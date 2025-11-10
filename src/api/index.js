@@ -5,17 +5,16 @@ const isDev = import.meta.env.DEV; // Vite provides this boolean
 const MODE = import.meta.env.MODE; // 'development' or 'production'
 
 // API URLs - use env variables only, no defaults
-const DEV_URL = import.meta.env.VITE_DEV_API_URL;  // Development API URL
+const TESTING_URL = import.meta.env.VITE_TESTING_API_URL || import.meta.env.VITE_DEV_API_URL;  // Testing/Development API URL
 const PROD_URL = import.meta.env.VITE_PROD_API_URL; // Production API URL
 
-// Check if we're in production mode based on environment variables
-const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONMENT === 'production';
+// Check if we're in production mode - prioritize VITE_ENVIRONMENT over MODE
+// MODE is always 'production' in builds, so we rely on VITE_ENVIRONMENT
+const isProductionMode = import.meta.env.VITE_ENVIRONMENT === 'production';
 
-// Base URLs for different environments
-const BASE_URL = {
-  dev: DEV_URL, // Development API URL
-  prod: PROD_URL // Production API URL
-};
+// Determine which API URL to use
+// If production mode, use production URL, otherwise use testing URL
+const API_BASE_URL = isProductionMode ? PROD_URL : TESTING_URL;
 
 // Common API path prefixes
 const API_PREFIX = '/v2';
@@ -24,7 +23,7 @@ const STATISTICS_PREFIX = `${API_PREFIX}/outlet_statistics`;
 
 // Create a base axios instance for API requests
 const api = axios.create({
-  baseURL: isProductionMode ? BASE_URL.prod : BASE_URL.dev,
+  baseURL: API_BASE_URL,
   timeout: 30000,
 });
 
@@ -33,35 +32,35 @@ api.interceptors.request.use(
   (config) => {
     // Get the token from localStorage
     const token = localStorage.getItem('access_token');
-    
+
     // If token exists, add it to the headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Check if this is a POST request with data
     if (config.method === 'post' && config.data) {
       // Parse the request data (in case it's a string)
       let requestData = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
-      
+
       // Add app_source parameter
       requestData.app_source = 'admin';
-      
+
       // If outlet_id is null or undefined, try to get it from localStorage
       if (requestData.outlet_id === null || requestData.outlet_id === undefined) {
         const storedOutletId = localStorage.getItem('outlet_id');
         if (storedOutletId && storedOutletId !== 'null') {
           requestData.outlet_id = Number(storedOutletId);
-          
+
           // Update the config data
-          config.data = typeof config.data === 'string' 
-            ? JSON.stringify(requestData) 
+          config.data = typeof config.data === 'string'
+            ? JSON.stringify(requestData)
             : requestData;
         }
       } else {
         // Update the config data with app_source even if outlet_id exists
-        config.data = typeof config.data === 'string' 
-          ? JSON.stringify(requestData) 
+        config.data = typeof config.data === 'string'
+          ? JSON.stringify(requestData)
           : requestData;
       }
     } else if (config.method === 'get') {
@@ -71,7 +70,7 @@ api.interceptors.request.use(
         app_source: 'admin'
       };
     }
-    
+
     return config;
   },
   (error) => {
@@ -88,13 +87,13 @@ api.interceptors.response.use(
     // Handle common error scenarios
     if (error.response) {
       const { status } = error.response;
-      
+
       // Handle 401 Unauthorized - typically expired or invalid token
       if (status === 401) {
         // Clear the auth state if token is invalid
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
-        
+
         // If not on login page, redirect to login
         if (!window.location.pathname.includes('/login')) {
           // Use timeout to prevent immediate redirect during ongoing request handling
@@ -102,7 +101,7 @@ api.interceptors.response.use(
         }
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -113,10 +112,10 @@ const API_PATHS = {
   login: `${COMMON_PREFIX}/login`,
   verifyOtp: `${COMMON_PREFIX}/verify_otp`,
   resendOtp: `${COMMON_PREFIX}/resend_otp`,
-  
+
   // Common API endpoints
   common: COMMON_PREFIX,
-  
+
   // Statistics API endpoints
   outletStatistics: STATISTICS_PREFIX,
   getAllStatsWithoutFilter: `${STATISTICS_PREFIX}/get_all_stats`,
@@ -145,8 +144,8 @@ const API_PATHS = {
   udhariReport: `${STATISTICS_PREFIX}/udhari_report`,
 };
 
-export { 
-  api, 
+export {
+  api,
   API_PATHS,
   API_PREFIX,
   COMMON_PREFIX,
