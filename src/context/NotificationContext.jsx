@@ -162,7 +162,7 @@ export const NotificationProvider = ({ children }) => {
       const params = new URLSearchParams();
       params.set('token', accessToken);
       if (userId) params.set('user_id', userId);
-      const wsUrl = `wss://men4u.xyz/v2/common/ws/${outletId}?${params.toString()}`;
+      const wsUrl = `wss://menu4.xyz/v2/common/ws/${outletId}?${params.toString()}`;
 
       connectingRef.current = true;
       const ws = new WebSocket(wsUrl);
