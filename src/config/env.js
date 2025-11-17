@@ -1,4 +1,7 @@
-const FALLBACK_ENV = 'testing';
+
+// SINGLE SWITCH: change this to 'production' | 'testing' | 'development'
+
+const FALLBACK_ENV = 'production';
 
 const CONFIG = {
   production: {
