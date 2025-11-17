@@ -5,6 +5,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import CustomToast from '../components/CustomToast';
 import 'react-toastify/dist/ReactToastify.css';
 import { useOutletId } from '../hooks/useOutletId'; 
+import { ENV } from '../config/env';
 
 // Create notification context
 export const NotificationContext = createContext();
@@ -162,7 +163,8 @@ export const NotificationProvider = ({ children }) => {
       const params = new URLSearchParams();
       params.set('token', accessToken);
       if (userId) params.set('user_id', userId);
-      const wsUrl = `wss://menu4.xyz/v2/common/ws/${outletId}?${params.toString()}`;
+      const wsBase = (ENV.WS_URL || '').replace(/\/$/, '');
+      const wsUrl = `${wsBase}/${outletId}?${params.toString()}`;
 
       connectingRef.current = true;
       const ws = new WebSocket(wsUrl);
