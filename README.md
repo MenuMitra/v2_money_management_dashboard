@@ -35,11 +35,13 @@ cd outlet-dashboard
 npm install
 ```
 
-3. Create a `.env` file in the root directory with your API URL:
+3. (Optional) Create a `.env` file in the root directory to select the runtime environment:
 
 ```
-VITE_API_URL=https://your-api-url.com
+VITE_APP_ENV=testing
 ```
+
+If `VITE_APP_ENV` is not provided, the fallback environment defined in `src/config/env.js` is used. Update `src/config/env.js` whenever you need to change domain names or WebSocket hosts for `production`, `testing`, or `development`.
 
 4. Start the development server:
 

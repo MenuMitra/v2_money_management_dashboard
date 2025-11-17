@@ -1,20 +1,11 @@
 import axios from "axios";
+import { ENV } from "../config/env";
 
 // Environment configuration
 const isDev = import.meta.env.DEV; // Vite provides this boolean
 const MODE = import.meta.env.MODE; // 'development' or 'production'
 
-// API URLs - use env variables only, no defaults
-const TESTING_URL = import.meta.env.VITE_TESTING_API_URL || import.meta.env.VITE_DEV_API_URL; // Testing/Development API URL
-const PROD_URL = import.meta.env.VITE_PROD_API_URL; // Production API URL
-
-// Check if we're in production mode - prioritize VITE_ENVIRONMENT over MODE
-// MODE is always 'production' in builds, so we rely on VITE_ENVIRONMENT
-const isProductionMode = import.meta.env.VITE_ENVIRONMENT === "production";
-
-// Determine which API URL to use
-// If production mode, use production URL, otherwise use testing URL
-const API_BASE_URL = isProductionMode ? PROD_URL : TESTING_URL;
+const API_BASE_URL = ENV.API_HOST;
 
 // Common API path prefixes
 export const API_PREFIX = "/v2";
@@ -39,12 +30,9 @@ const axiosInstance = axios.create({
 console.log(`[API Config] Environment Debug:`, {
   MODE,
   VITE_ENVIRONMENT: import.meta.env.VITE_ENVIRONMENT,
-  isProductionMode,
-  VITE_TESTING_API_URL: import.meta.env.VITE_TESTING_API_URL,
-  VITE_DEV_API_URL: import.meta.env.VITE_DEV_API_URL,
-  VITE_PROD_API_URL: import.meta.env.VITE_PROD_API_URL,
-  TESTING_URL,
-  PROD_URL,
+  CURRENT_ENV: ENV.env,
+  API_HOST: ENV.API_HOST,
+  WS_URL: ENV.WS_URL,
   API_BASE_URL,
 });
 

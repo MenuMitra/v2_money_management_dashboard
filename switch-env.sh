@@ -11,7 +11,7 @@ if [ "$BRANCH" = "production" ]; then
     echo "✅ Environment switched to production"
     echo "🚀 Run: npm run dev"
 elif [ "$BRANCH" = "testing" ]; then
-    echo "🧪 Switching to testing environment (men4u.xyz)..."
+    echo "🧪 Switching to testing environment (menu4.xyz)..."
     cp .env.testing .env.local
     echo "✅ Environment switched to testing"
     echo "🚀 Run: npm run dev"
