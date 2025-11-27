@@ -115,7 +115,10 @@ export default function MenuReports() {
           {row.menu_name}
         </div>
       ),
-      exportFormat: (row) => row.menu_name || '-'
+      exportFormat: (row) => {
+        const name = row.menu_name || '-';
+        return name.charAt(0).toUpperCase() + name.slice(1);
+      }
     },
     {
       Header: 'Category',

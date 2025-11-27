@@ -71,7 +71,7 @@ export default function SplitTableReports() {
         const status = row.status?.toLowerCase();
         if (status === 'split') {
           return (
-            <div className="text-sm capitalize text-gray-700">
+            <div className="text-sm capitalize text-gray-700  ">
               {row.status}
             </div>
           );
