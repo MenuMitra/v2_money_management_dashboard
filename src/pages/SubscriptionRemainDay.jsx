@@ -184,33 +184,16 @@ const SubscriptionRemainDay = () => {
         <h3 className="text-lg font-medium text-gray-800 mb-2">Timeline</h3>
         {/* Progress Bar */}
         <div className="mb-4">
-          <div
-            className="progress"
-            style={{
-              height: "20px",
-              backgroundColor: "#f1f5f9",
-              borderRadius: "10px",
-              overflow: "hidden",
-            }}
-          >
+          <div className="h-5 bg-slate-100 rounded-[10px] overflow-hidden">
             <div
-              className="progress-bar"
+              className="h-full flex items-center justify-center text-white font-bold text-xs rounded-[10px] transition-[width] duration-[800ms] ease-in-out border-0"
               role="progressbar"
               style={{
                 // Fill shows completed portion of subscription
                 width: `${percentage}%`,
                 backgroundColor: color,
                 background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-                borderRadius: "10px",
-                transition: "width 0.8s ease-in-out",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "12px",
                 textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                border: "0",
               }}
               aria-valuenow={percentage}
               aria-valuemin="0"

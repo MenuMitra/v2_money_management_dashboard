@@ -339,7 +339,7 @@ const OutletSelector = ({
         </div>
         
         {/* Outlet List - Update only the error and loading states */}
-        <div className="overflow-y-auto flex-grow" style={{ maxHeight: 'calc(90vh - 240px)' }}>
+        <div className="overflow-y-auto flex-grow max-h-[calc(90vh-240px)]">
           {error ? (
             <div className="px-4 sm:px-6 py-4 text-center text-red-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

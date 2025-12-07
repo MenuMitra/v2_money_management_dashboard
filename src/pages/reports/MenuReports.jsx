@@ -95,8 +95,7 @@ export default function MenuReports() {
       <div className="description-table-col text-sm text-gray-500 whitespace-nowrap">
         {expanded ? value : value.substring(0, limit) + '...'}
         <button
-          className="ml-2 text-primary-600 underline text-xs"
-          style={{ cursor: "pointer", padding: '0 5px', background: 'none', border: 'none' }}
+          className="ml-2 text-primary-600 underline text-xs cursor-pointer px-[5px] py-0 bg-transparent border-0"
           onClick={() => setExpanded(!expanded)}
         >
           {expanded ? "Less" : "More"}

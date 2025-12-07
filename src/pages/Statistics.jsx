@@ -219,7 +219,7 @@ const InfoTooltip = ({ content, className = "", preferredPosition = "right" }) =
   }, [isVisible, calculatePosition]);
 
   return (
-    <div className={`relative inline-block ${className}`} ref={containerRef} style={{ zIndex: 1 }}>
+    <div className={`relative inline-block z-[1] ${className}`} ref={containerRef}>
       <button
         ref={buttonRef}
         type="button"
@@ -240,13 +240,9 @@ const InfoTooltip = ({ content, className = "", preferredPosition = "right" }) =
       {isVisible && content && (
         <div
           ref={tooltipRef}
-          className="fixed w-80 max-w-[90vw] p-3 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg shadow-xl"
+          className="fixed w-80 max-w-[90vw] p-3 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg shadow-xl z-[99999] max-h-[400px] overflow-y-auto pointer-events-auto"
           style={{
             ...tooltipStyle,
-            zIndex: 99999,
-            maxHeight: "400px",
-            overflowY: "auto",
-            pointerEvents: "auto",
           }}
           onMouseEnter={() => {
             // Clear timeout when entering tooltip
@@ -263,99 +259,49 @@ const InfoTooltip = ({ content, className = "", preferredPosition = "right" }) =
           {position === "bottom" ? (
             <>
               <div
-                className="absolute -top-2 transform -translate-x-1/2"
+                className="absolute -top-2 transform -translate-x-1/2 w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-b-[9px] border-b-gray-300"
                 style={{
                   ...arrowStyle,
-                  width: 0,
-                  height: 0,
-                  borderLeft: "9px solid transparent",
-                  borderRight: "9px solid transparent",
-                  borderBottom: "9px solid #d1d5db",
                 }}
               />
               <div
-                className="absolute -top-1 transform -translate-x-1/2"
+                className="absolute -top-1 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-white"
                 style={{
                   ...arrowStyle,
-                  width: 0,
-                  height: 0,
-                  borderLeft: "8px solid transparent",
-                  borderRight: "8px solid transparent",
-                  borderBottom: "8px solid white",
                 }}
               />
             </>
           ) : position === "top" ? (
             <>
               <div
-                className="absolute -bottom-2 transform -translate-x-1/2"
+                className="absolute -bottom-2 transform -translate-x-1/2 w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-t-[9px] border-t-gray-300"
                 style={{
                   ...arrowStyle,
-                  width: 0,
-                  height: 0,
-                  borderLeft: "9px solid transparent",
-                  borderRight: "9px solid transparent",
-                  borderTop: "9px solid #d1d5db",
                 }}
               />
               <div
-                className="absolute -bottom-1 transform -translate-x-1/2"
+                className="absolute -bottom-1 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-white"
                 style={{
                   ...arrowStyle,
-                  width: 0,
-                  height: 0,
-                  borderLeft: "8px solid transparent",
-                  borderRight: "8px solid transparent",
-                  borderTop: "8px solid white",
                 }}
               />
             </>
           ) : position === "right" ? (
             <>
               <div
-                className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderTop: "9px solid transparent",
-                  borderBottom: "9px solid transparent",
-                  borderRight: "9px solid #d1d5db",
-                }}
+                className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2 w-0 h-0 border-t-[9px] border-t-transparent border-b-[9px] border-b-transparent border-r-[9px] border-r-gray-300"
               />
               <div
-                className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderTop: "8px solid transparent",
-                  borderBottom: "8px solid transparent",
-                  borderRight: "8px solid white",
-                  marginLeft: "1px",
-                }}
+                className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-white ml-px"
               />
             </>
           ) : (
             <>
               <div
-                className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderTop: "9px solid transparent",
-                  borderBottom: "9px solid transparent",
-                  borderLeft: "9px solid #d1d5db",
-                }}
+                className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 w-0 h-0 border-t-[9px] border-t-transparent border-b-[9px] border-b-transparent border-l-[9px] border-l-gray-300"
               />
               <div
-                className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderTop: "8px solid transparent",
-                  borderBottom: "8px solid transparent",
-                  borderLeft: "8px solid white",
-                  marginRight: "1px",
-                }}
+                className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-l-[8px] border-l-white mr-px"
               />
             </>
           )}
@@ -716,10 +662,9 @@ const CollectionSourcesCard = ({ collectionData }) => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5 relative overflow-hidden">
                 <div
-                  className={`${method.color} h-2.5 rounded-full transition-all duration-300`}
+                  className={`${method.color} h-2.5 rounded-full transition-all duration-300 max-w-full`}
                   style={{
                     width: `${barWidth}%`,
-                    maxWidth: "100%",
                   }}
                 ></div>
               </div>
@@ -3605,12 +3550,10 @@ export default function Statistics() {
             <div className="ml-3 flex items-center">
               <div className="animate-pulse h-2 w-2 bg-blue-600 rounded-full"></div>
               <div
-                className="animate-pulse h-2 w-2 bg-blue-600 rounded-full mx-1"
-                style={{ animationDelay: "0.2s" }}
+                className="animate-pulse h-2 w-2 bg-blue-600 rounded-full mx-1 [animation-delay:0.2s]"
               ></div>
               <div
-                className="animate-pulse h-2 w-2 bg-blue-600 rounded-full"
-                style={{ animationDelay: "0.4s" }}
+                className="animate-pulse h-2 w-2 bg-blue-600 rounded-full [animation-delay:0.4s]"
               ></div>
             </div>
           )}

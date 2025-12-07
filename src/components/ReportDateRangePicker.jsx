@@ -112,7 +112,7 @@ const ReportDateRangePicker = ({ onChange, initialValue = 'all', disabled = fals
   };
 
   return (
-    <div className="relative w-full inline-block text-left" ref={datePickerRef} style={{ zIndex: 50 }}>
+    <div className="relative w-full inline-block text-left z-50" ref={datePickerRef}>
       {/* Dropdown button */}
       <button
         type="button"

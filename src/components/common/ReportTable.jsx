@@ -488,7 +488,7 @@ const ReportTable = ({
         </div>
 
         {/* Filter Area - Stack on mobile, flex on desktop */}
-        <div className="mt-4 relative" style={{ zIndex: 1 }}>
+        <div className="mt-4 relative z-[1]">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Custom filters - full width on mobile */}
             <div className="w-full sm:w-auto relative z-1">
@@ -772,7 +772,7 @@ const ReportTable = ({
       </div>
 
       {/* Report Content - Only shown after generation */}
-      <div className="relative" style={{ zIndex: 1 }}>
+      <div className="relative z-[1]">
         {isReportGenerated && (
           <>
             {/* Error Message */}
