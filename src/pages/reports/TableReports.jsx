@@ -147,7 +147,7 @@ export default function TableReports() {
         <select
           value={filterParams.section_id || ''}
           onChange={handleSectionChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           disabled={loading}
         >
           <option value="">All Sections</option>

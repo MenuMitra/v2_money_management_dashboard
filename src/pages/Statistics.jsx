@@ -1153,7 +1153,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             {hasTopSellingData && (
               <button
                 onClick={() => setActiveTab("top")}
-                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${activeTab === "top"
+                className={`px-10 py-3 text-sm font-medium rounded-3xl w-full ${activeTab === "top"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
@@ -1164,7 +1164,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             {hasLowSellingData && (
               <button
                 onClick={() => setActiveTab("low")}
-                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${activeTab === "low"
+                className={`px-10 py-3 text-sm font-medium rounded-3xl w-full ${activeTab === "low"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
@@ -1175,7 +1175,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             {hasNoSellingData && (
               <button
                 onClick={() => setActiveTab("no")}
-                className={`px-10 py-3 text-sm font-medium rounded-md w-full ${activeTab === "no"
+                className={`px-10 py-3 text-sm font-medium rounded-3xl w-full ${activeTab === "no"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
@@ -1184,7 +1184,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               </button>
             )}
             {!hasTopSellingData && !hasLowSellingData && !hasNoSellingData && (
-              <button className="px-10 py-3 text-sm font-medium rounded-md bg-purple-600 text-white w-full">
+              <button className="px-10 py-3 text-sm font-medium rounded-3xl bg-purple-600 text-white w-full">
                 No Data Available
               </button>
             )}
@@ -1206,7 +1206,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 flex rounded-3xl items-center pr-3 text-gray-400 hover:text-gray-600"
             >
               <FaXmark className="h-5 w-5" />
             </button>
@@ -1270,7 +1270,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="border border-gray-300 rounded-md text-sm p-2 pr-8 m-2"
+            className="border border-gray-300 rounded-3xl text-sm p-2 pr-8 m-2"
           >
             {[5, 10, 20, 50, 100].map((val) => (
               <option key={val} value={val}>
@@ -1301,7 +1301,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-2 py-1 border mx-1 text-sm rounded-md ${currentPage === i + 1
+                className={`px-2 py-1 border mx-1 text-sm rounded-3xl ${currentPage === i + 1
                   ? "bg-purple-600 text-white border-purple-600"
                   : "bg-white text-gray-500 border-gray-300"
                   }`}
@@ -1313,7 +1313,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-2 py-1 border rounded-md ml-1 text-sm"
+              className="px-2 py-1 border rounded-3xl ml-1 text-sm"
             >
               Next
             </button>
@@ -1497,7 +1497,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
             {hasTopSellingData && (
               <button
                 onClick={() => setActiveTab("top")}
-                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${activeTab === "top"
+                className={`px-6 py-3 text-sm font-medium rounded-3xl transition-colors ${activeTab === "top"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
@@ -1508,7 +1508,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
             {hasLowSellingData && (
               <button
                 onClick={() => setActiveTab("low")}
-                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${activeTab === "low"
+                className={`px-6 py-3 text-sm font-medium rounded-3xl transition-colors ${activeTab === "low"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
@@ -1519,7 +1519,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
             {hasNoSellingData && (
               <button
                 onClick={() => setActiveTab("no")}
-                className={`px-6 py-3 text-sm font-medium rounded-md transition-colors ${activeTab === "no"
+                className={`px-6 py-3 text-sm font-medium rounded-3xl transition-colors ${activeTab === "no"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
@@ -1528,7 +1528,7 @@ const ProductsAnalysisCardLegacy = ({ categoryData }) => {
               </button>
             )}
             {useDefaultData && (
-              <button className="px-6 py-3 text-sm font-medium rounded-md bg-purple-600 text-white">
+              <button className="px-6 py-3 text-sm font-medium rounded-3xl bg-purple-600 text-white">
                 No Data Available
               </button>
             )}
@@ -2266,7 +2266,7 @@ Top Menus: Best-selling items in this category"
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className={`p-2 rounded-md ${currentPage === 1
+                    className={`p-2 rounded-3xl ${currentPage === 1
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"
                       }`}
@@ -2290,7 +2290,7 @@ Top Menus: Best-selling items in this category"
                       setCurrentPage(Math.min(totalPages, currentPage + 1))
                     }
                     disabled={currentPage === totalPages}
-                    className={`p-2 rounded-md ${currentPage === totalPages
+                    className={`p-2 rounded-3xl ${currentPage === totalPages
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"
                       }`}
@@ -2508,7 +2508,7 @@ const PriceRecommendationCard = ({ salesData }) => {
                     </td>
                     <td className="px-2 py-4 text-center">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.type === "top"
+                        className={`inline-flex items-center px-2 py-0.5 rounded-3xl text-xs font-medium ${item.type === "top"
                           ? "bg-green-100 text-green-800"
                           : item.type === "low"
                             ? "bg-yellow-100 text-yellow-800"
@@ -2570,7 +2570,7 @@ const PriceRecommendationCard = ({ salesData }) => {
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${currentPage === 1
+                className={`p-2 rounded-3xl ${currentPage === 1
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-600 hover:bg-gray-100"
                   }`}
@@ -2594,7 +2594,7 @@ const PriceRecommendationCard = ({ salesData }) => {
                   setCurrentPage(Math.min(totalPages, currentPage + 1))
                 }
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${currentPage === totalPages
+                className={`p-2 rounded-3xl ${currentPage === totalPages
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-600 hover:bg-gray-100"
                   }`}
@@ -2770,7 +2770,7 @@ const CouponStatisticsCard = ({ couponData }) => {
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className={`p-2 rounded-md ${currentPage === 1
+              className={`p-2 rounded-3xl ${currentPage === 1
                 ? "text-gray-400 cursor-not-allowed"
                 : "text-gray-600 hover:bg-gray-100"
                 }`}
@@ -2794,7 +2794,7 @@ const CouponStatisticsCard = ({ couponData }) => {
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
               disabled={currentPage === totalPages}
-              className={`p-2 rounded-md ${currentPage === totalPages
+              className={`p-2 rounded-3xl ${currentPage === totalPages
                 ? "text-gray-400 cursor-not-allowed"
                 : "text-gray-600 hover:bg-gray-100"
                 }`}
@@ -3538,7 +3538,7 @@ export default function Statistics() {
         <div className="flex items-center">
           <button
             onClick={() => navigate(-1)}
-            className="mr-3 p-1 rounded-full hover:bg-gray-100"
+            className="mr-3 p-1 rounded-3xl hover:bg-gray-100"
             aria-label="Go back"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="w-6 h-6 text-gray-500" />
@@ -3561,7 +3561,7 @@ export default function Statistics() {
 
         {activeDateRangeText && (
           <div className="mt-2 sm:mt-0 flex items-center">
-            <span className="inline-flex items-center px-4 py-2 rounded-md bg-primary-50 text-primary-800 border border-primary-200 shadow-sm">
+            <span className="inline-flex items-center px-4 py-2 rounded-3xl bg-primary-50 text-primary-800 border border-primary-200 shadow-sm">
               <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5 mr-2 text-primary-500" />
               <span className="font-medium">
                 Filtered by: {activeDateRangeText}

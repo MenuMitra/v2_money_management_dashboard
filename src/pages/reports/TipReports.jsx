@@ -190,7 +190,7 @@ export default function TipReports() {
         <select
           value={dateFilterType}
           onChange={handleDateFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
           <option value="all">All Time</option>
           <option value="today">Today</option>
@@ -231,7 +231,7 @@ export default function TipReports() {
           name="order_type"
           value={filterParams.order_type || 'all'}
           onChange={handleFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
           <option value="all">All Order Types</option>
           <option value="dine-in">Dine In</option>

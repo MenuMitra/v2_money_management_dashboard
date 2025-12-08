@@ -747,7 +747,7 @@ export default function OutletDetails() {
               <h1 className="text-2xl font-bold text-gray-800 flex items-center">
                 <button
                   onClick={() => navigate(-1)}
-                  className="mr-3 p-1 rounded-full hover:bg-gray-100"
+                  className="mr-3 p-1 rounded-3xl hover:bg-gray-100"
                   aria-label="Go back"
                 >
                   <FontAwesomeIcon

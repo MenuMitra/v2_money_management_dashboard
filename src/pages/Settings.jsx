@@ -278,7 +278,7 @@ export default function Settings() {
               name="language"
               value={appSettings.language}
               onChange={handleAppSettingChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
             >
               <option value="english">English</option>
               <option value="hindi">Hindi</option>
@@ -299,7 +299,7 @@ export default function Settings() {
               name="theme"
               value={appSettings.theme}
               onChange={handleAppSettingChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
@@ -342,7 +342,7 @@ export default function Settings() {
                 name="refreshInterval"
                 value={appSettings.refreshInterval}
                 onChange={handleAppSettingChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
               >
                 <option value="1">1 minute</option>
                 <option value="5">5 minutes</option>
@@ -360,13 +360,13 @@ export default function Settings() {
         <button
           onClick={saveSettings}
           disabled={isSaving}
-          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+          className="px-4 py-2 bg-primary-600 text-white rounded-3xl hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
         >
           {isSaving ? "Saving..." : "Save Settings"}
         </button>
         <button
           onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white rounded-3xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
         >
           Logout
         </button>

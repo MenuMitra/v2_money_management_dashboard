@@ -132,7 +132,7 @@ export default function PaymentSettleReports() {
           {(startDate || endDate) && (
             <button
               onClick={handleClearDates}
-              className="ml-2 px-2 py-1 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded"
+              className="ml-2 px-2 py-1 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-3xl"
             >
               Clear
             </button>

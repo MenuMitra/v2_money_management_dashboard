@@ -175,7 +175,7 @@ export default function PaymentReports() {
         <select
           value={dateFilterType}
           onChange={handleDateFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
           <option value="all">All Time</option>
           <option value="today">Today</option>
@@ -194,7 +194,7 @@ export default function PaymentReports() {
               name="startDate"
               value={startDate}
               onChange={handleDateChange}
-              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              className="block rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               placeholder="Start Date"
             />
             <span className="text-gray-500">to</span>
@@ -216,7 +216,7 @@ export default function PaymentReports() {
           name="payment_method"
           value={filterParams.payment_method || 'all'}
           onChange={handleFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
           <option value="all">All Payment Methods</option>
           <option value="upi">UPI</option>

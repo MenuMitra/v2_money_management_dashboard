@@ -97,7 +97,7 @@ export default function Report({ title, description, filters, renderContent }) {
                   name={filter.name}
                   value={selectedFilters[filter.name] || ''}
                   onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-3xl focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 >
                   <option value="">All</option>
                   {filter.options.map(option => (
@@ -123,7 +123,7 @@ export default function Report({ title, description, filters, renderContent }) {
             <button 
               onClick={handleApplyFilters}
               disabled={isLoading}
-              className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="w-full px-4 py-2 bg-primary-600 text-white rounded-3xl hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               {isLoading ? 'Loading...' : 'Apply Filters'}
             </button>
@@ -136,21 +136,21 @@ export default function Report({ title, description, filters, renderContent }) {
         <button 
           onClick={() => handleExport('PDF')}
           disabled={isExporting}
-          className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-3xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
         >
           {isExporting ? 'Exporting...' : 'Export PDF'}
         </button>
         <button 
           onClick={() => handleExport('Excel')}
           disabled={isExporting}
-          className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-3xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         >
           {isExporting ? 'Exporting...' : 'Export Excel'}
         </button>
         <button 
           onClick={handlePrint}
           disabled={isPrinting}
-          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-3xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           {isPrinting ? 'Printing...' : 'Print'}
         </button>

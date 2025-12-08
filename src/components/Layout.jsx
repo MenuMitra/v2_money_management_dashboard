@@ -125,7 +125,7 @@ export default function Layout({ children }) {
             </div>
             <button
               onClick={toggleSidebar}
-              className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
+              className="rounded-3xl p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
             >
               <svg
                 className="h-6 w-6"
@@ -167,7 +167,7 @@ export default function Layout({ children }) {
               <li>
                 <button
                   onClick={toggleReportsMenu}
-                  className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-3xl transition-colors ${
                     location.pathname.startsWith('/reports')
                       ? 'bg-primary-50 text-primary-600'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -223,7 +223,7 @@ export default function Layout({ children }) {
             <div className="border-t border-gray-200 p-4 md:hidden mt-auto">
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center px-4 py-3 text-sm font-medium text-red-600 rounded-md hover:bg-red-50"
+                className="flex w-full items-center px-4 py-3 text-sm font-medium text-red-600 rounded-3xl hover:bg-red-50"
               >
                 <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -241,7 +241,7 @@ export default function Layout({ children }) {
             <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-md text-gray-500 lg:hidden"
+              className="p-2 rounded-3xl text-gray-500 lg:hidden"
             >
               <svg
                 className="h-6 w-6"
@@ -275,7 +275,7 @@ export default function Layout({ children }) {
             <div className="md:hidden flex items-center justify-end gap-3 py-2 px-4">
               <button 
                 onClick={handleRefresh}
-                className="h-9 w-9 flex items-center justify-center rounded-md text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none"
+                className="h-9 w-9 flex items-center justify-center rounded-3xl text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none"
                 title="Refresh"
                 disabled={isRefreshing}
               >

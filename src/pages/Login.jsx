@@ -406,7 +406,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || mobileNumber.length !== 10}
-                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${loading || mobileNumber.length !== 10
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-3xl text-white ${loading || mobileNumber.length !== 10
                     ? "bg-primary-400 cursor-not-allowed"
                     : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     }`}
@@ -512,7 +512,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || otp.some((digit) => !digit)}
-                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${loading || otp.some((digit) => !digit)
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-3xl text-white ${loading || otp.some((digit) => !digit)
                     ? "bg-primary-400 cursor-not-allowed"
                     : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     }`}

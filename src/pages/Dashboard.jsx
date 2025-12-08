@@ -108,7 +108,7 @@ const NavigationCard = ({
       </div>
       <Link
         to={to}
-        className={`mt-auto w-full flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${buttonColor}`}
+        className={`mt-auto w-full flex items-center justify-center px-3 py-2 border border-transparent rounded-3xl shadow-sm text-sm font-medium text-white ${buttonColor}`}
       >
         Go to {title}
       </Link>

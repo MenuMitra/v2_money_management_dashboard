@@ -209,7 +209,7 @@ const OutletHeader = () => {
           {/* Outlet selector button */}
           <button
             onClick={handleOpenModal}
-            className="flex items-center h-9 px-3 text-sm font-medium text-gray-700 focus:outline-none border border-gray-300 rounded-md bg-white hover:bg-gray-50 justify-between min-w-[150px] mr-3"
+            className="flex items-center rounded-3xl h-9 px-3 text-sm font-medium text-gray-700 focus:outline-none border border-gray-300 rounded-3xl bg-white hover:bg-gray-50 justify-between min-w-[150px] mr-3"
           >
             <div className="flex items-center">
               {loading ? (
@@ -254,7 +254,7 @@ const OutletHeader = () => {
                 <RefreshButton
                   onRefresh={handleRefresh}
                   route={location.pathname}
-                  additionalClasses="ml-4"
+                  additionalClasses="ml-4 rounded-3xl"
                   showOnMobile={false}
                   size="md"
                   isDataLoading={isDataLoading}
@@ -383,13 +383,13 @@ const OutletHeader = () => {
             <div className="px-6 py-4 flex justify-between gap-3">
               <button
                 onClick={handleCancelLogout}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-3xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmLogout}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-3xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center"
               >
                 <FontAwesomeIcon
                   icon={faRightFromBracket}
