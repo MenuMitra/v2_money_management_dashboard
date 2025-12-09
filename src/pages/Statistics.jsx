@@ -1201,7 +1201,7 @@ const ProductsAnalysisCard = ({ categoryData }) => {
               setCurrentPage(1);
             }}
             placeholder="Search menu items..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm pl-10"
+            className="w-full px-4 py-3 border border-gray-300 rounded-3xl shadow-sm pl-10"
           />
           {searchQuery && (
             <button
