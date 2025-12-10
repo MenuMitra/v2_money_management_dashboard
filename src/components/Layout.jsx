@@ -56,8 +56,9 @@ export default function Layout({ children }) {
     window.location.reload();
   };
 
-  // Check if current page is Statistics
+  // Check if current page is Statistics or Home
   const isStatisticsPage = location.pathname === '/statistics';
+  const isHomePage = location.pathname === '/';
 
   const navigationItems = [
     { name: 'Home', path: '/', icon: 'home' },
@@ -290,13 +291,16 @@ export default function Layout({ children }) {
                 </svg>
               </button>
               
-              <div>
-                <DateRangePicker 
-                  onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
-                  initialValue="today" 
-                  disabled={!isStatisticsPage}
-                />
-              </div>
+              {/* Hide date filter on Home page */}
+              {!isHomePage && (
+                <div>
+                  <DateRangePicker 
+                    onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
+                    initialValue="today" 
+                    disabled={!isStatisticsPage}
+                  />
+                </div>
+              )}
             </div>
           )}
           
