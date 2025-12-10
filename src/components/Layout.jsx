@@ -61,9 +61,10 @@ export default function Layout({ children }) {
   const isHomePage = location.pathname === '/';
   const isOutletDetailsPage = location.pathname === '/outlet-details';
   const isCompareOutletsPage = location.pathname === '/compare-outlets';
+  const isReportsPage = location.pathname.startsWith('/reports');
   
-  // Hide date filter on Home, Outlet Details, and Compare Outlets pages
-  const shouldHideDateFilter = isHomePage || isOutletDetailsPage || isCompareOutletsPage;
+  // Hide date filter on Home, Outlet Details, Compare Outlets, and Reports pages
+  const shouldHideDateFilter = isHomePage || isOutletDetailsPage || isCompareOutletsPage || isReportsPage;
 
   const navigationItems = [
     { name: 'Home', path: '/', icon: 'home' },
@@ -296,7 +297,7 @@ export default function Layout({ children }) {
                 </svg>
               </button>
               
-              {/* Hide date filter on Home, Outlet Details, and Compare Outlets pages */}
+              {/* Hide date filter on Home, Outlet Details, Compare Outlets, and Reports pages */}
               {!shouldHideDateFilter && (
                 <div>
                   <DateRangePicker 
