@@ -59,6 +59,11 @@ export default function Layout({ children }) {
   // Check if current page is Statistics or Home
   const isStatisticsPage = location.pathname === '/statistics';
   const isHomePage = location.pathname === '/';
+  const isOutletDetailsPage = location.pathname === '/outlet-details';
+  const isCompareOutletsPage = location.pathname === '/compare-outlets';
+  
+  // Hide date filter on Home, Outlet Details, and Compare Outlets pages
+  const shouldHideDateFilter = isHomePage || isOutletDetailsPage || isCompareOutletsPage;
 
   const navigationItems = [
     { name: 'Home', path: '/', icon: 'home' },
@@ -291,8 +296,8 @@ export default function Layout({ children }) {
                 </svg>
               </button>
               
-              {/* Hide date filter on Home page */}
-              {!isHomePage && (
+              {/* Hide date filter on Home, Outlet Details, and Compare Outlets pages */}
+              {!shouldHideDateFilter && (
                 <div>
                   <DateRangePicker 
                     onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
