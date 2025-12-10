@@ -287,10 +287,7 @@ export default function Login() {
     <>
       {/* Testing Environment Bar - Only show in non-production */}
       {!isProduction && (
-        <div
-          className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-500 text-white text-center py-1 px-2 font-medium w-full flex items-center justify-center"
-          style={{ height: "28px" }}
-        >
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-500 text-white text-center py-1 px-2 font-medium w-full flex items-center justify-center h-7">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-4 w-4 mr-1"
@@ -309,10 +306,7 @@ export default function Login() {
         </div>
       )}
 
-      <div
-        className="min-h-screen flex items-center justify-center bg-white py-16 px-6 lg:px-12"
-        style={{ paddingTop: isProduction ? "4rem" : "calc(28px + 4rem)" }}
-      >
+      <div className={`min-h-screen flex items-center justify-center bg-white py-16 px-6 lg:px-12 ${isProduction ? 'pt-16' : 'pt-[calc(1.75rem+4rem)]'}`}>
         <div className="max-w-xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
           {/* Login Testing Badge */}
 
@@ -412,7 +406,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || mobileNumber.length !== 10}
-                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${loading || mobileNumber.length !== 10
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-3xl text-white ${loading || mobileNumber.length !== 10
                     ? "bg-primary-400 cursor-not-allowed"
                     : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     }`}
@@ -518,7 +512,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading || otp.some((digit) => !digit)}
-                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-md text-white ${loading || otp.some((digit) => !digit)
+                  className={`group relative w-full flex justify-center py-4 px-6 border border-transparent text-xl font-medium rounded-3xl text-white ${loading || otp.some((digit) => !digit)
                     ? "bg-primary-400 cursor-not-allowed"
                     : "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     }`}

@@ -39,7 +39,7 @@ export default function MainLayout() {
           )}
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md hover:bg-gray-100"
+            className="p-2 rounded-3xl hover:bg-gray-100"
           >
             {isSidebarOpen ? '◀' : '▶'}
           </button>

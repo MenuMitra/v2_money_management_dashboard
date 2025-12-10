@@ -578,7 +578,7 @@ export default function CompareOutlets() {
 
         refreshOutlets();
       }}
-      className="group h-9 w-9 rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
+      className="group h-9 w-9 rounded-3xl flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
       disabled={isLoading || isLoadingComparison}
     >
       <FontAwesomeIcon icon={faArrowsRotate} className="w-5 h-5" />
@@ -608,7 +608,7 @@ export default function CompareOutlets() {
             <div className="flex items-center">
               <button
                 onClick={() => navigate(-1)}
-                className="mr-3 p-1 rounded-full hover:bg-gray-100"
+                className="mr-3 p-1 rounded-3xl hover:bg-gray-100"
                 aria-label="Go back"
               >
                 <FontAwesomeIcon
@@ -667,7 +667,7 @@ export default function CompareOutlets() {
                         <div className="flex space-x-1">
                           <button
                             onClick={() => handleRefreshOutlet(idx)}
-                            className="text-blue-600 hover:text-blue-800 p-1 rounded border border-gray-300 mx-2"
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded-3xl border border-gray-300 mx-2"
                             title="Change outlet"
                           >
                             <FontAwesomeIcon
@@ -677,7 +677,7 @@ export default function CompareOutlets() {
                           </button>
                           <button
                             onClick={() => handleRemoveOutlet(idx)}
-                            className="text-red-600 hover:text-red-800 p-1 rounded border border-gray-300 mx-2"
+                            className="text-red-600 hover:text-red-800 p-1 rounded-3xl border border-gray-300 mx-2"
                             title="Remove outlet"
                           >
                             <FontAwesomeIcon
@@ -695,7 +695,7 @@ export default function CompareOutlets() {
                     <th className="px-4 py-3 text-center border-b border-gray-200">
                       <button
                         onClick={handleOpenOutletSelector}
-                        className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
+                        className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 text-white rounded-3xl hover:bg-blue-700 font-medium text-sm transition-colors"
                         disabled={isPageLoading}
                       >
                         <FontAwesomeIcon
@@ -800,7 +800,7 @@ export default function CompareOutlets() {
                               );
                             }
                           }}
-                          className="group h-9 w-9 rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
+                          className="group h-9 w-9 rounded-3xl flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-gray-50 focus:outline-none border border-gray-300 hidden md:flex ml-4"
                           title="Refresh outlet data"
                         >
                           <FontAwesomeIcon

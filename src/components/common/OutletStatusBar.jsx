@@ -115,7 +115,7 @@ const OutletStatusBar = () => {
                   // Don't close the modal, just trigger outlet selector to open
                   window.dispatchEvent(new CustomEvent('open:outlet:selector'));
                 }}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-blue-600 text-white rounded-3xl hover:bg-blue-700 transition-colors"
               >
                 Change Outlet
               </button>

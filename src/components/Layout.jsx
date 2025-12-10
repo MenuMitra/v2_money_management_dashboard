@@ -62,8 +62,15 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
     window.location.reload();
   };
 
-  // Check if current page is Statistics
+  // Check if current page is Statistics or Home
   const isStatisticsPage = location.pathname === '/statistics';
+  const isHomePage = location.pathname === '/';
+  const isOutletDetailsPage = location.pathname === '/outlet-details';
+  const isCompareOutletsPage = location.pathname === '/compare-outlets';
+  const isReportsPage = location.pathname.startsWith('/reports');
+  
+  // Hide date filter on Home, Outlet Details, Compare Outlets, and Reports pages
+  const shouldHideDateFilter = isHomePage || isOutletDetailsPage || isCompareOutletsPage || isReportsPage;
 
   const navigationItems = [
     { name: 'Home', path: '/', icon: 'home' },
@@ -133,7 +140,7 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
             </div>
             <button
               onClick={toggleSidebar}
-              className="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
+              className="rounded-3xl p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
             >
               <svg
                 className="h-6 w-6"
@@ -175,7 +182,7 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
               <li>
                 <button
                   onClick={toggleReportsMenu}
-                  className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-3xl transition-colors ${
                     location.pathname.startsWith('/reports')
                       ? 'bg-primary-50 text-primary-600'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -231,7 +238,7 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
             <div className="border-t border-gray-200 p-4 md:hidden mt-auto">
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center px-4 py-3 text-sm font-medium text-red-600 rounded-md hover:bg-red-50"
+                className="flex w-full items-center px-4 py-3 text-sm font-medium text-red-600 rounded-3xl hover:bg-red-50"
               >
                 <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -249,7 +256,7 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
             <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-md text-gray-500 lg:hidden"
+              className="p-2 rounded-3xl text-gray-500 lg:hidden"
             >
               <svg
                 className="h-6 w-6"
@@ -283,7 +290,7 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
             <div className="md:hidden flex items-center justify-end gap-3 py-2 px-4">
               <button 
                 onClick={handleRefresh}
-                className="h-9 w-9 flex items-center justify-center rounded-md text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none"
+                className="h-9 w-9 flex items-center justify-center rounded-3xl text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none"
                 title="Refresh"
                 disabled={isRefreshing}
               >
@@ -298,13 +305,16 @@ const isProductionMode = MODE === 'production' || import.meta.env.VITE_ENVIRONME
                 </svg>
               </button>
               
-              <div>
-                <DateRangePicker 
-                  onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
-                  initialValue="today" 
-                  disabled={!isStatisticsPage}
-                />
-              </div>
+              {/* Hide date filter on Home, Outlet Details, Compare Outlets, and Reports pages */}
+              {!shouldHideDateFilter && (
+                <div>
+                  <DateRangePicker 
+                    onChange={isStatisticsPage ? handleDateRangeChange : undefined} 
+                    initialValue="today" 
+                    disabled={!isStatisticsPage}
+                  />
+                </div>
+              )}
             </div>
           )}
           

@@ -506,15 +506,9 @@ export const NotificationProvider = ({ children }) => {
         draggable
         theme="colored"
         icon={false}
-        toastClassName="toast-custom"
+        toastClassName="toast-custom !top-4 !right-4 !w-auto !max-w-[420px]"
         bodyClassName="toast-body-custom"
         closeButton={true}
-        style={{
-          top: '1rem',
-          right: '1rem',
-          width: 'auto',
-          maxWidth: '420px'
-        }}
       />
     </NotificationContext.Provider>
   );

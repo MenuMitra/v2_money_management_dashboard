@@ -184,7 +184,7 @@ export default function InventoryReports() {
         <select
           value={inOutFilter}
           onChange={handleInOutFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
           <option value="all">All Transactions</option>
           <option value="in">Inventory In</option>
@@ -196,7 +196,7 @@ export default function InventoryReports() {
         <select
           value={selectedSupplier}
           onChange={handleSupplierChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           disabled={loadingSuppliers}
         >
           <option value="">All Suppliers</option>

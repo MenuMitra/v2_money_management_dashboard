@@ -95,8 +95,7 @@ export default function MenuReports() {
       <div className="description-table-col text-sm text-gray-500 whitespace-nowrap">
         {expanded ? value : value.substring(0, limit) + '...'}
         <button
-          className="ml-2 text-primary-600 underline text-xs"
-          style={{ cursor: "pointer", padding: '0 5px', background: 'none', border: 'none' }}
+          className="ml-2 text-primary-600 underline text-xs cursor-pointer px-[5px] py-0 bg-transparent border-0"
           onClick={() => setExpanded(!expanded)}
         >
           {expanded ? "Less" : "More"}
@@ -115,7 +114,10 @@ export default function MenuReports() {
           {row.menu_name}
         </div>
       ),
-      exportFormat: (row) => row.menu_name || '-'
+      exportFormat: (row) => {
+        const name = row.menu_name || '-';
+        return name.charAt(0).toUpperCase() + name.slice(1);
+      }
     },
     {
       Header: 'Category',
@@ -260,7 +262,7 @@ export default function MenuReports() {
         <select
           value={dateFilterType}
           onChange={handleDateFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
         >
           <option value="all">All Time</option>
           <option value="today">Today</option>
@@ -299,7 +301,7 @@ export default function MenuReports() {
           name="category_id"
           value={filterParams.category_id || 'all'}
           onChange={handleFilterChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+          className="block w-full rounded-3xl border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           disabled={loadingCategories}
         >
           <option value="all">All Categories</option>

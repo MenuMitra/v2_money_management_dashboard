@@ -256,7 +256,7 @@ const OutletSelector = ({
                 id="status-filter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full rounded-md border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
+                className="w-full rounded-3xl border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -271,7 +271,7 @@ const OutletSelector = ({
                 id="account-filter"
                 value={accountFilter}
                 onChange={(e) => setAccountFilter(e.target.value)}
-                className="w-full rounded-md border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
+                className="w-full rounded-3xl border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="all">All Types</option>
                 <option value="live">Live</option>
@@ -286,7 +286,7 @@ const OutletSelector = ({
                 id="open-filter"
                 value={openFilter}
                 onChange={(e) => setOpenFilter(e.target.value)}
-                className="w-full rounded-md border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
+                className="w-full rounded-3xl border border-gray-300 py-1.5 text-sm focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="all">All Status</option>
                 <option value="open">Open</option>
@@ -299,7 +299,7 @@ const OutletSelector = ({
               <label className="block text-xs font-medium text-gray-700 mb-1">Sort</label>
               <button
                 onClick={toggleSortOrder}
-                className="flex items-center justify-between w-full rounded-md border border-gray-300 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 bg-white hover:bg-gray-50"
+                className="flex items-center justify-between w-full rounded-3xl border border-gray-300 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 bg-white hover:bg-gray-50"
               >
                 <span className="text-gray-700">
                   {sortOrder === 'default' ? 'Default' : sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
@@ -339,7 +339,7 @@ const OutletSelector = ({
         </div>
         
         {/* Outlet List - Update only the error and loading states */}
-        <div className="overflow-y-auto flex-grow" style={{ maxHeight: 'calc(90vh - 240px)' }}>
+        <div className="overflow-y-auto flex-grow max-h-[calc(90vh-240px)]">
           {error ? (
             <div className="px-4 sm:px-6 py-4 text-center text-red-500">
               <svg className="mx-auto h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

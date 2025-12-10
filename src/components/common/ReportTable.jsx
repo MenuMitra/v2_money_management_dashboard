@@ -465,7 +465,7 @@ const ReportTable = ({
           <div className="flex items-center mb-3 sm:mb-0">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center mr-3 px-3 py-1.5 rounded-full bg-white shadow-sm text-gray-600 hover:text-gray-800 focus:outline-none"
+              className="flex items-center mr-3 px-3 py-1.5 rounded-3xl bg-white shadow-sm text-gray-600 hover:text-gray-800 focus:outline-none"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -488,7 +488,7 @@ const ReportTable = ({
         </div>
 
         {/* Filter Area - Stack on mobile, flex on desktop */}
-        <div className="mt-4 relative" style={{ zIndex: 1 }}>
+        <div className="mt-4 relative z-[1]">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Custom filters - full width on mobile */}
             <div className="w-full sm:w-auto relative z-1">
@@ -499,7 +499,7 @@ const ReportTable = ({
             <button
               onClick={handleGenerateReport}
               disabled={loading || generateDisabled}
-              className={`w-full sm:w-auto px-4 py-2 rounded-md text-white font-medium focus:outline-none ${
+              className={`w-full sm:w-auto px-4 py-2 rounded-3xl text-white font-medium focus:outline-none ${
                 loading || generateDisabled
                   ? "bg-primary-300"
                   : "bg-primary-600 hover:bg-primary-700"
@@ -596,7 +596,7 @@ const ReportTable = ({
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2.5 top-1.5 h-5 w-5 text-gray-400 hover:text-gray-600 rounded-full flex items-center justify-center focus:outline-none"
+                      className="absolute right-2.5 top-1.5 h-5 w-5 text-gray-400 hover:text-gray-600 rounded-3xl flex items-center justify-center focus:outline-none"
                       title="Clear search"
                     >
                       <svg
@@ -623,7 +623,7 @@ const ReportTable = ({
                   <div className="flex space-x-2">
                     <button
                       onClick={exportToExcel}
-                      className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
+                      className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-3xl text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -643,7 +643,7 @@ const ReportTable = ({
                     <CSVLink
                       data={getExportData()}
                       filename={`${title || "report"}.csv`}
-                      className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
+                      className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-3xl text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -662,7 +662,7 @@ const ReportTable = ({
 
                     <button
                       onClick={exportToPDF}
-                      className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
+                      className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-3xl text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -683,7 +683,7 @@ const ReportTable = ({
                   {/* Refresh Button */}
                   <button
                     onClick={handleRefresh}
-                    className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
+                    className="p-1.5 rounded-3xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 focus:outline-none"
                     title="Refresh Report"
                   >
                     <svg
@@ -708,7 +708,7 @@ const ReportTable = ({
                   <div className="flex space-x-3 w-full">
                     <button
                       onClick={exportToExcel}
-                      className="flex-1 px-3 py-2 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center justify-center"
+                      className="flex-1 px-3 py-2 bg-green-50 border border-green-300 rounded-3xl text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center justify-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -747,7 +747,7 @@ const ReportTable = ({
 
                     <button
                       onClick={exportToPDF}
-                      className="flex-1 px-3 py-2 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center justify-center"
+                      className="flex-1 px-3 py-2 bg-red-50 border border-red-300 rounded-3xl text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center justify-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -772,7 +772,7 @@ const ReportTable = ({
       </div>
 
       {/* Report Content - Only shown after generation */}
-      <div className="relative" style={{ zIndex: 1 }}>
+      <div className="relative z-[1]">
         {isReportGenerated && (
           <>
             {/* Error Message */}
@@ -834,7 +834,7 @@ const ReportTable = ({
                           <th className="px-3 py-2 border-r border-gray-200 text-center">
                             <button
                               onClick={toggleAllRows}
-                              className={`p-1.5 rounded-full ${
+                              className={`p-1.5 rounded-3xl ${
                                 Object.values(selectedRows).every(Boolean)
                                   ? "bg-primary-100 text-primary-600"
                                   : "bg-gray-100 text-gray-500"
@@ -872,7 +872,7 @@ const ReportTable = ({
                                 onClick={() =>
                                   toggleColumnSelection(column.accessor)
                                 }
-                                className={`p-1.5 rounded-full ${
+                                className={`p-1.5 rounded-3xl ${
                                   selectedColumns[column.accessor]
                                     ? "bg-primary-100 text-primary-600"
                                     : "bg-gray-100 text-gray-500"
@@ -983,7 +983,7 @@ const ReportTable = ({
                                     onClick={() =>
                                       handleColumnSearch(column.accessor, "")
                                     }
-                                    className="absolute right-1.5 top-1 h-4 w-4 text-gray-400 hover:text-gray-600 rounded-full flex items-center justify-center focus:outline-none"
+                                    className="absolute right-1.5 top-1 h-4 w-4 text-gray-400 hover:text-gray-600 rounded-3xl flex items-center justify-center focus:outline-none"
                                     title="Clear search"
                                   >
                                     <svg
@@ -1055,7 +1055,7 @@ const ReportTable = ({
                                   <td className="px-3 py-2 whitespace-nowrap border-r border-gray-200">
                                     <button
                                       onClick={() => toggleRowSelection(rowId)}
-                                      className={`p-1.5 rounded-full ${
+                                      className={`p-1.5 rounded-3xl ${
                                         isRowSelected
                                           ? "bg-primary-100 text-primary-600"
                                           : "bg-gray-100 text-gray-500"
@@ -1143,7 +1143,7 @@ const ReportTable = ({
                           setItemsPerPage(Number(e.target.value));
                           setCurrentPage(1); // reset to first page
                         }}
-                        className="px-2 py-1 pr-8 border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 appearance-none"
+                        className="px-2 py-1 pr-8 border border-gray-300 rounded-3xl text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 appearance-none"
                       >
                         {[5, 10, 20, 50, 100].map((option) => (
                           <option key={option} value={option}>
@@ -1194,7 +1194,7 @@ const ReportTable = ({
                                   setCurrentPage((p) => Math.max(1, p - 1))
                                 }
                                 disabled={currentPage === 1}
-                                className="px-2 py-1 border rounded-md text-sm disabled:opacity-50"
+                                className="px-2 py-1 border rounded-3xl text-sm disabled:opacity-50"
                               >
                                 Prev
                               </button>
@@ -1203,7 +1203,7 @@ const ReportTable = ({
                                 <button
                                   key={page}
                                   onClick={() => setCurrentPage(page)}
-                                  className={`px-2 py-1 border rounded-md text-sm ${
+                                  className={`px-2 py-1 border rounded-3xl text-sm ${
                                     currentPage === page
                                       ? "bg-purple-600 text-white border-purple-600"
                                       : "bg-white text-gray-500 border-gray-300"
@@ -1220,7 +1220,7 @@ const ReportTable = ({
                                   )
                                 }
                                 disabled={currentPage === totalPages}
-                                className="px-2 py-1 border rounded-md text-sm disabled:opacity-50"
+                                className="px-2 py-1 border rounded-3xl text-sm disabled:opacity-50"
                               >
                                 Next
                               </button>
@@ -1235,7 +1235,7 @@ const ReportTable = ({
                     <div className="flex space-x-2">
                       <button
                         onClick={exportToExcel}
-                        className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-md text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
+                        className="px-3 py-1.5 bg-green-50 border border-green-300 rounded-3xl text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none inline-flex items-center"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1254,7 +1254,7 @@ const ReportTable = ({
                       <CSVLink
                         data={getExportData()}
                         filename={`${title || "report"}.csv`}
-                        className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-md text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
+                        className="px-3 py-1.5 bg-blue-50 border border-blue-300 rounded-3xl text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none inline-flex items-center"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1272,7 +1272,7 @@ const ReportTable = ({
                       </CSVLink>
                       <button
                         onClick={exportToPDF}
-                        className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
+                        className="px-3 py-1.5 bg-red-50 border border-red-300 rounded-3xl text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none inline-flex items-center"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

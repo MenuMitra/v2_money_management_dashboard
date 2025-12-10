@@ -152,11 +152,11 @@ const DateRangePicker = ({ onChange, initialValue = 'today', disabled = false })
   };
 
   return (
-    <div className="relative w-full inline-block text-left" ref={datePickerRef} style={{ zIndex: 1 }}>
+    <div className="relative w-full inline-block text-left z-[1]" ref={datePickerRef}>
       {/* Dropdown button */}
       <button
         type="button"
-        className={`inline-flex justify-between w-full rounded-md border border-gray-300 px-3 py-2 bg-white text-sm font-medium ${
+        className={`inline-flex justify-between w-full rounded-3xl border border-gray-300 px-3 py-2 bg-white text-sm font-medium ${
           disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50 focus:ring-1 focus:ring-primary-500'
         }`}
         onClick={() => !disabled && setShowDropdown(!showDropdown)}
@@ -234,14 +234,14 @@ const DateRangePicker = ({ onChange, initialValue = 'today', disabled = false })
             <div className="flex justify-between">
               <button
                 type="button"
-                className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-3xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 onClick={() => setShowCustomRange(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-3xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 onClick={handleCustomRangeApply}
                 disabled={!startDate || !endDate}
               >

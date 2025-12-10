@@ -38,14 +38,13 @@ export const RefreshButton = ({
     full: 'rounded-full'
   };
 
+  // Icon size classes based on size prop
+  const iconSizeClass = size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-6 w-6' : 'h-4 w-4';
+
   // Default refresh icon (static — no spin)
   const DefaultRefreshIcon = () => (
     <svg
-      className="transition-transform"
-      style={{
-        height: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem',
-        width: size === 'sm' ? '1rem' : size === 'lg' ? '1.5rem' : '1rem'
-      }}
+      className={`transition-transform ${iconSizeClass}`}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
